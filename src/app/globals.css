@@ -1,0 +1,272 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Base colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Fonts */
+  --font-sans: var(--font-pretendard), var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+
+  /* shadcn/ui colors */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* ========================================
+     Growth Log Brand Colors
+     ======================================== */
+
+  /* Primary Green Scale */
+  --color-green-1: #00962B;
+  --color-green-2: #38A726;
+  --color-green-3: #3FB52B;
+  --color-green-4: #4BBE38;
+  --color-green-5: #52C43F;
+  --color-green-6: #64CD52;
+  --color-green-7: #75D565;
+  --color-green-8: #90DF83;
+  --color-green-9: #B3EEAA;
+
+  /* Grayscale */
+  --color-gray-black: #222222;
+  --color-gray-1: #666666;
+  --color-gray-2: #919191;
+  --color-gray-3: #BDBDBD;
+  --color-gray-4: #DCDCDC;
+  --color-gray-5: #EAEAEA;
+  --color-gray-6: #F5F5F5;
+  --color-gray-7: #FCFCFC;
+  --color-gray-white: #FFFFFF;
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* Light Mode */
+  --background: #FFFFFF;
+  --foreground: #222222;
+  --card: #FFFFFF;
+  --card-foreground: #222222;
+  --popover: #FFFFFF;
+  --popover-foreground: #222222;
+
+  /* Primary: Green */
+  --primary: #00962B;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary: Gray */
+  --secondary: #919191;
+  --secondary-foreground: #FFFFFF;
+
+  /* Muted */
+  --muted: #F5F5F5;
+  --muted-foreground: #666666;
+
+  /* Accent: Light Green */
+  --accent: #B3EEAA;
+  --accent-foreground: #222222;
+
+  /* Destructive */
+  --destructive: #DC2626;
+
+  /* Border & Input */
+  --border: #EAEAEA;
+  --input: #EAEAEA;
+  --ring: #00962B;
+
+  /* Chart Colors */
+  --chart-1: #00962B;
+  --chart-2: #666666;
+  --chart-3: #4BBE38;
+  --chart-4: #919191;
+  --chart-5: #75D565;
+
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #222222;
+  --sidebar-primary: #00962B;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F5F5F5;
+  --sidebar-accent-foreground: #222222;
+  --sidebar-border: #EAEAEA;
+  --sidebar-ring: #00962B;
+}
+
+.dark {
+  --background: #222222;
+  --foreground: #FCFCFC;
+  --card: #333333;
+  --card-foreground: #FCFCFC;
+  --popover: #333333;
+  --popover-foreground: #FCFCFC;
+  --primary: #4BBE38;
+  --primary-foreground: #222222;
+  --secondary: #BDBDBD;
+  --secondary-foreground: #222222;
+  --muted: #444444;
+  --muted-foreground: #BDBDBD;
+  --accent: #3FB52B;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --border: #444444;
+  --input: #444444;
+  --ring: #4BBE38;
+  --chart-1: #4BBE38;
+  --chart-2: #919191;
+  --chart-3: #75D565;
+  --chart-4: #BDBDBD;
+  --chart-5: #90DF83;
+  --sidebar: #333333;
+  --sidebar-foreground: #FCFCFC;
+  --sidebar-primary: #4BBE38;
+  --sidebar-primary-foreground: #222222;
+  --sidebar-accent: #444444;
+  --sidebar-accent-foreground: #FCFCFC;
+  --sidebar-border: #444444;
+  --sidebar-ring: #4BBE38;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* ========================================
+   Custom Utility Classes
+   ======================================== */
+
+/* Brand color utilities */
+.bg-brand-green { background-color: var(--color-green-1); }
+.bg-brand-green-light { background-color: var(--color-green-9); }
+
+.text-brand-green { color: var(--color-green-1); }
+
+/* Gradient utilities */
+.bg-gradient-brand {
+  background: linear-gradient(135deg, var(--color-green-1) 0%, var(--color-green-4) 100%);
+}
+
+/* Section padding */
+.section-padding {
+  @apply px-4 py-16 md:px-6 md:py-20 lg:px-8 lg:py-24;
+}
+
+/* Container */
+.container-custom {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* Marquee Animations */
+@keyframes marquee-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee-left {
+  animation: marquee-left 30s linear infinite;
+}
+
+.animate-marquee-right {
+  animation: marquee-right 30s linear infinite;
+}
+
+/* 4개 복제본용 마퀴 애니메이션 */
+@keyframes marquee-left-4 {
+  0% {
+    transform: translateX(-25%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right-4 {
+  0% {
+    transform: translateX(-25%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee-left-4 {
+  animation: marquee-left-4 20s linear infinite;
+}
+
+.animate-marquee-right-4 {
+  animation: marquee-right-4 20s linear infinite;
+}
+
+/* Pulse Right Animation */
+@keyframes pulse-right {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(6px);
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-right {
+  animation: pulse-right 1.5s ease-in-out infinite;
+}
