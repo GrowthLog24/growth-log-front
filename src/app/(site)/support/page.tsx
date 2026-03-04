@@ -4,24 +4,14 @@ import { ChevronRight, MapPin, Phone } from "lucide-react";
 import { FAQSection } from "@/presentation/components/faq";
 import { faqRepository } from "@/infrastructure/repositories/faqRepository";
 import { faqCategoryRepository } from "@/infrastructure/repositories/faqCategoryRepository";
+import { noticeRepository } from "@/infrastructure/repositories/noticeRepository";
+import { formatDate } from "@/shared/utils/date";
 import type { FAQ, FAQCategoryItem } from "@/domain/entities";
 
 export const metadata: Metadata = {
   title: "Support",
   description: "그로스로그 공지사항, FAQ, 찾아오시는 길을 안내합니다.",
 };
-
-// Mock data - Firebase 연동 후 실제 데이터로 교체
-const mockNotices = [
-  { id: "1", title: "[안내] 5기 그로스로그 멤버를 모집합니다.", date: "2025/03/01", isPinned: true },
-  { id: "2", title: "[공지] 1차 OT 안내사항입니다. 2월 21일까지 읽어주세요.", date: "2025/02/21", isPinned: false },
-  { id: "3", title: "[안내] 그로스로그 운영을 안내합니다.", date: "2025/02/20", isPinned: false },
-  { id: "4", title: "[안내] 그로스로그 웹 개발 예비회의 일정 안내드립니다.", date: "2025/01/22", isPinned: false },
-  { id: "5", title: "[안내] 그로스토크 개발 세미나 참여자 분들 안내드립니다.", date: "2025/01/01", isPinned: false },
-  { id: "6", title: "[안내] 그로스토크, 정기모임 장소 안내 및 예티켓 관련 안내 드립니다.", date: "2024/12/01", isPinned: false },
-  { id: "7", title: "[안내] 1차 OT 안내사항입니다.", date: "2024/11/22", isPinned: false },
-  { id: "8", title: "[공지] 일부 회원 탈퇴 안내 말씀 드립니다. 8월 11일", date: "2024/08/03", isPinned: false },
-];
 
 /**
  * FAQ 데이터를 카테고리별로 그룹화
@@ -48,10 +38,11 @@ function groupFAQsByCategory(
 }
 
 export default async function SupportPage() {
-  // Firestore에서 FAQ 데이터 가져오기
-  const [faqs, categories] = await Promise.all([
+  // Firestore에서 데이터 가져오기
+  const [faqs, categories, notices] = await Promise.all([
     faqRepository.getFAQs(),
     faqCategoryRepository.getCategories(),
+    noticeRepository.getNotices(),
   ]);
 
   // 카테고리별로 FAQ 그룹화
@@ -71,7 +62,7 @@ export default async function SupportPage() {
 
           {/* Notice List */}
           <div className="border rounded-lg divide-y">
-            {mockNotices.map((notice) => (
+            {notices.map((notice) => (
               <Link
                 key={notice.id}
                 href={`/support/notice/${notice.id}`}
@@ -87,7 +78,7 @@ export default async function SupportPage() {
                 </div>
                 <div className="flex items-center gap-4 shrink-0 ml-4">
                   <span className="text-sm text-muted-foreground hidden sm:block">
-                    {notice.date}
+                    {formatDate(notice.publishedAt)}
                   </span>
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </div>

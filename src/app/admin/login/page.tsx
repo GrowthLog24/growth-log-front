@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
         {error && (
           <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
             {error === "AccessDenied"
-              ? "접근이 거부되었습니다. 관리자에게 문의하세요."
+              ? "등록된 관리자 계정만 로그인할 수 있습니다."
               : "로그인에 실패했습니다. 다시 시도해주세요."}
           </div>
         )}

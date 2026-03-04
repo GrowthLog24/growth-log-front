@@ -6,23 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
+import { recruitmentRepository } from "@/infrastructure/repositories/recruitmentRepository";
+import { formatDateKorean, formatDateWithDay } from "@/shared/utils/date";
 
 export const metadata: Metadata = {
   title: "Recruit",
   description: "그로스로그 멤버를 모집합니다. 함께 성장할 분들을 기다립니다.",
-};
-
-// Mock data - Firebase 연동 후 실제 데이터로 교체
-const recruitmentDetails = {
-  deadline: "2025년 3월 31일",
-  contactPhone: "010-1234-5678",
-  contactEmail: "recruit@growth-log.com",
-  feeAmount: 50000,
-  otSchedules: [
-    { round: 1, date: "2025.04.05 (토)", time: "16:00", location: "공덕역 인근" },
-    { round: 2, date: "2025.04.12 (토)", time: "16:00", location: "공덕역 인근" },
-    { round: 3, date: "2025.04.19 (토)", time: "16:00", location: "공덕역 인근" },
-  ],
 };
 
 export default async function RecruitPage() {
@@ -32,6 +21,11 @@ export default async function RecruitPage() {
   const isRecruitmentOpen = siteConfig?.isRecruitmentOpen ?? false;
   const recruitmentGeneration = siteConfig?.recruitmentGeneration ?? 1;
   const recruitmentFormLink = siteConfig?.recruitmentFormLink ?? "";
+
+  // 모집 중일 때 실제 모집 정보 가져오기
+  const recruitment = isRecruitmentOpen
+    ? await recruitmentRepository.getRecruitmentByGeneration(recruitmentGeneration)
+    : null;
 
   // 모집 종료 시 다음 기수
   const nextGeneration = recruitmentGeneration + 1;
@@ -183,17 +177,21 @@ export default async function RecruitPage() {
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">지원 마감</p>
-                  <p className="font-medium">{recruitmentDetails.deadline}</p>
+                  <p className="font-medium">
+                    {recruitment?.deadlineAt
+                      ? formatDateKorean(recruitment.deadlineAt)
+                      : "미정"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">문의</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span>{recruitmentDetails.contactPhone}</span>
+                    <span>{recruitment?.contactPhone || "미정"}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <Mail className="w-4 h-4 text-muted-foreground" />
-                    <span>{recruitmentDetails.contactEmail}</span>
+                    <span>{recruitment?.contactEmail || "미정"}</span>
                   </div>
                 </div>
               </CardContent>
@@ -212,7 +210,7 @@ export default async function RecruitPage() {
                   * 세 번의 OT 중 한 번만 참석하시면 됩니다.
                 </p>
                 <div className="space-y-3">
-                  {recruitmentDetails.otSchedules.map((ot) => (
+                  {(recruitment?.otSchedules || []).map((ot) => (
                     <div
                       key={ot.round}
                       className="flex items-center gap-4 p-3 bg-gray-6 rounded-lg"
@@ -221,9 +219,11 @@ export default async function RecruitPage() {
                         {ot.round}
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">{ot.date}</p>
+                        <p className="font-medium">
+                          {ot.dateAt ? formatDateWithDay(ot.dateAt) : "미정"}
+                        </p>
                         <p className="text-sm text-muted-foreground">
-                          {ot.time} · {ot.location}
+                          {ot.timeText} · {ot.locationText}
                         </p>
                       </div>
                     </div>
@@ -244,22 +244,21 @@ export default async function RecruitPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">참여비</p>
                   <p className="text-2xl font-bold text-primary">
-                    {recruitmentDetails.feeAmount.toLocaleString()}원
+                    {(recruitment?.feeAmount ?? 0).toLocaleString()}원
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">포함 내역</p>
-                  <ul className="mt-2 space-y-1 text-sm">
-                    <li>· 스터디/프로젝트 참여</li>
-                    <li>· 전문가 특강 참석</li>
-                    <li>· 정규 모임 참석</li>
-                    <li>· 네트워킹 행사 참여</li>
-                  </ul>
-                </div>
+                {recruitment?.feeDescriptionMd && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">포함 내역</p>
+                    <p className="mt-2 text-sm whitespace-pre-line">
+                      {recruitment.feeDescriptionMd}
+                    </p>
+                  </div>
+                )}
                 <div className="p-3 bg-accent rounded-lg">
                   <p className="text-sm font-medium">입금 계좌</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    카카오뱅크 3333-01-1234567 (그로스로그)
+                    {recruitment?.bankAccountText || "미정"}
                   </p>
                 </div>
               </CardContent>
@@ -274,19 +273,15 @@ export default async function RecruitPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">정규 모임 일시</p>
-                  <p className="font-medium">매주 토요일 14:00 - 17:00</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">장소</p>
-                  <p className="font-medium">공덕역 인근 스터디 카페</p>
-                </div>
-                <div className="p-3 bg-gray-6 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    💡 정규 모임은 온/오프라인 병행으로 진행되며, 불참 시 사전 공지가 필요합니다.
+                {recruitment?.regularMeetingsMd ? (
+                  <p className="text-sm whitespace-pre-line">
+                    {recruitment.regularMeetingsMd}
                   </p>
-                </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    정규 모임 정보가 아직 등록되지 않았습니다.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

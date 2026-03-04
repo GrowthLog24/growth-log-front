@@ -65,14 +65,14 @@ export function MarkdownEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      const markdown = editor.storage.markdown.getMarkdown();
+      const markdown = (editor.storage as any).markdown.getMarkdown();
       onChange(markdown);
     },
   });
 
   // 외부에서 value가 변경되면 에디터 내용 업데이트
   useEffect(() => {
-    if (editor && value !== editor.storage.markdown.getMarkdown()) {
+    if (editor && value !== (editor.storage as any).markdown.getMarkdown()) {
       editor.commands.setContent(value);
     }
   }, [value, editor]);

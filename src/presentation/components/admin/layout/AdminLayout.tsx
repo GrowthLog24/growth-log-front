@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { AdminSidebar } from "./AdminSidebar";
 import { Toaster } from "sonner";
 import {
@@ -53,7 +54,7 @@ export function AdminLayout({ children, user }: AdminLayoutProps) {
                   사이트 보기
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/admin/login" })}>
                 로그아웃
               </DropdownMenuItem>
             </DropdownMenuContent>

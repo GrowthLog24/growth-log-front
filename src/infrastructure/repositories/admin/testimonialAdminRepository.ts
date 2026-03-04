@@ -4,6 +4,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  getDoc,
   serverTimestamp,
   getDocs,
   query,
@@ -30,6 +31,35 @@ export class TestimonialAdminRepository {
       id: doc.id,
       ...doc.data(),
     })) as Testimonial[];
+  }
+
+  /**
+   * 단일 멤버 후기 조회
+   */
+  async getTestimonialById(id: string): Promise<Testimonial | null> {
+    const docRef = doc(this.testimonialsRef, id);
+    const snapshot = await getDoc(docRef);
+    if (!snapshot.exists()) return null;
+    return { id: snapshot.id, ...snapshot.data() } as Testimonial;
+  }
+
+  /**
+   * 다음 순서 반환
+   */
+  async getNextOrder(): Promise<number> {
+    const testimonials = await this.getAllTestimonials();
+    if (testimonials.length === 0) return 1;
+    return Math.max(...testimonials.map((t) => t.order)) + 1;
+  }
+
+  /**
+   * 멤버 후기 생성 (순서 자동 지정)
+   */
+  async createTestimonialWithAutoOrder(
+    data: Omit<TestimonialInput, "order">
+  ): Promise<string> {
+    const nextOrder = await this.getNextOrder();
+    return this.createTestimonial({ ...data, order: nextOrder });
   }
 
   /**
