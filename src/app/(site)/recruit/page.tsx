@@ -19,6 +19,7 @@ export default async function RecruitPage() {
   const siteConfig = await siteConfigRepository.getSiteConfig();
 
   const isRecruitmentOpen = siteConfig?.isRecruitmentOpen ?? false;
+  const currentGeneration = siteConfig?.currentGeneration ?? 0;
   const recruitmentGeneration = siteConfig?.recruitmentGeneration ?? 1;
   const recruitmentFormLink = siteConfig?.recruitmentFormLink ?? "";
 
@@ -27,8 +28,8 @@ export default async function RecruitPage() {
     ? await recruitmentRepository.getRecruitmentByGeneration(recruitmentGeneration)
     : null;
 
-  // 모집 종료 시 다음 기수
-  const nextGeneration = recruitmentGeneration + 1;
+  // 모집 종료 시 다음 기수 (현재 기수 + 1)
+  const nextGeneration = currentGeneration + 1;
 
   // 모집 종료 상태일 때
   if (!isRecruitmentOpen) {
@@ -171,7 +172,7 @@ export default async function RecruitPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" />
-                  {recruitmentGeneration}기 신청서 기간 안내
+                  {recruitmentGeneration}기 신입회원 가입 안내
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -194,6 +195,13 @@ export default async function RecruitPage() {
                     <span>{recruitment?.contactEmail || "미정"}</span>
                   </div>
                 </div>
+                {recruitment?.applyGuideMd && (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm whitespace-pre-line">
+                      {recruitment.applyGuideMd}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -205,10 +213,17 @@ export default async function RecruitPage() {
                   {recruitmentGeneration}기 OT 안내
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  * 세 번의 OT 중 한 번만 참석하시면 됩니다.
-                </p>
+              <CardContent className="space-y-4">
+                {recruitment?.otGuideMd && (
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                    {recruitment.otGuideMd}
+                  </p>
+                )}
+                {!recruitment?.otGuideMd && (
+                  <p className="text-sm text-muted-foreground">
+                    * 세 번의 OT 중 한 번만 참석하시면 됩니다.
+                  </p>
+                )}
                 <div className="space-y-3">
                   {(recruitment?.otSchedules || []).map((ot) => (
                     <div
@@ -229,6 +244,14 @@ export default async function RecruitPage() {
                     </div>
                   ))}
                 </div>
+                {recruitment?.otLocationMd && (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm font-medium mb-1">OT 장소 안내</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-line">
+                      {recruitment.otLocationMd}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -237,21 +260,21 @@ export default async function RecruitPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5 text-primary" />
-                  {recruitmentGeneration}기 등록금 안내
+                  {recruitmentGeneration}기 등록 입금 안내
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">참여비</p>
+                  <p className="text-sm text-muted-foreground">총 납부 금액</p>
                   <p className="text-2xl font-bold text-primary">
                     {(recruitment?.feeAmount ?? 0).toLocaleString()}원
                   </p>
                 </div>
-                {recruitment?.feeDescriptionMd && (
+                {recruitment?.feeDetailMd && (
                   <div>
-                    <p className="text-sm text-muted-foreground">포함 내역</p>
+                    <p className="text-sm text-muted-foreground">회비 상세 내역</p>
                     <p className="mt-2 text-sm whitespace-pre-line">
-                      {recruitment.feeDescriptionMd}
+                      {recruitment.feeDetailMd}
                     </p>
                   </div>
                 )}
@@ -261,6 +284,13 @@ export default async function RecruitPage() {
                     {recruitment?.bankAccountText || "미정"}
                   </p>
                 </div>
+                {recruitment?.feeDescriptionMd && (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm whitespace-pre-line">
+                      {recruitment.feeDescriptionMd}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -269,17 +299,44 @@ export default async function RecruitPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-primary" />
-                  {recruitmentGeneration}기 정규 모임 안내
+                  {recruitmentGeneration}기 정기 모임 안내
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recruitment?.regularMeetingsMd ? (
-                  <p className="text-sm whitespace-pre-line">
-                    {recruitment.regularMeetingsMd}
-                  </p>
-                ) : (
+                {recruitment?.firstMeetingAt && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">첫 정기 모임</p>
+                    <p className="font-medium">
+                      {formatDateKorean(recruitment.firstMeetingAt)}
+                    </p>
+                  </div>
+                )}
+                {recruitment?.regularMeetingsMd && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">정기 모임 일정</p>
+                    <p className="mt-1 text-sm whitespace-pre-line">
+                      {recruitment.regularMeetingsMd}
+                    </p>
+                  </div>
+                )}
+                {recruitment?.activityScheduleMd && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">월별 활동 일정</p>
+                    <p className="mt-1 text-sm whitespace-pre-line">
+                      {recruitment.activityScheduleMd}
+                    </p>
+                  </div>
+                )}
+                {recruitment?.meetingGuideMd && (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm whitespace-pre-line">
+                      {recruitment.meetingGuideMd}
+                    </p>
+                  </div>
+                )}
+                {!recruitment?.regularMeetingsMd && !recruitment?.firstMeetingAt && !recruitment?.activityScheduleMd && (
                   <p className="text-sm text-muted-foreground">
-                    정규 모임 정보가 아직 등록되지 않았습니다.
+                    정기 모임 정보가 아직 등록되지 않았습니다.
                   </p>
                 )}
               </CardContent>

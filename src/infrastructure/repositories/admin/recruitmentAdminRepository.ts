@@ -12,10 +12,10 @@ import {
   orderBy,
   where,
   limit,
-  runTransaction,
+  Timestamp,
 } from "firebase/firestore";
-import { db, COLLECTIONS, DOCUMENT_IDS } from "@/infrastructure/firebase";
-import type { SiteConfig, PreRegistration, PreRegistrationField } from "@/domain/entities";
+import { db, COLLECTIONS, DOCUMENT_IDS, getSubCollection } from "@/infrastructure/firebase";
+import type { SiteConfig, PreRegistration, PreRegistrationField, Recruitment, OTSchedule } from "@/domain/entities";
 
 /**
  * 모집/사전신청 통합 관리자 Repository
@@ -70,10 +70,185 @@ export class RecruitmentAdminRepository {
     });
   }
 
-  // ==================== 사전 신청 ====================
+  // ==================== 모집 상세 정보 ====================
 
   /**
-   * 사전 신청자 목록 조회
+   * 모집 상세 정보 조회
+   */
+  async getRecruitmentDetail(generation: number): Promise<Recruitment | null> {
+    const docRef = doc(db, COLLECTIONS.RECRUITMENTS, String(generation));
+    const snapshot = await getDoc(docRef);
+    if (!snapshot.exists()) return null;
+
+    const data = snapshot.data();
+
+    // OT 일정 가져오기
+    const otSchedulesRef = collection(db, getSubCollection.otSchedules(generation));
+    const otQuery = query(otSchedulesRef, orderBy("round", "asc"));
+    const otSnapshot = await getDocs(otQuery);
+    const otSchedules = otSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as OTSchedule[];
+
+    return {
+      id: snapshot.id,
+      ...data,
+      otSchedules,
+    } as Recruitment;
+  }
+
+  /**
+   * 모집 상세 정보 저장/수정
+   */
+  async saveRecruitmentDetail(
+    generation: number,
+    data: {
+      // 섹션 1: 신입회원 가입 안내
+      deadlineAt?: Date;
+      applyGuideMd?: string;
+      // 섹션 2: OT 안내
+      otLocationMd?: string;
+      otGuideMd?: string;
+      // 섹션 3: 등록 입금 안내
+      feeAmount?: number;
+      feeDetailMd?: string;
+      bankAccountText?: string;
+      feeDescriptionMd?: string;
+      // 섹션 4: 정기 모임 안내
+      firstMeetingAt?: Date;
+      regularMeetingsMd?: string;
+      activityScheduleMd?: string;
+      meetingGuideMd?: string;
+      // 기타
+      contactPhone?: string;
+      contactEmail?: string;
+    }
+  ): Promise<void> {
+    const docRef = doc(db, COLLECTIONS.RECRUITMENTS, String(generation));
+
+    const updateData: Record<string, unknown> = {
+      generation,
+      updatedAt: serverTimestamp(),
+    };
+
+    // 섹션 1: 신입회원 가입 안내
+    if (data.deadlineAt) {
+      updateData.deadlineAt = Timestamp.fromDate(data.deadlineAt);
+    }
+    if (data.applyGuideMd !== undefined) {
+      updateData.applyGuideMd = data.applyGuideMd;
+    }
+
+    // 섹션 2: OT 안내
+    if (data.otLocationMd !== undefined) {
+      updateData.otLocationMd = data.otLocationMd;
+    }
+    if (data.otGuideMd !== undefined) {
+      updateData.otGuideMd = data.otGuideMd;
+    }
+
+    // 섹션 3: 등록 입금 안내
+    if (data.feeAmount !== undefined) {
+      updateData.feeAmount = data.feeAmount;
+    }
+    if (data.feeDetailMd !== undefined) {
+      updateData.feeDetailMd = data.feeDetailMd;
+    }
+    if (data.bankAccountText !== undefined) {
+      updateData.bankAccountText = data.bankAccountText;
+    }
+    if (data.feeDescriptionMd !== undefined) {
+      updateData.feeDescriptionMd = data.feeDescriptionMd;
+    }
+
+    // 섹션 4: 정기 모임 안내
+    if (data.firstMeetingAt) {
+      updateData.firstMeetingAt = Timestamp.fromDate(data.firstMeetingAt);
+    }
+    if (data.regularMeetingsMd !== undefined) {
+      updateData.regularMeetingsMd = data.regularMeetingsMd;
+    }
+    if (data.activityScheduleMd !== undefined) {
+      updateData.activityScheduleMd = data.activityScheduleMd;
+    }
+    if (data.meetingGuideMd !== undefined) {
+      updateData.meetingGuideMd = data.meetingGuideMd;
+    }
+
+    // 기타
+    if (data.contactPhone !== undefined) {
+      updateData.contactPhone = data.contactPhone;
+    }
+    if (data.contactEmail !== undefined) {
+      updateData.contactEmail = data.contactEmail;
+    }
+
+    await setDoc(docRef, updateData, { merge: true });
+  }
+
+  /**
+   * OT 일정 추가
+   */
+  async addOTSchedule(
+    generation: number,
+    data: {
+      round: number;
+      dateAt: Date;
+      timeText: string;
+      locationText: string;
+      note?: string;
+    }
+  ): Promise<string> {
+    const otSchedulesRef = collection(db, getSubCollection.otSchedules(generation));
+    const docRef = await addDoc(otSchedulesRef, {
+      round: data.round,
+      dateAt: Timestamp.fromDate(data.dateAt),
+      timeText: data.timeText,
+      locationText: data.locationText,
+      note: data.note || "",
+    });
+    return docRef.id;
+  }
+
+  /**
+   * OT 일정 수정
+   */
+  async updateOTSchedule(
+    generation: number,
+    otId: string,
+    data: {
+      round?: number;
+      dateAt?: Date;
+      timeText?: string;
+      locationText?: string;
+      note?: string;
+    }
+  ): Promise<void> {
+    const docRef = doc(db, getSubCollection.otSchedules(generation), otId);
+    const updateData: Record<string, unknown> = {};
+
+    if (data.round !== undefined) updateData.round = data.round;
+    if (data.dateAt) updateData.dateAt = Timestamp.fromDate(data.dateAt);
+    if (data.timeText !== undefined) updateData.timeText = data.timeText;
+    if (data.locationText !== undefined) updateData.locationText = data.locationText;
+    if (data.note !== undefined) updateData.note = data.note;
+
+    await updateDoc(docRef, updateData);
+  }
+
+  /**
+   * OT 일정 삭제
+   */
+  async deleteOTSchedule(generation: number, otId: string): Promise<void> {
+    const docRef = doc(db, getSubCollection.otSchedules(generation), otId);
+    await deleteDoc(docRef);
+  }
+
+  // ==================== 사전등록 신청 ====================
+
+  /**
+   * 사전등록 신청자 목록 조회
    */
   async getPreRegistrations(filters?: {
     generation?: number;
@@ -111,7 +286,7 @@ export class RecruitmentAdminRepository {
   }
 
   /**
-   * 기수별 사전 신청자 수 조회
+   * 기수별 사전등록 신청자 수 조회
    */
   async getPreRegistrationCountByGeneration(generation: number): Promise<number> {
     const q = query(
@@ -138,7 +313,7 @@ export class RecruitmentAdminRepository {
   }
 
   /**
-   * 사전 신청 추가 (순차적 seq 자동 할당)
+   * 사전등록 신청 추가 (순차적 seq 자동 할당)
    */
   async addPreRegistration(data: {
     generation: number;
@@ -159,7 +334,7 @@ export class RecruitmentAdminRepository {
   }
 
   /**
-   * 사전 신청 삭제
+   * 사전등록 신청 삭제
    */
   async deletePreRegistration(id: string): Promise<void> {
     const docRef = doc(this.preRegistrationsRef, id);
@@ -181,7 +356,7 @@ export class RecruitmentAdminRepository {
     return Array.from(generations).sort((a, b) => b - a);
   }
 
-  // ==================== 사전 신청 폼 필드 ====================
+  // ==================== 사전등록 신청 폼 필드 ====================
 
   /**
    * 폼 필드 목록 조회

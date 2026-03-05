@@ -42,7 +42,8 @@ export default function PreRegisterPage() {
 
         if (config) {
           setIsRecruitmentOpen(config.isRecruitmentOpen);
-          setNextGeneration(config.recruitmentGeneration + 1);
+          // 다음 기수 = 현재 기수 + 1
+          setNextGeneration((config.currentGeneration || 0) + 1);
 
           // 모집 중이면 recruit 페이지로 리다이렉트
           if (config.isRecruitmentOpen) {

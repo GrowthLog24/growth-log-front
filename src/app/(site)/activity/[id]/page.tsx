@@ -1,130 +1,49 @@
-import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Tag, ExternalLink } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { activityRepository } from "@/infrastructure/repositories/activityRepository";
-import { MarkdownContent } from "@/presentation/components/common";
-import { formatDate } from "@/shared/utils/date";
+import { redirect, notFound } from "next/navigation";
+import { collection, doc, getDoc } from "firebase/firestore";
+import { db, COLLECTIONS } from "@/infrastructure/firebase";
+import type { Activity } from "@/domain/entities";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const activity = await activityRepository.getActivityById(id);
-  if (!activity) {
-    return { title: "활동" };
-  }
-  return {
-    title: activity.title,
-    description: activity.summary,
-  };
-}
-
+/**
+ * 활동 상세 페이지
+ * 새 구조에서는 클릭 가능한 활동(프로젝트, 성장일지)은
+ * 외부 링크로 직접 이동하므로, 이 페이지 접근 시 리다이렉트 처리
+ */
 export default async function ActivityDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const activity = await activityRepository.getActivityById(id);
 
-  if (!activity) {
+  // Firestore에서 직접 활동 조회
+  const docRef = doc(collection(db, COLLECTIONS.ACTIVITIES), id);
+  const snapshot = await getDoc(docRef);
+
+  if (!snapshot.exists()) {
     notFound();
   }
 
-  const thumbnailUrl = activity.thumbnail?.url || activity.thumbnail?.storagePath || "";
+  const activity = { id: snapshot.id, ...snapshot.data() } as Activity;
 
-  return (
-    <article className="min-h-screen">
-      {/* Header */}
-      <section className="bg-gray-6 py-8">
-        <div className="container-custom">
-          <Button asChild variant="ghost" className="mb-6 -ml-4">
-            <Link href="/activity" className="flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              목록으로
-            </Link>
-          </Button>
+  // 카테고리별 리다이렉트 처리
+  switch (activity.category) {
+    case "project":
+      // 프로젝트는 PDF URL로 리다이렉트
+      if (activity.pdfUrl) {
+        redirect(activity.pdfUrl);
+      }
+      break;
+    case "growth-log":
+      // 성장일지는 블로그 URL로 리다이렉트
+      if (activity.blogUrl) {
+        redirect(activity.blogUrl);
+      }
+      break;
+    default:
+      // 클릭 불가능한 활동은 목록 페이지로 리다이렉트
+      redirect("/activity");
+  }
 
-          <Badge variant="outline" className="mb-4">
-            {activity.category}
-          </Badge>
-
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            {activity.title}
-          </h1>
-
-          <p className="mt-4 text-lg text-muted-foreground">
-            {activity.summary}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4 mt-6 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" />
-              {formatDate(activity.eventDateAt)}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Tag className="w-4 h-4" />
-              {activity.generation}기
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-4">
-            {activity.tags.map((tag) => (
-              <Badge key={tag} variant="secondary">
-                #{tag}
-              </Badge>
-            ))}
-          </div>
-
-          {activity.externalUrl && (
-            <div className="mt-4">
-              <Button asChild variant="outline" size="sm">
-                <a
-                  href={activity.externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  외부 링크 보기
-                </a>
-              </Button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Thumbnail */}
-      {thumbnailUrl && (
-        <section className="bg-gray-6 pb-8">
-          <div className="container-custom">
-            <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-4">
-              <Image
-                src={thumbnailUrl}
-                alt={activity.title}
-                fill
-                className="object-cover"
-                priority
-                unoptimized
-              />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Content */}
-      {activity.body?.contentMd && (
-        <section className="section-padding bg-white">
-          <div className="container-custom max-w-3xl">
-            <MarkdownContent
-              content={activity.body.contentMd}
-              className="prose-lg"
-            />
-          </div>
-        </section>
-      )}
-    </article>
-  );
+  // 외부 URL이 없는 경우 목록 페이지로 리다이렉트
+  redirect("/activity");
 }

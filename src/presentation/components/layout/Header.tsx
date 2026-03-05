@@ -13,19 +13,21 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [ctaText, setCtaText] = useState<string>("");
   const [ctaLink, setCtaLink] = useState<string>("/recruit");
+  const [isRecruitmentOpen, setIsRecruitmentOpen] = useState(false);
 
   useEffect(() => {
     const fetchConfig = async () => {
       try {
         const config = await siteConfigRepository.getSiteConfig();
         if (config) {
+          setIsRecruitmentOpen(config.isRecruitmentOpen);
           if (config.isRecruitmentOpen) {
-            // 모집 중: "{기수}기 지원하기"
+            // 모집 중: "{모집기수}기 지원하기"
             setCtaText(`${config.recruitmentGeneration}기 지원하기`);
             setCtaLink("/recruit");
           } else {
-            // 모집 종료: "{마지막모집기수+1}기 사전 등록하기"
-            const nextGeneration = config.recruitmentGeneration + 1;
+            // 모집 종료: "{현재기수+1}기 사전 등록하기"
+            const nextGeneration = (config.currentGeneration || 0) + 1;
             setCtaText(`${nextGeneration}기 사전 등록하기`);
             setCtaLink("/pre-register");
           }
@@ -70,7 +72,7 @@ export function Header() {
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-4">
           {ctaText && (
-            <Button asChild>
+            <Button asChild variant={isRecruitmentOpen ? "default" : "outline"}>
               <Link href={ctaLink}>{ctaText}</Link>
             </Button>
           )}
@@ -99,7 +101,7 @@ export function Header() {
               ))}
               {ctaText && (
                 <div className="mt-4 pt-4 border-t">
-                  <Button asChild className="w-full">
+                  <Button asChild variant={isRecruitmentOpen ? "default" : "outline"} className="w-full">
                     <Link href={ctaLink} onClick={() => setIsOpen(false)}>
                       {ctaText}
                     </Link>

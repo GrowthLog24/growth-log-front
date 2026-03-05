@@ -1,1 +1,1 @@
-export { FAQSection } from "./FAQSection";
+export { FAQSection, type FAQCategory, type FAQItem } from "./FAQSection";

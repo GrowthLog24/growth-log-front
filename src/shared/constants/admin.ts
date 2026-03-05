@@ -6,6 +6,8 @@ import {
   Users,
   FolderKanban,
   MessageSquare,
+  CalendarDays,
+  Rss,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,12 +32,17 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: "모집/사전 신청",
+    title: "모집/사전등록 신청",
     href: "/admin/recruitment",
     icon: Users,
   },
   {
-    title: "활동 관리",
+    title: "커뮤니티 블로그",
+    href: "/admin/community-blogs",
+    icon: Rss,
+  },
+  {
+    title: "활동 기록",
     href: "/admin/activities",
     icon: FolderKanban,
   },
@@ -55,6 +62,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: HelpCircle,
   },
   {
+    title: "월별 일정",
+    href: "/admin/schedules",
+    icon: CalendarDays,
+  },
+  {
     title: "사이트 정보 설정",
     href: "/admin/settings",
     icon: Settings,
@@ -66,10 +78,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
  */
 export const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin": "대시보드",
-  "/admin/recruitment": "모집/사전 신청",
-  "/admin/activities": "활동 관리",
+  "/admin/recruitment": "모집/사전등록 신청",
+  "/admin/community-blogs": "커뮤니티 블로그",
+  "/admin/activities": "활동 기록",
   "/admin/testimonials": "멤버 후기",
   "/admin/notices": "공지사항",
   "/admin/faqs": "FAQ",
+  "/admin/schedules": "월별 일정",
   "/admin/settings": "사이트 정보 설정",
 };

@@ -1,14 +1,26 @@
 /**
- * 활동 카테고리
+ * 활동 카테고리 (영문 slug)
  */
 export const ACTIVITY_CATEGORIES = [
-  "프로젝트",
-  "학사 스터디",
-  "성장일지",
-  "전문가 특강",
-  "그로스톡",
-  "클럽 활동",
+  "project",
+  "study",
+  "growth-log",
+  "lecture",
+  "growth-talk",
+  "club",
 ] as const;
+
+/**
+ * 활동 카테고리 영문 서브타이틀
+ */
+export const ACTIVITY_CATEGORY_SUBTITLES: Record<string, string> = {
+  project: "TEAM PROJECT",
+  study: "COMPUTER SCIENCE STUDY",
+  "growth-log": "TECH BLOG CURATION",
+  lecture: "GROWTH PRIME",
+  "growth-talk": "GROWTH TALK",
+  club: "GROWTH CLUB",
+};
 
 /**
  * FAQ 카테고리

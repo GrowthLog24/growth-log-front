@@ -5,7 +5,6 @@ import type {
   FAQ,
   Recruitment,
   Activity,
-  ActivityDetail,
   Testimonial,
   PreRegistrationConfig,
   PreRegistration,
@@ -60,7 +59,7 @@ export interface IActivityRepository {
     category?: string;
     startAfter?: string;
   }): Promise<Activity[]>;
-  getActivityById(id: string): Promise<ActivityDetail | null>;
+  getActivityById(id: string): Promise<Activity | null>;
   getActivitiesByCategory(category: string): Promise<Activity[]>;
   getFeaturedActivities(): Promise<Activity[]>;
 }

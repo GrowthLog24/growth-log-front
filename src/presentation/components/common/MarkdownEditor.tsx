@@ -53,6 +53,8 @@ export function MarkdownEditor({
       }),
       Markdown.configure({
         html: false,
+        breaks: true,
+        linkify: true,
         transformPastedText: true,
         transformCopiedText: true,
       }),
@@ -65,7 +67,10 @@ export function MarkdownEditor({
       },
     },
     onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
       const markdown = (editor.storage as any).markdown.getMarkdown();
+      console.log("📝 HTML 구조:", html);
+      console.log("📝 저장되는 마크다운:", JSON.stringify(markdown));
       onChange(markdown);
     },
   });
@@ -73,6 +78,7 @@ export function MarkdownEditor({
   // 외부에서 value가 변경되면 에디터 내용 업데이트
   useEffect(() => {
     if (editor && value !== (editor.storage as any).markdown.getMarkdown()) {
+      console.log("📖 불러오는 마크다운:", JSON.stringify(value));
       editor.commands.setContent(value);
     }
   }, [value, editor]);

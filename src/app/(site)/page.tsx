@@ -1,7 +1,7 @@
 import {
   HeroWrapper,
   IntroSection,
-  ActivityPreviewWrapper,
+  CommunityBlogWrapper,
   MemberTestimonialSection,
   RoleMarqueeSection,
 } from "@/presentation/components/sections";
@@ -11,7 +11,7 @@ export default function Home() {
     <>
       <HeroWrapper />
       <IntroSection />
-      <ActivityPreviewWrapper />
+      <CommunityBlogWrapper />
       <MemberTestimonialSection />
       <RoleMarqueeSection />
     </>

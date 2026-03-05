@@ -150,7 +150,7 @@ function SortableFieldItem({ field, onEdit, onDelete }: SortableFieldItemProps) 
 }
 
 /**
- * 사전 신청 폼 관리 페이지
+ * 사전등록 신청 폼 관리 페이지
  */
 export default function PreRegistrationFormPage() {
   const [fields, setFields] = useState<PreRegistrationField[]>([]);
@@ -341,9 +341,9 @@ export default function PreRegistrationFormPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-xl font-semibold">사전 신청 폼 관리</h1>
+            <h1 className="text-xl font-semibold">사전등록 신청 폼 관리</h1>
             <p className="text-sm text-muted-foreground">
-              사전 신청 시 수집할 정보를 설정합니다.
+              사전등록 신청 시 수집할 정보를 설정합니다.
             </p>
           </div>
         </div>
@@ -423,7 +423,7 @@ export default function PreRegistrationFormPage() {
               {editingField ? "필드 수정" : "필드 추가"}
             </DialogTitle>
             <DialogDescription>
-              사전 신청 폼에 표시될 필드 정보를 입력하세요.
+              사전등록 신청 폼에 표시될 필드 정보를 입력하세요.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

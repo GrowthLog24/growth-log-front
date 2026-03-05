@@ -33,6 +33,12 @@ export interface SiteConfig {
   recruitmentGeneration: number;
   /** 구글폼 링크 */
   recruitmentFormLink: string;
+  /** 그로스로그 주소 (지도용) */
+  address?: string;
+  /** 상세 주소 */
+  addressDetail?: string;
+  /** 오시는 길 안내 텍스트 */
+  directionsText?: string;
   updatedAt: Timestamp;
 }
 
@@ -116,80 +122,186 @@ export interface Recruitment {
   id: string;
   generation: number;
   status: RecruitmentStatus;
-  applyLink: string;
-  deadlineAt: Timestamp;
+  updatedAt: Timestamp;
+
+  // ===== 섹션 1: 신입회원 가입 안내 =====
+  applyLink: string;              // 가입 신청서 링크
+  deadlineAt: Timestamp;          // 마감 일시
+  applyGuideMd: string;           // 가입 안내 문구 (메시지 템플릿, 카카오 채널 안내 등)
+
+  // ===== 섹션 2: OT 안내 =====
+  otSchedules?: OTSchedule[];     // OT 일정 목록
+  otLocationMd: string;           // OT 장소 안내 문구
+  otGuideMd: string;              // OT 참석/가입 안내 문구
+
+  // ===== 섹션 3: 등록 입금 안내 =====
+  feeAmount: number;              // 총 납부 금액
+  feeDetailMd: string;            // 회비 상세 (회비, 보증금, 가입비 내역)
+  bankAccountText: string;        // 납부 계좌
+  feeDescriptionMd: string;       // 회비 안내 문구 (투명 공개, 보증금 환불 등)
+
+  // ===== 섹션 4: 정기 모임 안내 =====
+  firstMeetingAt?: Timestamp;     // 첫 정기 모임 일시
+  regularMeetingsMd: string;      // 정기 모임 일정 안내
+  activityScheduleMd: string;     // 월별 활동 일정
+  meetingGuideMd: string;         // 정기 모임 안내 문구
+
+  // ===== 기타 =====
   contactPhone: string;
   contactEmail: string;
-  introMd: string;
-  feeAmount: number;
-  feeDescriptionMd: string;
-  bankAccountText: string;
-  regularMeetingsMd: string;
-  updatedAt: Timestamp;
-  otSchedules?: OTSchedule[];
+  introMd: string;                // 인트로 문구 (기존)
 }
 
 /**
  * 활동 카테고리
  */
 export type ActivityCategory =
-  | "프로젝트"
-  | "학사 스터디"
-  | "성장일지"
-  | "전문가 특강"
-  | "그로스톡"
-  | "클럽 활동";
+  | "project"      // 프로젝트
+  | "study"        // 학사 스터디
+  | "growth-log"   // 성장일지
+  | "lecture"      // 전문가 특강
+  | "growth-talk"  // 그로스톡
+  | "club";        // 클럽 활동
 
 /**
- * 썸네일 정보
+ * 활동 카테고리 라벨
  */
-export interface Thumbnail {
-  storagePath: string;
-  url?: string;
-}
+export const ACTIVITY_CATEGORY_LABELS: Record<ActivityCategory, string> = {
+  project: "프로젝트",
+  study: "학사 스터디",
+  "growth-log": "성장일지",
+  lecture: "전문가 특강",
+  "growth-talk": "그로스톡",
+  club: "클럽 활동",
+};
 
 /**
- * 외부 링크 플랫폼
+ * 활동 공통 필드
  */
-export type ExternalPlatform = "blog" | "instagram" | "youtube" | "notion" | "other";
-
-/**
- * 활동
- * Collection: activities/{activityId}
- */
-export interface Activity {
+interface ActivityBase {
   id: string;
   category: ActivityCategory;
-  title: string;
-  summary: string;
-  thumbnail: Thumbnail;
-  tags: string[];
+  thumbnailUrl: string;
   generation: number;
-  eventDateAt: Timestamp;
-  publishedAt: Timestamp;
-  isFeatured: boolean;
-  /** 외부 링크 URL (블로그, 인스타그램 등) */
-  externalUrl?: string;
-  /** 외부 링크 플랫폼 유형 */
-  externalPlatform?: ExternalPlatform;
+  order: number;
+  isActive: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 /**
- * 활동 본문
- * SubCollection: activities/{activityId}/body/main
+ * 프로젝트
+ * - 클릭 시 PDF Viewer 표시
  */
-export interface ActivityBody {
-  contentMd: string;
-  updatedAt: Timestamp;
+export interface ProjectActivity extends ActivityBase {
+  category: "project";
+  /** 프로젝트명 */
+  projectName: string;
+  /** 플랫폼 (Web, App, Embedded, Game 등) */
+  platform: string;
+  /** 프로젝트장명 */
+  leaderName: string;
+  /** 간단한 한줄 프로젝트 설명 */
+  description: string;
+  /** 발표 자료 PDF URL */
+  pdfUrl: string;
 }
 
 /**
- * 활동 상세 (활동 + 본문)
+ * 학사 스터디
+ * - 클릭 불가
  */
-export interface ActivityDetail extends Activity {
-  body: ActivityBody;
+export interface StudyActivity extends ActivityBase {
+  category: "study";
+  /** 과목명 */
+  subjectName: string;
+  /** 학년 및 학기 */
+  semester: string;
+  /** 스터디장명 */
+  leaderName: string;
+}
+
+/**
+ * 성장일지
+ * - 클릭 시 블로그 이동
+ */
+export interface GrowthLogActivity extends ActivityBase {
+  category: "growth-log";
+  /** 글 제목 */
+  title: string;
+  /** 구분 (Backend, Frontend 등) */
+  field: string;
+  /** 작성자명 */
+  authorName: string;
+  /** 블로그 글 일부 (최대 200자) */
+  excerpt: string;
+  /** 블로그 글 URL */
+  blogUrl: string;
+}
+
+/**
+ * 전문가 특강
+ * - 클릭 불가
+ */
+export interface LectureActivity extends ActivityBase {
+  category: "lecture";
+  /** 특강명 */
+  lectureName: string;
+  /** 연사 소속 */
+  speakerOrganization: string;
+  /** 연사명 및 직함 */
+  speakerTitle: string;
+  /** 특강 일자 */
+  lectureDate: Timestamp;
+}
+
+/**
+ * 그로스톡
+ * - 클릭 불가
+ */
+export interface GrowthTalkActivity extends ActivityBase {
+  category: "growth-talk";
+  /** 제목 */
+  title: string;
+  /** 구분 (개발, 커리어, 학사) */
+  field: string;
+  /** 진행자명 */
+  hostName: string;
+  /** 날짜 */
+  eventDate: Timestamp;
+}
+
+/**
+ * 클럽 활동
+ * - 클릭 불가
+ */
+export interface ClubActivity extends ActivityBase {
+  category: "club";
+  /** 클럽명 */
+  clubName: string;
+  /** 클럽장명 */
+  leaderName: string;
+  /** 클럽 소개글 (100자 이내) */
+  description: string;
+}
+
+/**
+ * 활동 통합 타입
+ * Collection: activities/{activityId}
+ */
+export type Activity =
+  | ProjectActivity
+  | StudyActivity
+  | GrowthLogActivity
+  | LectureActivity
+  | GrowthTalkActivity
+  | ClubActivity;
+
+/**
+ * 클릭 가능한 활동인지 확인
+ */
+export function isClickableActivity(activity: Activity): boolean {
+  return activity.category === "project" || activity.category === "growth-log";
 }
 
 /**
@@ -299,4 +411,48 @@ export interface PreRegistration {
   formData: Record<string, string>;
   /** 제출 시간 */
   submittedAt: Timestamp;
+}
+
+/**
+ * 월별 일정
+ * Collection: monthlySchedules/{phase}
+ */
+export interface MonthlySchedule {
+  /** 개월차 (0~6), 7은 정기 프로그램 */
+  phase: number;
+  /** 해당 월 표시 (예: "2월", "4월, 5월", "All") - 고정값 */
+  months: string;
+  /** 활동 내용 리스트 */
+  activities: string[];
+}
+
+/**
+ * 커뮤니티 블로그 플랫폼 타입
+ */
+export type CommunityBlogPlatform = "tistory" | "instagram" | "youtube";
+
+/**
+ * 커뮤니티 블로그
+ * Collection: communityBlogs/{blogId}
+ */
+export interface CommunityBlog {
+  id: string;
+  /** 제목 */
+  title: string;
+  /** 외부 URL (티스토리, 인스타그램, 유튜브) */
+  url: string;
+  /** 플랫폼 타입 */
+  platform: CommunityBlogPlatform;
+  /** 썸네일 이미지 URL */
+  thumbnailUrl: string;
+  /** 기수 */
+  generation: number;
+  /** 게시 날짜 */
+  publishedAt: Timestamp;
+  /** 노출 순서 */
+  order: number;
+  /** 활성화 여부 */
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }

@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "testimonials",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isActive", "order": "ASCENDING" },
+        { "fieldPath": "order", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "faqs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isActive", "order": "ASCENDING" },
+        { "fieldPath": "order", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notices",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isPinned", "order": "DESCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

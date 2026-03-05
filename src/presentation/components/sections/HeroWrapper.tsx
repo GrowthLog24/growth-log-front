@@ -12,8 +12,14 @@ const FALLBACK_GENERATION = 1;
 export async function HeroWrapper() {
   const siteConfig = await siteConfigRepository.getSiteConfig();
 
-  const generation = siteConfig?.recruitmentGeneration ?? FALLBACK_GENERATION;
-  const recruitmentStatus: RecruitmentStatus = siteConfig?.isRecruitmentOpen ? "OPEN" : "CLOSED";
+  const isRecruiting = siteConfig?.isRecruitmentOpen ?? false;
+  const recruitmentStatus: RecruitmentStatus = isRecruiting ? "OPEN" : "CLOSED";
+
+  // 모집 중: recruitmentGeneration 사용 (예: 6기 지원하기)
+  // 모집 종료: currentGeneration 사용 (사전등록은 currentGeneration + 1)
+  const generation = isRecruiting
+    ? (siteConfig?.recruitmentGeneration ?? FALLBACK_GENERATION)
+    : (siteConfig?.currentGeneration ?? FALLBACK_GENERATION);
 
   return (
     <HeroSection

@@ -1,6 +1,7 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 
 interface MarkdownContentProps {
   content: string;
@@ -14,6 +15,7 @@ export function MarkdownContent({ content, className = "" }: MarkdownContentProp
   return (
     <div className={`prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mt-4 prose-headings:mb-2 ${className}`}>
       <ReactMarkdown
+        remarkPlugins={[remarkBreaks]}
         components={{
           // 링크를 새 탭에서 열기
           a: ({ href, children }) => (

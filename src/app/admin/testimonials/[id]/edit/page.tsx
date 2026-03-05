@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { testimonialAdminRepository } from "@/infrastructure/repositories/admin/testimonialAdminRepository";
+import { uploadFile, generateStoragePath } from "@/infrastructure/firebase";
 
 /**
  * 멤버 후기 수정 페이지
@@ -25,18 +27,46 @@ export default function EditTestimonialPage() {
   const router = useRouter();
   const params = useParams();
   const testimonialId = params.id as string;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [existingAvatarPath, setExistingAvatarPath] = useState<string | null>(null);
   const [form, setForm] = useState({
     category: "",
     name: "",
-    generation: 1,
+    generation: "",
     content: "",
-    avatarPath: "",
     order: 1,
     isActive: true,
   });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("이미지 파일만 업로드할 수 있습니다.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("파일 크기는 5MB 이하여야 합니다.");
+        return;
+      }
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setExistingAvatarPath(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     const fetchTestimonial = async () => {
@@ -47,12 +77,15 @@ export default function EditTestimonialPage() {
           setForm({
             category: testimonial.category,
             name: testimonial.name,
-            generation: testimonial.generation,
+            generation: String(testimonial.generation),
             content: testimonial.content,
-            avatarPath: testimonial.avatarPath || "",
             order: testimonial.order,
             isActive: testimonial.isActive,
           });
+          if (testimonial.avatarPath) {
+            setExistingAvatarPath(testimonial.avatarPath);
+            setAvatarPreview(testimonial.avatarPath);
+          }
         } else {
           toast.error("멤버 후기를 찾을 수 없습니다.");
           router.push("/admin/testimonials");
@@ -86,12 +119,20 @@ export default function EditTestimonialPage() {
 
     setSaving(true);
     try {
+      let avatarPath: string | undefined = existingAvatarPath || undefined;
+
+      // 새 프로필 이미지가 있으면 업로드
+      if (avatarFile) {
+        const storagePath = generateStoragePath("testimonials", avatarFile.name);
+        avatarPath = await uploadFile(avatarFile, storagePath);
+      }
+
       await testimonialAdminRepository.updateTestimonial(testimonialId, {
         category: form.category,
         name: form.name,
-        generation: form.generation,
+        generation: parseInt(form.generation) || 1,
         content: form.content,
-        ...(form.avatarPath ? { avatarPath: form.avatarPath } : {}),
+        ...(avatarPath ? { avatarPath } : {}),
         order: form.order,
         isActive: form.isActive,
       });
@@ -151,15 +192,24 @@ export default function EditTestimonialPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="generation">기수</Label>
-                <Input
-                  id="generation"
-                  type="number"
-                  min={1}
-                  value={form.generation}
-                  onChange={(e) =>
-                    setForm({ ...form, generation: Number(e.target.value) })
-                  }
-                />
+                <div className="relative">
+                  <Input
+                    id="generation"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={form.generation}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "");
+                      setForm({ ...form, generation: value });
+                    }}
+                    className="pr-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                    기
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -175,28 +225,71 @@ export default function EditTestimonialPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="avatarPath">프로필 이미지 경로</Label>
-              <Input
-                id="avatarPath"
-                value={form.avatarPath}
-                onChange={(e) =>
-                  setForm({ ...form, avatarPath: e.target.value })
-                }
-                placeholder="Storage 경로 또는 URL (선택)"
-              />
+              <Label>프로필 이미지</Label>
+              <div className="flex items-center gap-4">
+                {avatarPreview ? (
+                  <div className="relative group">
+                    <Image
+                      src={avatarPreview}
+                      alt="프로필 미리보기"
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 rounded-full object-cover border"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      className="absolute -top-1 -right-1 p-1 bg-background border border-border rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-6"
+                    >
+                      <X className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gray-6 flex items-center justify-center border border-dashed">
+                    <span className="text-xs text-muted-foreground">없음</span>
+                  </div>
+                )}
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    이미지 선택
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    JPG, PNG (최대 5MB)
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="order">노출 순서</Label>
-              <Input
-                id="order"
-                type="number"
-                min={1}
-                value={form.order}
-                onChange={(e) =>
-                  setForm({ ...form, order: Number(e.target.value) })
-                }
-              />
+              <div className="relative">
+                <Input
+                  id="order"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={form.order || ""}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    setForm({ ...form, order: parseInt(value) || 0 });
+                  }}
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-2">

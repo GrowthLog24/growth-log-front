@@ -10,19 +10,20 @@ import {
   Users,
   FileText,
   Megaphone,
-  ClipboardList,
   TrendingUp,
-  Activity,
   HelpCircle,
+  Rss,
+  FolderKanban,
 } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { recruitmentAdminRepository } from "@/infrastructure/repositories/admin/recruitmentAdminRepository";
+import { communityBlogAdminRepository } from "@/infrastructure/repositories/admin/communityBlogAdminRepository";
 import { activityAdminRepository } from "@/infrastructure/repositories/admin/activityAdminRepository";
 import { noticeRepository } from "@/infrastructure/repositories/noticeRepository";
 import { faqAdminRepository } from "@/infrastructure/repositories/admin/faqAdminRepository";
 import { formatRelativeTime } from "@/shared/utils/date";
-import type { Notice, Activity as ActivityType } from "@/domain/entities";
+import type { Notice, CommunityBlog } from "@/domain/entities";
 
 interface StatCardProps {
   title: string;
@@ -58,7 +59,7 @@ function StatCard({ title, value, description, icon, href }: StatCardProps) {
 interface RecentItem {
   id: string;
   title: string;
-  type: "notice" | "activity";
+  type: "notice" | "blog";
   updatedAt: Date;
   href: string;
 }
@@ -68,7 +69,7 @@ interface RecentItem {
  */
 function buildRecentItems(
   notices: Notice[],
-  activities: ActivityType[]
+  blogs: CommunityBlog[]
 ): RecentItem[] {
   const items: RecentItem[] = [
     ...notices.slice(0, 5).map((n) => ({
@@ -78,12 +79,12 @@ function buildRecentItems(
       updatedAt: n.updatedAt?.toDate?.() || new Date(),
       href: `/admin/notices/${n.id}/edit`,
     })),
-    ...activities.slice(0, 5).map((a) => ({
-      id: a.id,
-      title: a.title,
-      type: "activity" as const,
-      updatedAt: a.updatedAt?.toDate?.() || new Date(),
-      href: `/admin/activities/${a.id}/edit`,
+    ...blogs.slice(0, 5).map((b) => ({
+      id: b.id,
+      title: b.title,
+      type: "blog" as const,
+      updatedAt: b.updatedAt?.toDate?.() || new Date(),
+      href: `/admin/community-blogs`,
     })),
   ];
 
@@ -97,38 +98,33 @@ function buildRecentItems(
  */
 async function getDashboardData() {
   try {
-    const [preRegistrations, activities, notices, faqs, recruitmentSettings] = await Promise.all([
+    const [preRegistrations, communityBlogs, activities, notices, faqs] = await Promise.all([
       recruitmentAdminRepository.getPreRegistrations(),
+      communityBlogAdminRepository.getAllBlogs(),
       activityAdminRepository.getAllActivities(),
       noticeRepository.getNotices(),
       faqAdminRepository.getAllFAQs(),
-      recruitmentAdminRepository.getRecruitmentSettings(),
     ]);
-
-    const currentGeneration = recruitmentSettings?.generation ?? recruitmentSettings?.currentGeneration;
-    const currentGenerationCount = currentGeneration
-      ? preRegistrations.filter((r) => r.generation === currentGeneration).length
-      : preRegistrations.length;
 
     return {
       stats: {
-        totalMembers: preRegistrations.length,
-        activeActivities: activities.length,
+        totalPreRegistrations: preRegistrations.length,
+        totalCommunityBlogs: communityBlogs.length,
+        totalActivities: activities.length,
         totalNotices: notices.length,
         totalFaqs: faqs.length,
-        preRegistrations: currentGenerationCount,
       },
-      recentItems: buildRecentItems(notices, activities),
+      recentItems: buildRecentItems(notices, communityBlogs),
     };
   } catch (error) {
     console.error("Failed to fetch dashboard data:", error);
     return {
       stats: {
-        totalMembers: 0,
-        activeActivities: 0,
+        totalPreRegistrations: 0,
+        totalCommunityBlogs: 0,
+        totalActivities: 0,
         totalNotices: 0,
         totalFaqs: 0,
-        preRegistrations: 0,
       },
       recentItems: [],
     };
@@ -159,17 +155,24 @@ export default async function AdminDashboardPage() {
       {/* 통계 카드 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatCard
-          title="총 멤버 수"
-          value={stats.totalMembers}
+          title="사전등록"
+          value={stats.totalPreRegistrations}
           description="사전등록 신청자 수"
           icon={<Users className="h-4 w-4" />}
           href="/admin/recruitment"
         />
         <StatCard
-          title="활동 게시물"
-          value={stats.activeActivities}
-          description="공개된 활동 수"
-          icon={<Activity className="h-4 w-4" />}
+          title="커뮤니티 블로그"
+          value={stats.totalCommunityBlogs}
+          description="등록된 게시물"
+          icon={<Rss className="h-4 w-4" />}
+          href="/admin/community-blogs"
+        />
+        <StatCard
+          title="활동 기록"
+          value={stats.totalActivities}
+          description="등록된 활동"
+          icon={<FolderKanban className="h-4 w-4" />}
           href="/admin/activities"
         />
         <StatCard
@@ -186,13 +189,6 @@ export default async function AdminDashboardPage() {
           icon={<HelpCircle className="h-4 w-4" />}
           href="/admin/faqs"
         />
-        <StatCard
-          title="사전등록"
-          value={stats.preRegistrations}
-          description="이번 기수 신청자"
-          icon={<ClipboardList className="h-4 w-4" />}
-          href="/admin/recruitment"
-        />
       </div>
 
       {/* 빠른 작업 */}
@@ -207,6 +203,13 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent className="grid gap-2">
             <Link
+              href="/admin/community-blogs"
+              className="flex items-center gap-2 rounded-lg bg-gray-6 p-3 hover:bg-gray-5 transition-colors"
+            >
+              <Rss className="h-4 w-4" />
+              커뮤니티 블로그 관리
+            </Link>
+            <Link
               href="/admin/notices/create"
               className="flex items-center gap-2 rounded-lg bg-gray-6 p-3 hover:bg-gray-5 transition-colors"
             >
@@ -214,17 +217,10 @@ export default async function AdminDashboardPage() {
               새 공지사항 작성
             </Link>
             <Link
-              href="/admin/activities/create"
-              className="flex items-center gap-2 rounded-lg bg-gray-6 p-3 hover:bg-gray-5 transition-colors"
-            >
-              <Activity className="h-4 w-4" />
-              새 활동 등록
-            </Link>
-            <Link
               href="/admin/recruitment"
               className="flex items-center gap-2 rounded-lg bg-gray-6 p-3 hover:bg-gray-5 transition-colors"
             >
-              <ClipboardList className="h-4 w-4" />
+              <Users className="h-4 w-4" />
               사전등록 목록 확인
             </Link>
           </CardContent>
@@ -253,7 +249,7 @@ export default async function AdminDashboardPage() {
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <Badge variant="outline" className="text-xs shrink-0">
-                        {item.type === "notice" ? "공지" : "활동"}
+                        {item.type === "notice" ? "공지" : "블로그"}
                       </Badge>
                       <span className="text-sm truncate">{item.title}</span>
                     </div>

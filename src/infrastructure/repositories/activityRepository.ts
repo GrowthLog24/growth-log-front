@@ -1,47 +1,30 @@
 import {
   collection,
-  doc,
-  getDoc,
   getDocs,
   query,
   where,
   orderBy,
-  limit as firestoreLimit,
-  startAfter,
 } from "firebase/firestore";
-import { db, COLLECTIONS, DOCUMENT_IDS, getSubCollection } from "@/infrastructure/firebase";
-import type { IActivityRepository } from "@/domain/repositories";
-import type { Activity, ActivityDetail, ActivityBody } from "@/domain/entities";
+import { db, COLLECTIONS } from "@/infrastructure/firebase";
+import type { Activity, ActivityCategory } from "@/domain/entities";
 
 /**
- * 활동 Repository Firestore 구현체
+ * 활동 Repository (읽기 전용)
+ * 홈페이지 및 Activity 페이지에서 사용
  */
-export class ActivityRepository implements IActivityRepository {
-  private activitiesRef = collection(db, COLLECTIONS.ACTIVITIES);
+export class ActivityRepository {
+  private collectionRef = collection(db, COLLECTIONS.ACTIVITIES);
 
-  async getActivities(options?: {
-    limit?: number;
-    category?: string;
-    startAfter?: string;
-  }): Promise<Activity[]> {
+  /**
+   * 전체 활동 목록 조회 (활성화된 것만)
+   */
+  async getAllActivities(): Promise<Activity[]> {
     try {
-      let q = query(this.activitiesRef, orderBy("publishedAt", "desc"));
-
-      if (options?.category) {
-        q = query(q, where("category", "==", options.category));
-      }
-
-      if (options?.limit) {
-        q = query(q, firestoreLimit(options.limit));
-      }
-
-      if (options?.startAfter) {
-        const lastDoc = await getDoc(doc(this.activitiesRef, options.startAfter));
-        if (lastDoc.exists()) {
-          q = query(q, startAfter(lastDoc));
-        }
-      }
-
+      const q = query(
+        this.collectionRef,
+        where("isActive", "==", true),
+        orderBy("order", "asc")
+      );
       const snapshot = await getDocs(q);
       return snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -53,49 +36,17 @@ export class ActivityRepository implements IActivityRepository {
     }
   }
 
-  async getActivityById(id: string): Promise<ActivityDetail | null> {
-    try {
-      const activityDoc = await getDoc(doc(this.activitiesRef, id));
-
-      if (!activityDoc.exists()) {
-        return null;
-      }
-
-      const activity = {
-        id: activityDoc.id,
-        ...activityDoc.data(),
-      } as Activity;
-
-      // 본문 가져오기
-      const bodyRef = doc(
-        db,
-        getSubCollection.activityBody(id),
-        DOCUMENT_IDS.BODY_MAIN
-      );
-      const bodyDoc = await getDoc(bodyRef);
-
-      const body: ActivityBody = bodyDoc.exists()
-        ? (bodyDoc.data() as ActivityBody)
-        : { contentMd: "", updatedAt: activity.updatedAt };
-
-      return {
-        ...activity,
-        body,
-      };
-    } catch (error) {
-      console.error("Failed to fetch activity by id:", error);
-      return null;
-    }
-  }
-
-  async getActivitiesByCategory(category: string): Promise<Activity[]> {
+  /**
+   * 카테고리별 활동 목록 조회 (활성화된 것만)
+   */
+  async getActivitiesByCategory(category: ActivityCategory): Promise<Activity[]> {
     try {
       const q = query(
-        this.activitiesRef,
+        this.collectionRef,
         where("category", "==", category),
-        orderBy("publishedAt", "desc")
+        where("isActive", "==", true),
+        orderBy("order", "asc")
       );
-
       const snapshot = await getDocs(q);
       return snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -103,26 +54,6 @@ export class ActivityRepository implements IActivityRepository {
       })) as Activity[];
     } catch (error) {
       console.error("Failed to fetch activities by category:", error);
-      return [];
-    }
-  }
-
-  async getFeaturedActivities(): Promise<Activity[]> {
-    try {
-      const q = query(
-        this.activitiesRef,
-        where("isFeatured", "==", true),
-        orderBy("publishedAt", "desc"),
-        firestoreLimit(9)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Activity[];
-    } catch (error) {
-      console.error("Failed to fetch featured activities:", error);
       return [];
     }
   }

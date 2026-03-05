@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, MapPin, Phone } from "lucide-react";
-import { FAQSection } from "@/presentation/components/faq";
+import { ChevronRight, MapPin, MessageCircle } from "lucide-react";
+import { FAQSection, type FAQCategory, type FAQItem } from "@/presentation/components/faq";
+import { GoogleMap, MarkdownContent } from "@/presentation/components/common";
 import { faqRepository } from "@/infrastructure/repositories/faqRepository";
 import { faqCategoryRepository } from "@/infrastructure/repositories/faqCategoryRepository";
 import { noticeRepository } from "@/infrastructure/repositories/noticeRepository";
+import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { formatDate } from "@/shared/utils/date";
-import type { FAQ, FAQCategoryItem } from "@/domain/entities";
 
 export const metadata: Metadata = {
   title: "Support",
@@ -14,39 +15,55 @@ export const metadata: Metadata = {
 };
 
 /**
- * FAQ 데이터를 카테고리별로 그룹화
+ * FAQ 데이터를 카테고리별로 그룹화 (직렬화 가능한 형태로 변환)
  */
 function groupFAQsByCategory(
-  faqs: FAQ[],
-  categories: FAQCategoryItem[]
-): Record<string, FAQ[]> {
-  const grouped: Record<string, FAQ[]> = {};
+  faqs: Awaited<ReturnType<typeof faqRepository.getFAQs>>,
+  categories: Awaited<ReturnType<typeof faqCategoryRepository.getCategories>>
+): { serializedCategories: FAQCategory[]; groupedFAQs: Record<string, FAQItem[]> } {
+  // 카테고리 직렬화 (Timestamp 제거)
+  const serializedCategories: FAQCategory[] = categories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    order: cat.order,
+  }));
+
+  // FAQ를 카테고리별로 그룹화 및 직렬화
+  const groupedFAQs: Record<string, FAQItem[]> = {};
 
   // 카테고리 순서대로 초기화
-  categories.forEach((cat) => {
-    grouped[cat.name] = [];
+  serializedCategories.forEach((cat) => {
+    groupedFAQs[cat.name] = [];
   });
 
-  // FAQ를 해당 카테고리에 추가
+  // FAQ를 해당 카테고리에 추가 (직렬화)
   faqs.forEach((faq) => {
-    if (grouped[faq.category]) {
-      grouped[faq.category].push(faq);
+    if (groupedFAQs[faq.category]) {
+      groupedFAQs[faq.category].push({
+        id: faq.id,
+        category: faq.category,
+        question: faq.question,
+        answerMd: faq.answerMd,
+        order: faq.order,
+        isActive: faq.isActive,
+      });
     }
   });
 
-  return grouped;
+  return { serializedCategories, groupedFAQs };
 }
 
 export default async function SupportPage() {
   // Firestore에서 데이터 가져오기
-  const [faqs, categories, notices] = await Promise.all([
+  const [faqs, categories, notices, siteConfig] = await Promise.all([
     faqRepository.getFAQs(),
     faqCategoryRepository.getCategories(),
     noticeRepository.getNotices(),
+    siteConfigRepository.getSiteConfig(),
   ]);
 
-  // 카테고리별로 FAQ 그룹화
-  const groupedFAQs = groupFAQsByCategory(faqs, categories);
+  // 카테고리별로 FAQ 그룹화 및 직렬화
+  const { serializedCategories, groupedFAQs } = groupFAQsByCategory(faqs, categories);
 
   return (
     <>
@@ -96,7 +113,7 @@ export default async function SupportPage() {
             <h2 className="text-3xl font-bold text-foreground mt-1">자주 묻는 질문</h2>
           </div>
 
-          <FAQSection categories={categories} groupedFAQs={groupedFAQs} />
+          <FAQSection categories={serializedCategories} groupedFAQs={groupedFAQs} />
         </div>
       </section>
 
@@ -108,12 +125,15 @@ export default async function SupportPage() {
             <h2 className="text-3xl font-bold text-foreground mt-1">찾아 오시는 길</h2>
           </div>
 
-          {/* Map Placeholder */}
-          <div className="aspect-[21/9] bg-gray-4 rounded-xl mb-8">
-            {/* 실제 지도 컴포넌트 또는 iframe 삽입 */}
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              지도 영역
-            </div>
+          {/* Map */}
+          <div className="aspect-[21/9] bg-gray-4 rounded-xl mb-8 overflow-hidden">
+            {siteConfig?.address ? (
+              <GoogleMap address={siteConfig.address} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                주소가 설정되지 않았습니다.
+              </div>
+            )}
           </div>
 
           {/* Location Info */}
@@ -123,20 +143,47 @@ export default async function SupportPage() {
                 <MapPin className="w-5 h-5 text-primary" />
                 오시는 길
               </h3>
-              <p className="text-muted-foreground">
-                서울특별시 마포구 공덕동 123-45<br />
-                공덕역 6번출구에서 도보 5분 → 스터디 카페
-              </p>
+              {siteConfig?.address && (
+                <p className="text-foreground font-medium mb-2">
+                  {siteConfig.address}
+                  {siteConfig.addressDetail && ` ${siteConfig.addressDetail}`}
+                </p>
+              )}
+              {siteConfig?.directionsText && (
+                <MarkdownContent
+                  content={siteConfig.directionsText}
+                  className="text-muted-foreground"
+                />
+              )}
+              {!siteConfig?.address && !siteConfig?.directionsText && (
+                <p className="text-muted-foreground">
+                  오시는 길 정보가 설정되지 않았습니다.
+                </p>
+              )}
             </div>
             <div>
               <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Phone className="w-5 h-5 text-primary" />
+                <MessageCircle className="w-5 h-5 text-primary" />
                 문의하기
               </h3>
-              <p className="text-muted-foreground">
-                카카오톡 채널: @그로스로그<br />
-                문의가 있을 경우 카카오톡으로 문의 바랍니다. → 오픈 채팅
-              </p>
+              {siteConfig?.chatLink ? (
+                <p className="text-muted-foreground">
+                  문의가 있을 경우 아래 링크를 통해 문의 바랍니다.
+                  <br />
+                  <a
+                    href={siteConfig.chatLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline mt-2 inline-block"
+                  >
+                    오픈 채팅 바로가기 →
+                  </a>
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  문의 링크가 설정되지 않았습니다.
+                </p>
+              )}
             </div>
           </div>
         </div>

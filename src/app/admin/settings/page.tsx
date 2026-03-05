@@ -6,6 +6,7 @@ import { Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -13,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AddressSearch, MarkdownEditor } from "@/presentation/components/common";
 import { siteConfigRepository, statsRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { siteConfigAdminRepository } from "@/infrastructure/repositories/admin/siteConfigAdminRepository";
 import { statsAdminRepository } from "@/infrastructure/repositories/admin/statsAdminRepository";
@@ -47,6 +49,9 @@ export default function AdminSettingsPage() {
             isRecruitmentOpen: false,
             recruitmentGeneration: 1,
             recruitmentFormLink: "",
+            address: "",
+            addressDetail: "",
+            directionsText: "",
           });
         }
 
@@ -79,9 +84,16 @@ export default function AdminSettingsPage() {
 
     setSaving(true);
     try {
+      // 운영 기간과 누적 기수는 현재 기수에서 자동 계산
+      const calculatedStats = {
+        ...stats,
+        operatingYears: Math.floor(config.currentGeneration / 2),
+        generationsCount: config.currentGeneration,
+      };
+
       await Promise.all([
         siteConfigAdminRepository.updateSiteConfig(config),
-        statsAdminRepository.updateStats(stats),
+        statsAdminRepository.updateStats(calculatedStats),
       ]);
       toast.success("설정이 저장되었습니다.");
     } catch (error) {
@@ -124,17 +136,57 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      {/* 채팅 링크 */}
+      {/* 그로스로그 정보 */}
       <Card>
         <CardHeader>
-          <CardTitle>채팅 링크</CardTitle>
+          <CardTitle>그로스로그 정보</CardTitle>
           <CardDescription>
-            오픈채팅 또는 문의 링크를 설정합니다.
+            커뮤니티의 기본 정보를 설정합니다.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="chatLink">채팅 링크 URL</Label>
+            <Label htmlFor="currentGeneration">현재 기수</Label>
+            <div className="relative w-32">
+              <Input
+                id="currentGeneration"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={config.currentGeneration || ""}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, "");
+                  updateConfig("currentGeneration", parseInt(value) || 0);
+                }}
+                className="pr-8"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                기
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>주소</Label>
+            <AddressSearch
+              value={config.address || ""}
+              detailValue={config.addressDetail || ""}
+              onChange={(address) => updateConfig("address", address)}
+              onDetailChange={(detail) => updateConfig("addressDetail", detail)}
+            />
+            <p className="text-xs text-muted-foreground">
+              검색 버튼을 클릭하여 주소를 찾고, 상세 주소를 입력하세요.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>오시는 길</Label>
+            <MarkdownEditor
+              value={config.directionsText || ""}
+              onChange={(value) => updateConfig("directionsText", value)}
+              placeholder="오시는 길 안내를 작성하세요..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="chatLink">문의 채팅 링크</Label>
             <Input
               id="chatLink"
               value={config.chatLink}
@@ -160,14 +212,9 @@ export default function AdminSettingsPage() {
               <Input
                 id="operatingYears"
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={stats.operatingYears || ""}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, "");
-                  updateStats("operatingYears", parseInt(value) || 0);
-                }}
-                className="pr-8"
+                value={Math.floor(config.currentGeneration / 2) || ""}
+                disabled
+                className="pr-8 bg-muted"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                 년
@@ -220,14 +267,9 @@ export default function AdminSettingsPage() {
               <Input
                 id="generationsCount"
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={stats.generationsCount || ""}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, "");
-                  updateStats("generationsCount", parseInt(value) || 0);
-                }}
-                className="pr-8"
+                value={config.currentGeneration || ""}
+                disabled
+                className="pr-8 bg-muted"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                 기

@@ -3,3 +3,4 @@
  */
 export { db, storage } from "./config";
 export { COLLECTIONS, DOCUMENT_IDS, getSubCollection } from "./collections";
+export { uploadFile, deleteFile, generateStoragePath } from "./storage";

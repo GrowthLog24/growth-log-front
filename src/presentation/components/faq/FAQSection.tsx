@@ -7,11 +7,31 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { MarkdownContent } from "@/presentation/components/common";
-import type { FAQ, FAQCategoryItem } from "@/domain/entities";
+
+/**
+ * 클라이언트 컴포넌트용 FAQ 카테고리 (직렬화 가능)
+ */
+export interface FAQCategory {
+  id: string;
+  name: string;
+  order: number;
+}
+
+/**
+ * 클라이언트 컴포넌트용 FAQ 아이템 (직렬화 가능)
+ */
+export interface FAQItem {
+  id: string;
+  category: string;
+  question: string;
+  answerMd: string;
+  order: number;
+  isActive: boolean;
+}
 
 interface FAQSectionProps {
-  categories: FAQCategoryItem[];
-  groupedFAQs: Record<string, FAQ[]>;
+  categories: FAQCategory[];
+  groupedFAQs: Record<string, FAQItem[]>;
 }
 
 /**

@@ -41,6 +41,12 @@ export const COLLECTIONS = {
 
   /** 사전등록 제출 데이터 */
   PRE_REGISTRATIONS: "preRegistrations",
+
+  /** 월별 일정 */
+  MONTHLY_SCHEDULES: "monthlySchedules",
+
+  /** 커뮤니티 블로그 */
+  COMMUNITY_BLOGS: "communityBlogs",
 } as const;
 
 /**
