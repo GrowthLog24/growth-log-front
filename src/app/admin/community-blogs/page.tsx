@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import {
   Plus,
@@ -10,6 +11,8 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  Upload,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +45,7 @@ import {
 import { ConfirmDialog } from "@/presentation/components/admin";
 import { communityBlogAdminRepository } from "@/infrastructure/repositories/admin/communityBlogAdminRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
+import { uploadFile, generateStoragePath } from "@/infrastructure/firebase";
 import type { CommunityBlog, CommunityBlogPlatform } from "@/domain/entities";
 
 const PLATFORM_OPTIONS: { value: CommunityBlogPlatform; label: string }[] = [
@@ -68,6 +72,11 @@ export default function CommunityBlogsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<CommunityBlog | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // 썸네일 파일 업로드 상태
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
   // 폼 상태
   const [formData, setFormData] = useState<{
@@ -125,6 +134,11 @@ export default function CommunityBlogsPage() {
       generation: currentGeneration,
       publishedAt: new Date(),
     });
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setDialogOpen(true);
   };
 
@@ -145,7 +159,39 @@ export default function CommunityBlogsPage() {
       generation: blog.generation,
       publishedAt: date,
     });
+    setThumbnailFile(null);
+    setThumbnailPreview(blog.thumbnailUrl || null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     setDialogOpen(true);
+  };
+
+  // 썸네일 파일 선택 핸들러
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("이미지 파일만 업로드할 수 있습니다.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("파일 크기는 5MB 이하여야 합니다.");
+        return;
+      }
+      setThumbnailFile(file);
+      setThumbnailPreview(URL.createObjectURL(file));
+    }
+  };
+
+  // 썸네일 제거 핸들러
+  const handleRemoveThumbnail = () => {
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    setFormData({ ...formData, thumbnailUrl: "" });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   // 저장
@@ -161,11 +207,19 @@ export default function CommunityBlogsPage() {
 
     setSaving(true);
     try {
+      let thumbnailUrl = formData.thumbnailUrl.trim();
+
+      // 새 파일이 업로드된 경우 Firebase Storage에 업로드
+      if (thumbnailFile) {
+        const storagePath = generateStoragePath("community-blogs", thumbnailFile.name);
+        thumbnailUrl = await uploadFile(thumbnailFile, storagePath);
+      }
+
       const data = {
         title: formData.title.trim(),
         url: formData.url.trim(),
         platform: formData.platform,
-        thumbnailUrl: formData.thumbnailUrl.trim(),
+        thumbnailUrl,
         generation: formData.generation,
         publishedAt: formData.publishedAt ?? new Date(),
       };
@@ -406,20 +460,55 @@ export default function CommunityBlogsPage() {
               />
             </div>
 
-            {/* 썸네일 URL */}
+            {/* 썸네일 이미지 */}
             <div className="space-y-2">
-              <Label htmlFor="thumbnailUrl">썸네일 이미지 URL</Label>
-              <Input
-                id="thumbnailUrl"
-                value={formData.thumbnailUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, thumbnailUrl: e.target.value })
-                }
-                placeholder="https://... (비워두면 기본 이미지 사용)"
-              />
-              <p className="text-xs text-muted-foreground">
-                직접 이미지 URL을 입력하거나 비워두세요.
-              </p>
+              <Label>썸네일 이미지</Label>
+              <div className="flex items-center gap-4">
+                {thumbnailPreview ? (
+                  <div className="relative group">
+                    <Image
+                      src={thumbnailPreview}
+                      alt="썸네일 미리보기"
+                      width={120}
+                      height={80}
+                      className="w-[120px] h-[80px] rounded-lg object-cover border"
+                      unoptimized
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveThumbnail}
+                      className="absolute -top-1 -right-1 p-1 bg-background border border-border rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-6"
+                    >
+                      <X className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-[120px] h-[80px] rounded-lg bg-gray-6 flex items-center justify-center border border-dashed">
+                    <span className="text-xs text-muted-foreground">없음</span>
+                  </div>
+                )}
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    이미지 선택
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    JPG, PNG (최대 5MB)
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* 기수 */}
