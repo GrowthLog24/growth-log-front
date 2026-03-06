@@ -146,7 +146,7 @@ export default async function RecruitPage() {
               그로스로그 {recruitmentGeneration}기 모집 안내
             </h1>
             <p className="mt-6 text-lg text-white/80 max-w-2xl mx-auto">
-              함께 성장하고 싶은 분들을 기다립니다. 다양한 분야의 사람들과 교류하며 새로운 인사이트를 얻어가세요.
+              다양한 사람들과 새로운 인사이트를 얻어요
             </p>
             <div className="mt-8">
               <Button

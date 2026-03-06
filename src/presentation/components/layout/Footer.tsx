@@ -27,7 +27,7 @@ export async function Footer() {
                 className="h-10 w-auto"
               />
             </Link>
-            <p className="mt-2 text-sm text-muted-foreground max-w-sm">
+            <p className="mt-2 text-sm text-muted-foreground max-w-md">
               다양한 분야에 종사하는 멤버들과 함께하며 새로운 인사이트를 얻어가요.
             </p>
             {fullAddress && (
@@ -37,7 +37,7 @@ export async function Footer() {
               </p>
             )}
             <p className="mt-4 text-sm text-muted-foreground">
-              © {currentYear} {SITE_METADATA.title}. All rights reserved.
+              © Copyright 2024-{currentYear} {SITE_METADATA.title}. All rights reserved.
             </p>
           </div>
 
