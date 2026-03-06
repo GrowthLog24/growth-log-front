@@ -40,22 +40,17 @@ export class ActivityRepository {
    * 카테고리별 활동 목록 조회 (활성화된 것만)
    */
   async getActivitiesByCategory(category: ActivityCategory): Promise<Activity[]> {
-    try {
-      const q = query(
-        this.collectionRef,
-        where("category", "==", category),
-        where("isActive", "==", true),
-        orderBy("order", "asc")
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Activity[];
-    } catch (error) {
-      console.error("Failed to fetch activities by category:", error);
-      return [];
-    }
+    const q = query(
+      this.collectionRef,
+      where("category", "==", category),
+      where("isActive", "==", true),
+      orderBy("generation", "desc")
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Activity[];
   }
 }
 

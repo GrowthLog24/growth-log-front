@@ -150,6 +150,32 @@ export interface Recruitment {
   contactPhone: string;
   contactEmail: string;
   introMd: string;                // 인트로 문구 (기존)
+  kakaoMessageTemplate: string;   // 카카오톡 문자 양식
+}
+
+/**
+ * 회원 구분
+ */
+export type MemberType = "신입회원" | "정회원";
+
+/**
+ * 멤버
+ * Collection: members/{memberId}
+ */
+export interface Member {
+  id: string;
+  /** 멤버 이름 */
+  memberName: string;
+  /** 가입 기수 */
+  generation: number;
+  /** 회원 구분 (현재기수 - 가입기수 >= 1 이면 정회원, 아니면 신입회원) */
+  memberType: MemberType;
+  /** 가입 여부 */
+  isActive: boolean;
+  /** 리디렉트 URL (선택) */
+  redirectUrl?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 /**
@@ -261,6 +287,8 @@ export interface LectureActivity extends ActivityBase {
  */
 export interface GrowthTalkActivity extends ActivityBase {
   category: "growth-talk";
+  /** 회차 */
+  round: number;
   /** 제목 */
   title: string;
   /** 구분 (개발, 커리어, 학사) */
@@ -452,6 +480,61 @@ export interface CommunityBlog {
   /** 노출 순서 */
   order: number;
   /** 활성화 여부 */
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
+ * 행사 타임테이블 서브 아이템
+ */
+export interface EventTimeBlockSubItem {
+  /** 제목 */
+  title: string;
+  /** 내용 (선택) */
+  description?: string;
+  /** 시작 시간 (HH:mm) */
+  startTime: string;
+  /** 종료 시간 (HH:mm) */
+  endTime: string;
+}
+
+/**
+ * 행사 타임테이블 블록
+ */
+export interface EventTimeBlock {
+  id: string;
+  /** 제목 */
+  title: string;
+  /** 내용 (선택) */
+  description?: string;
+  /** 시작 시간 (HH:mm) */
+  startTime: string;
+  /** 종료 시간 (HH:mm) */
+  endTime: string;
+  /** 서브 아이템 */
+  subItems: EventTimeBlockSubItem[];
+  /** 표시 순서 */
+  order: number;
+}
+
+/**
+ * 행사
+ * Collection: events/{eventId}
+ */
+export interface Event {
+  id: string;
+  /** 행사명 */
+  name: string;
+  /** 행사 날짜 (YYYY-MM-DD) */
+  date: string;
+  /** 시작 시간 (HH:mm) */
+  startTime: string;
+  /** 종료 시간 (HH:mm) */
+  endTime: string;
+  /** 타임테이블 블록 목록 */
+  timeBlocks: EventTimeBlock[];
+  /** 활성화 여부 (공개 페이지에 표시) */
   isActive: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;

@@ -8,6 +8,8 @@ import {
   MessageSquare,
   CalendarDays,
   Rss,
+  UserRoundSearch,
+  CalendarClock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -67,6 +69,16 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: CalendarDays,
   },
   {
+    title: "멤버 관리",
+    href: "/admin/members",
+    icon: UserRoundSearch,
+  },
+  {
+    title: "행사 타임테이블",
+    href: "/admin/events",
+    icon: CalendarClock,
+  },
+  {
     title: "사이트 정보 설정",
     href: "/admin/settings",
     icon: Settings,
@@ -85,5 +97,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/notices": "공지사항",
   "/admin/faqs": "FAQ",
   "/admin/schedules": "월별 일정",
+  "/admin/members": "멤버 관리",
+  "/admin/events": "행사 타임테이블",
   "/admin/settings": "사이트 정보 설정",
 };

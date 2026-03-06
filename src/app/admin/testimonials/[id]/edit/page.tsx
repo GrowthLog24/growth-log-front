@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { testimonialAdminRepository } from "@/infrastructure/repositories/admin/testimonialAdminRepository";
 import { uploadFile, generateStoragePath } from "@/infrastructure/firebase";
+import { convertToJpegIfNeeded } from "@/shared/utils/image";
 
 /**
  * 멤버 후기 수정 페이지
@@ -43,9 +44,10 @@ export default function EditTestimonialPage() {
     isActive: true,
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFile = e.target.files?.[0];
+    if (rawFile) {
+      const file = await convertToJpegIfNeeded(rawFile);
       if (!file.type.startsWith("image/")) {
         toast.error("이미지 파일만 업로드할 수 있습니다.");
         return;
@@ -253,7 +255,7 @@ export default function EditTestimonialPage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.heic,.heif"
                     onChange={handleFileChange}
                     className="hidden"
                   />

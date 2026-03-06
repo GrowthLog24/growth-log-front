@@ -137,11 +137,11 @@ export default async function AboutUsPage() {
                       </span>
                     ))}
                   </div>
-                <h3 className="font-semibold text-foreground mb-3">
+                <h3 className="font-semibold text-foreground mb-2">
                   {PHASE_LABELS[schedule.phase]}
                 </h3>
                 {schedule.activities.length > 0 ? (
-                  <ul className="space-y-1.5">
+                  <ul className="space-y-0.5">
                     {schedule.activities.map((activity, index) => (
                       <li
                         key={index}

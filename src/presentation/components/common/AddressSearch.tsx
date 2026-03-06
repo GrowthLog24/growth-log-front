@@ -92,9 +92,9 @@ export function AddressSearch({
       <div className="flex gap-2">
         <Input
           value={value}
-          readOnly
+          onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 bg-gray-6 cursor-not-allowed"
+          className="flex-1"
         />
         <Button type="button" variant="outline" onClick={handleSearch}>
           <Search className="h-4 w-4 mr-2" />

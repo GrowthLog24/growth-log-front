@@ -14,7 +14,6 @@ import {
   FileText,
   Bell,
   Calendar as CalendarIcon,
-  Phone,
   Mail,
   CreditCard,
   Clock,
@@ -65,6 +64,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { DataTable, Column, ConfirmDialog } from "@/presentation/components/admin";
+import { MarkdownEditor } from "@/presentation/components/common";
 import { recruitmentAdminRepository } from "@/infrastructure/repositories/admin/recruitmentAdminRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import type { PreRegistration, PreRegistrationField, Recruitment, OTSchedule } from "@/domain/entities";
@@ -136,8 +136,8 @@ export default function RecruitmentPage() {
     activityScheduleMd: string;
     meetingGuideMd: string;
     // 기타
-    contactPhone: string;
     contactEmail: string;
+    kakaoMessageTemplate: string;
   }>({
     deadlineAt: undefined,
     applyGuideMd: "",
@@ -151,8 +151,8 @@ export default function RecruitmentPage() {
     regularMeetingsMd: "",
     activityScheduleMd: "",
     meetingGuideMd: "",
-    contactPhone: "",
     contactEmail: "",
+    kakaoMessageTemplate: "",
   });
 
   // OT 일정 다이얼로그 상태
@@ -241,8 +241,8 @@ export default function RecruitmentPage() {
           activityScheduleMd: detail.activityScheduleMd || "",
           meetingGuideMd: detail.meetingGuideMd || "",
           // 기타
-          contactPhone: detail.contactPhone || "",
           contactEmail: detail.contactEmail || "",
+          kakaoMessageTemplate: detail.kakaoMessageTemplate || "",
         });
       }
     } catch (error) {
@@ -428,8 +428,8 @@ export default function RecruitmentPage() {
         activityScheduleMd: detailForm.activityScheduleMd,
         meetingGuideMd: detailForm.meetingGuideMd,
         // 기타
-        contactPhone: detailForm.contactPhone,
         contactEmail: detailForm.contactEmail,
+        kakaoMessageTemplate: detailForm.kakaoMessageTemplate,
       });
       toast.success("모집 정보가 저장되었습니다.");
       fetchRecruitmentDetail(recruitmentGeneration);
@@ -714,44 +714,38 @@ export default function RecruitmentPage() {
                         placeholder="마감일 및 시간 선택"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="contactPhone" className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          문의 전화번호
-                        </Label>
-                        <Input
-                          id="contactPhone"
-                          value={detailForm.contactPhone}
-                          onChange={(e) => setDetailForm({ ...detailForm, contactPhone: e.target.value })}
-                          placeholder="010-0000-0000"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="contactEmail" className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          문의 이메일
-                        </Label>
-                        <Input
-                          id="contactEmail"
-                          type="email"
-                          value={detailForm.contactEmail}
-                          onChange={(e) => setDetailForm({ ...detailForm, contactEmail: e.target.value })}
-                          placeholder="contact@growth-log.com"
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contactEmail" className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        문의 이메일
+                      </Label>
+                      <Input
+                        id="contactEmail"
+                        type="email"
+                        value={detailForm.contactEmail}
+                        onChange={(e) => setDetailForm({ ...detailForm, contactEmail: e.target.value })}
+                        placeholder="contact@growth-log.com"
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>가입 안내 문구</Label>
-                    <Textarea
+                    <MarkdownEditor
                       value={detailForm.applyGuideMd}
-                      onChange={(e) => setDetailForm({ ...detailForm, applyGuideMd: e.target.value })}
-                      placeholder="가입 안내 메시지 템플릿, 카카오 채널 안내 등을 작성하세요"
+                      onChange={(value) => setDetailForm({ ...detailForm, applyGuideMd: value })}
+                      placeholder="가입 안내 문구를 작성하세요"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>카카오톡 문자 양식</Label>
+                    <Textarea
+                      value={detailForm.kakaoMessageTemplate}
+                      onChange={(e) => setDetailForm({ ...detailForm, kakaoMessageTemplate: e.target.value })}
+                      placeholder="카카오톡으로 보낼 문자 양식을 입력하세요"
                       rows={6}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Markdown 문법을 사용할 수 있습니다.
+                      홈페이지에서 사용자가 이 양식을 복사할 수 있습니다.
                     </p>
                   </div>
                 </TabsContent>

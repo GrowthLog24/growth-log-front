@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Phone, Mail, Clock, CreditCard, Users, Bell, CheckCircle2 } from "lucide-react";
+import { Calendar, Mail, Clock, CreditCard, Users, Bell, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MarkdownContent } from "@/presentation/components/common";
+import { KakaoMessageCopyCard } from "@/presentation/components/recruit/KakaoMessageCopyCard";
+import { BankAccountCard } from "@/presentation/components/recruit/BankAccountCard";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { recruitmentRepository } from "@/infrastructure/repositories/recruitmentRepository";
@@ -187,19 +190,18 @@ export default async function RecruitPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">문의</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span>{recruitment?.contactPhone || "미정"}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
                     <Mail className="w-4 h-4 text-muted-foreground" />
                     <span>{recruitment?.contactEmail || "미정"}</span>
                   </div>
                 </div>
                 {recruitment?.applyGuideMd && (
                   <div className="pt-2 border-t">
-                    <p className="text-sm whitespace-pre-line">
-                      {recruitment.applyGuideMd}
-                    </p>
+                    <MarkdownContent content={recruitment.applyGuideMd} className="text-sm" />
+                  </div>
+                )}
+                {recruitment?.kakaoMessageTemplate && (
+                  <div className="pt-2 border-t">
+                    <KakaoMessageCopyCard message={recruitment.kakaoMessageTemplate} />
                   </div>
                 )}
               </CardContent>
@@ -278,12 +280,7 @@ export default async function RecruitPage() {
                     </p>
                   </div>
                 )}
-                <div className="p-3 bg-accent rounded-lg">
-                  <p className="text-sm font-medium">입금 계좌</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {recruitment?.bankAccountText || "미정"}
-                  </p>
-                </div>
+                <BankAccountCard bankAccountText={recruitment?.bankAccountText || "미정"} />
                 {recruitment?.feeDescriptionMd && (
                   <div className="pt-2 border-t">
                     <p className="text-sm whitespace-pre-line">

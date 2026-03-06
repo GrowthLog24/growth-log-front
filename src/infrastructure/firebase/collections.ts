@@ -47,6 +47,12 @@ export const COLLECTIONS = {
 
   /** 커뮤니티 블로그 */
   COMMUNITY_BLOGS: "communityBlogs",
+
+  /** 멤버 */
+  MEMBERS: "members",
+
+  /** 행사 */
+  EVENTS: "events",
 } as const;
 
 /**

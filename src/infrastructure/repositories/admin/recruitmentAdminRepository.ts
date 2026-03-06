@@ -123,6 +123,7 @@ export class RecruitmentAdminRepository {
       // 기타
       contactPhone?: string;
       contactEmail?: string;
+      kakaoMessageTemplate?: string;
     }
   ): Promise<void> {
     const docRef = doc(db, COLLECTIONS.RECRUITMENTS, String(generation));
@@ -182,6 +183,9 @@ export class RecruitmentAdminRepository {
     }
     if (data.contactEmail !== undefined) {
       updateData.contactEmail = data.contactEmail;
+    }
+    if (data.kakaoMessageTemplate !== undefined) {
+      updateData.kakaoMessageTemplate = data.kakaoMessageTemplate;
     }
 
     await setDoc(docRef, updateData, { merge: true });

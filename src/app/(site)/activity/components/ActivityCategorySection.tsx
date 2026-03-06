@@ -5,6 +5,12 @@ import Image from "next/image";
 import { ExternalLink, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type {
   Activity,
   ActivityCategory,
@@ -29,8 +35,19 @@ const ITEMS_PER_LOAD = 4;
 /**
  * 날짜를 포맷하는 헬퍼 함수
  */
-function formatDate(timestamp: { toDate: () => Date } | Date): string {
-  const date = "toDate" in timestamp ? timestamp.toDate() : timestamp;
+function formatDate(timestamp: { toDate?: () => Date; seconds?: number } | Date | string): string {
+  let date: Date;
+  if (timestamp instanceof Date) {
+    date = timestamp;
+  } else if (typeof timestamp === "string") {
+    date = new Date(timestamp);
+  } else if (typeof timestamp === "object" && "seconds" in timestamp && timestamp.seconds) {
+    date = new Date(timestamp.seconds * 1000);
+  } else if (typeof timestamp === "object" && "toDate" in timestamp && timestamp.toDate) {
+    date = timestamp.toDate();
+  } else {
+    return "";
+  }
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
 }
 
@@ -146,62 +163,77 @@ function ActivityCard({ activity }: { activity: Activity }) {
 }
 
 /**
- * 프로젝트 카드 (클릭 가능 → PDF 보기)
+ * 프로젝트 카드 (클릭 시 PDF 다이얼로그)
  */
 function ProjectCard({ activity }: { activity: ProjectActivity }) {
-  return (
-    <a
-      href={activity.pdfUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group"
-    >
-      <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer">
-        {/* Thumbnail */}
-        <div className="relative aspect-[16/10] bg-gray-4 overflow-hidden">
-          {activity.thumbnailUrl ? (
-            <Image
-              src={activity.thumbnailUrl}
-              alt={activity.projectName}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              unoptimized
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-5">
-              <FileText className="w-12 h-12 text-muted-foreground/50" />
-            </div>
-          )}
-          {/* PDF Indicator */}
-          <div className="absolute top-3 right-3">
-            <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
-              <FileText className="w-4 h-4 text-primary" />
-            </div>
-          </div>
-          {/* Platform Badge */}
-          <div className="absolute top-3 left-3">
-            <Badge variant="secondary" className="bg-white/90 text-foreground">
-              {activity.platform}
-            </Badge>
-          </div>
-        </div>
+  const [open, setOpen] = useState(false);
 
-        {/* Content */}
-        <div className="p-4">
-          <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-            {activity.projectName}
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-            {activity.description}
-          </p>
-          <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-            <span>{activity.generation}기</span>
-            <span>·</span>
-            <span>PM {activity.leaderName}</span>
+  return (
+    <>
+      <div
+        className="group cursor-pointer"
+        onClick={() => setOpen(true)}
+      >
+        <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+          {/* Thumbnail */}
+          <div className="relative aspect-[4/3] bg-gray-4 overflow-hidden">
+            {activity.thumbnailUrl ? (
+              <Image
+                src={activity.thumbnailUrl}
+                alt={activity.projectName}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-5">
+                <FileText className="w-12 h-12 text-muted-foreground/50" />
+              </div>
+            )}
+            {/* PDF Indicator */}
+            <div className="absolute top-3 right-3">
+              <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-primary" />
+              </div>
+            </div>
+            {/* Platform Badge */}
+            <div className="absolute top-3 left-3">
+              <Badge variant="secondary" className="bg-white/90 text-foreground">
+                {activity.platform}
+              </Badge>
+            </div>
           </div>
-        </div>
-      </article>
-    </a>
+
+          {/* Content */}
+          <div className="p-4 flex flex-col flex-1">
+            <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+              {activity.projectName}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+              {activity.description}
+            </p>
+            <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground mt-auto">
+              <span>{activity.generation}기</span>
+              <span>·</span>
+              <span>PM {activity.leaderName}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="!max-w-[65vw] w-[65vw] h-[85vh] p-0 gap-0 flex flex-col">
+          <DialogHeader className="px-5 py-3 border-b shrink-0 flex flex-row items-center justify-between">
+            <DialogTitle className="flex items-center gap-2 text-sm">
+              {activity.projectName}
+              <Badge variant="secondary">{activity.platform}</Badge>
+              <span className="text-muted-foreground font-normal">{activity.generation}기 · PM {activity.leaderName}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <PdfViewer url={activity.pdfUrl} title={activity.projectName} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -391,7 +423,7 @@ function GrowthTalkCard({ activity }: { activity: GrowthTalkActivity }) {
       {/* Content */}
       <div className="p-4">
         <h3 className="text-base font-semibold text-foreground line-clamp-1">
-          {activity.title}
+          {activity.round ? `${activity.round}회 ` : ""}{activity.title}
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
           진행: {activity.hostName}
@@ -448,5 +480,32 @@ function ClubCard({ activity }: { activity: ClubActivity }) {
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * PDF 뷰어 (로딩 프로그레스바 포함)
+ */
+function PdfViewer({ url, title }: { url: string; title: string }) {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <div className="flex-1 min-h-0 relative">
+      {loading && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background z-10">
+          <FileText className="w-10 h-10 text-primary/30" />
+          <p className="text-sm text-muted-foreground">PDF 불러오는 중...</p>
+          <div className="w-48 h-1.5 bg-gray-5 rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full animate-progress" />
+          </div>
+        </div>
+      )}
+      <iframe
+        src={`${url}#toolbar=0&navpanes=0`}
+        className="w-full h-full"
+        title={title}
+        onLoad={() => setLoading(false)}
+      />
+    </div>
   );
 }

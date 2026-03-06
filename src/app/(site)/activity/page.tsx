@@ -27,9 +27,11 @@ export default async function ActivityPage() {
     )
   );
 
-  // 결과를 카테고리별로 매핑
+  // 결과를 카테고리별로 매핑 (Timestamp를 직렬화하여 Client Component에 전달)
   ACTIVITY_CATEGORIES.forEach((category, index) => {
-    activitiesByCategory[category as ActivityCategory] = results[index];
+    activitiesByCategory[category as ActivityCategory] = results[index].map(
+      (activity) => JSON.parse(JSON.stringify(activity))
+    );
   });
 
   return (

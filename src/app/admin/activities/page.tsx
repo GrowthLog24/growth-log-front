@@ -41,6 +41,7 @@ import {
 import { ConfirmDialog } from "@/presentation/components/admin";
 import { activityAdminRepository } from "@/infrastructure/repositories/admin/activityAdminRepository";
 import { uploadFile, generateStoragePath } from "@/infrastructure/firebase/storage";
+import { convertToJpegIfNeeded } from "@/shared/utils/image";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import {
   ACTIVITY_CATEGORY_LABELS,
@@ -300,7 +301,7 @@ function ActivityCard({
       }
       case "growth-talk": {
         const t = activity as GrowthTalkActivity;
-        return `${t.field} · ${t.hostName}`;
+        return `${t.round ? `${t.round}회 · ` : ""}${t.field} · ${t.hostName}`;
       }
       case "club": {
         const c = activity as ClubActivity;
@@ -488,6 +489,7 @@ function ActivityFormDialog({
           case "growth-talk": {
             const t = editingActivity as GrowthTalkActivity;
             Object.assign(data, {
+              round: t.round || 0,
               title: t.title,
               field: t.field,
               hostName: t.hostName,
@@ -520,9 +522,10 @@ function ActivityFormDialog({
   }, [open, editingActivity, currentGeneration]);
 
   // 썸네일 파일 선택 핸들러
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFile = e.target.files?.[0];
+    if (rawFile) {
+      const file = await convertToJpegIfNeeded(rawFile);
       setThumbnailFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -612,6 +615,7 @@ function ActivityFormDialog({
           case "growth-talk":
             await activityAdminRepository.updateGrowthTalk(editingActivity.id, {
               ...baseData,
+              round: Number(formData.round) || 0,
               title: String(formData.title || ""),
               field: String(formData.field || ""),
               hostName: String(formData.hostName || ""),
@@ -671,6 +675,7 @@ function ActivityFormDialog({
           case "growth-talk":
             await activityAdminRepository.addGrowthTalk({
               ...baseData,
+              round: Number(formData.round) || 0,
               title: String(formData.title || ""),
               field: String(formData.field || ""),
               hostName: String(formData.hostName || ""),
@@ -752,7 +757,7 @@ function ActivityFormDialog({
                   <input
                     type="file"
                     className="hidden"
-                    accept="image/*"
+                    accept="image/*,.heic,.heif"
                     onChange={handleThumbnailChange}
                   />
                 </label>
@@ -992,6 +997,19 @@ function ActivityFormDialog({
 
           {category === "growth-talk" && (
             <>
+              <div className="space-y-2">
+                <Label htmlFor="round">회차</Label>
+                <div className="relative w-24">
+                  <Input
+                    id="round"
+                    type="number"
+                    min={0}
+                    value={String(formData.round || "")}
+                    onChange={(e) => updateField("round", e.target.value)}
+                    placeholder="1"
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="title">토크 주제 *</Label>
                 <Input
