@@ -188,6 +188,33 @@
 }
 
 /* ========================================
+   TipTap Editor Styles
+   ======================================== */
+.tiptap ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.tiptap ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+
+.tiptap li {
+  margin: 0.125rem 0 !important;
+  display: list-item !important;
+}
+
+.tiptap blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: var(--muted-foreground);
+}
+
+/* ========================================
    Custom Utility Classes
    ======================================== */
 

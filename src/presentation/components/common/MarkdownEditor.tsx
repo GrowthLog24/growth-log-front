@@ -1,6 +1,8 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
+import { TextSelection } from "@tiptap/pm/state";
+import { liftListItem } from "@tiptap/pm/schema-list";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
@@ -63,7 +65,38 @@ export function MarkdownEditor({
     editorProps: {
       attributes: {
         class:
-          "min-h-[200px] w-full bg-background px-3 py-2 text-sm focus:outline-none prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5",
+          "min-h-[200px] w-full bg-background px-3 py-2 text-sm focus:outline-none",
+      },
+      handleKeyDown: (view, event) => {
+        if (event.key === "Enter" && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
+          const { state } = view;
+          const { $from } = state.selection;
+          // 리스트 내에서는 기본 동작 유지 (새 항목 생성)
+          for (let d = $from.depth; d > 0; d--) {
+            if ($from.node(d).type.name === "listItem") {
+              return false;
+            }
+          }
+          // 그 외에는 줄바꿈(hard break) 삽입
+          const tr = state.tr.replaceSelectionWith(
+            state.schema.nodes.hardBreak.create()
+          ).scrollIntoView();
+          view.dispatch(tr);
+          return true;
+        }
+        // 리스트 항목 맨 앞에서 Backspace → bullet 해제
+        if (event.key === "Backspace") {
+          const { state } = view;
+          const { $from, empty } = state.selection;
+          if (empty && $from.parentOffset === 0) {
+            for (let d = $from.depth; d > 0; d--) {
+              if ($from.node(d).type.name === "listItem") {
+                return liftListItem(state.schema.nodes.listItem)(state, view.dispatch);
+              }
+            }
+          }
+        }
+        return false;
       },
     },
     onUpdate: ({ editor }) => {
@@ -88,6 +121,60 @@ export function MarkdownEditor({
       <div className="min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 animate-pulse" />
     );
   }
+
+  /**
+   * 선택 영역의 hard break를 별도 문단으로 분리한 뒤 리스트를 토글
+   */
+  const splitAndToggleList = (listType: "bulletList" | "orderedList") => {
+    // 이미 리스트면 해제만
+    if (editor.isActive(listType)) {
+      if (listType === "bulletList") {
+        editor.chain().focus().toggleBulletList().run();
+      } else {
+        editor.chain().focus().toggleOrderedList().run();
+      }
+      return;
+    }
+
+    const { state } = editor;
+    const { from, to } = state.selection;
+
+    // 선택 영역을 포함하는 블록 전체 범위로 확장
+    const $from = state.doc.resolve(from);
+    const $to = state.doc.resolve(to);
+    const blockFrom = $from.start($from.depth);
+    const blockTo = $to.end($to.depth);
+
+    // 확장된 범위 내 hard break 위치 수집
+    const hardBreakPositions: number[] = [];
+    state.doc.nodesBetween(blockFrom, blockTo, (node, pos) => {
+      if (node.type.name === "hardBreak") {
+        hardBreakPositions.push(pos);
+      }
+    });
+
+    // hard break가 있으면 각각을 문단 분리로 변환
+    if (hardBreakPositions.length > 0) {
+      const tr = state.tr;
+      for (let i = hardBreakPositions.length - 1; i >= 0; i--) {
+        const mappedPos = tr.mapping.map(hardBreakPositions[i]);
+        tr.delete(mappedPos, mappedPos + 1);
+        tr.split(mappedPos);
+      }
+      // 분리된 전체 영역을 다시 선택
+      const newFrom = tr.mapping.map(blockFrom);
+      const newTo = tr.mapping.map(blockTo);
+      tr.setSelection(TextSelection.create(tr.doc, newFrom, newTo));
+      editor.view.dispatch(tr);
+    }
+
+    // 분리 후 리스트 토글
+    if (listType === "bulletList") {
+      editor.chain().focus().toggleBulletList().run();
+    } else {
+      editor.chain().focus().toggleOrderedList().run();
+    }
+  };
 
   const setLink = () => {
     const previousUrl = editor.getAttributes("link").href;
@@ -184,7 +271,7 @@ export function MarkdownEditor({
           variant="ghost"
           size="sm"
           className={`h-8 w-8 p-0 ${editor.isActive("bulletList") ? "bg-accent" : ""}`}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          onClick={() => splitAndToggleList("bulletList")}
           title="글머리 기호 목록"
         >
           <List className="h-4 w-4" />
@@ -194,7 +281,7 @@ export function MarkdownEditor({
           variant="ghost"
           size="sm"
           className={`h-8 w-8 p-0 ${editor.isActive("orderedList") ? "bg-accent" : ""}`}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          onClick={() => splitAndToggleList("orderedList")}
           title="번호 매기기 목록"
         >
           <ListOrdered className="h-4 w-4" />
