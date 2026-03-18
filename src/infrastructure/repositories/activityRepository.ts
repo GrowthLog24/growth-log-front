@@ -41,11 +41,12 @@ export class ActivityRepository {
    */
   async getActivitiesByCategory(category: ActivityCategory): Promise<Activity[]> {
     try {
+      const orderField = this.getOrderField(category);
       const q = query(
         this.collectionRef,
         where("category", "==", category),
         where("isActive", "==", true),
-        orderBy("generation", "desc")
+        orderBy(orderField, "desc")
       );
       const snapshot = await getDocs(q);
       return snapshot.docs.map((doc) => ({
@@ -55,6 +56,20 @@ export class ActivityRepository {
     } catch (error) {
       console.error(`Failed to fetch activities for category ${category}:`, error);
       return [];
+    }
+  }
+
+  /**
+   * 카테고리별 정렬 기준 필드 반환
+   */
+  private getOrderField(category: ActivityCategory): string {
+    switch (category) {
+      case "lecture":
+        return "lectureDate";
+      case "growth-talk":
+        return "eventDate";
+      default:
+        return "generation";
     }
   }
 }

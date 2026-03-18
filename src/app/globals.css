@@ -10,7 +10,7 @@
   --color-foreground: var(--foreground);
 
   /* Fonts */
-  --font-sans: var(--font-pretendard), var(--font-geist-sans), system-ui, sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 
   /* shadcn/ui colors */
