@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   description: "그로스로그의 다양한 활동을 확인하세요. 프로젝트, 스터디, 성장일지, 특강, 그로스톡, 클럽 활동.",
 };
 
-/** 1시간(3600초)마다 페이지를 재생성 (ISR) */
-export const revalidate = 3600;
+/** 매 요청마다 최신 데이터 조회 (인덱스 안정화 후 revalidate = 3600으로 전환) */
+export const dynamic = "force-dynamic";
 
 export default async function ActivityPage() {
   // 카테고리별로 활동 가져오기

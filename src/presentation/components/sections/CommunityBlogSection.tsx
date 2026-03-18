@@ -153,7 +153,7 @@ function BlogCard({ blog }: { blog: CommunityBlog }) {
 
         {/* Content */}
         <div className="p-5">
-          <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+          <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
             {blog.title}
           </h3>
           <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
