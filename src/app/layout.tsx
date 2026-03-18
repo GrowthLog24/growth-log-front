@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
 import { SITE_METADATA } from "@/shared/constants";
-import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.min.css";
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 
 const geistMono = Geist_Mono({

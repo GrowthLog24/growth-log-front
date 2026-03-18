@@ -8,7 +8,7 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownEditor } from "@/presentation/components/common";
 import { Switch } from "@/components/ui/switch";
 import {
   Card,
@@ -100,13 +100,11 @@ export default function CreateNoticePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contentMd">내용 (Markdown)</Label>
-              <Textarea
-                id="contentMd"
+              <Label>내용 (Markdown)</Label>
+              <MarkdownEditor
                 value={form.contentMd}
-                onChange={(e) => setForm({ ...form, contentMd: e.target.value })}
-                placeholder="공지사항 내용을 Markdown 형식으로 작성하세요."
-                rows={15}
+                onChange={(value) => setForm({ ...form, contentMd: value })}
+                placeholder="공지사항 내용을 작성하세요."
               />
             </div>
 
