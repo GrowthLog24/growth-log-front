@@ -22,7 +22,7 @@ const introItems = [
   },
   {
     icon: Flame,
-    title: "그로스로그에는 열정적인자기계발러들이 모여있습니다.",
+    title: "그로스로그에는 열정적인 자기계발러들이 모여있습니다.",
     description:
       "개발에 관해 어떤 질문이라도 편하게 물어보고 알려줄 사람들과 함께 전공 지식과 실무감각을 동시에 키워보세요.",
   },
@@ -45,7 +45,7 @@ const PHASE_LABELS: Record<number, string> = {
   4: "4개월차 프로그램",
   5: "5개월차 프로그램",
   6: "6개월차 프로그램",
-  7: "월별 정기 프로그램",
+  7: "매월 소모임 프로그램",
 };
 
 export default async function AboutUsPage() {
