@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { testimonialRepository } from "@/infrastructure/repositories";
 import type { Testimonial } from "@/domain/entities";
+import { serializeFirestoreData } from "@/shared/utils/serialize";
 
 export async function MemberTestimonialSection() {
   // Firestore에서 활성화된 후기 3개 가져오기
@@ -10,6 +11,9 @@ export async function MemberTestimonialSection() {
   if (testimonials.length === 0) {
     return null;
   }
+
+  // Client Component로 전달하기 위해 Plain Object로 직렬화
+  const serializedTestimonials = serializeFirestoreData(testimonials);
 
   return (
     <section className="section-padding bg-gray-black">
@@ -27,7 +31,7 @@ export async function MemberTestimonialSection() {
 
         {/* Testimonial Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((testimonial) => (
+          {serializedTestimonials.map((testimonial: Testimonial) => (
             <TestimonialCard
               key={testimonial.id}
               testimonial={testimonial}

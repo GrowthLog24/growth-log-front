@@ -35,19 +35,14 @@ const ITEMS_PER_LOAD = 4;
 /**
  * 날짜를 포맷하는 헬퍼 함수
  */
-function formatDate(timestamp: { toDate?: () => Date; seconds?: number } | Date | string): string {
-  let date: Date;
-  if (timestamp instanceof Date) {
-    date = timestamp;
-  } else if (typeof timestamp === "string") {
-    date = new Date(timestamp);
-  } else if (typeof timestamp === "object" && "seconds" in timestamp && timestamp.seconds) {
-    date = new Date(timestamp.seconds * 1000);
-  } else if (typeof timestamp === "object" && "toDate" in timestamp && timestamp.toDate) {
-    date = timestamp.toDate();
-  } else {
-    return "";
-  }
+function formatDate(timestamp: any): string {
+  if (!timestamp) return "";
+  
+  // serializeFirestoreData 유틸리티를 통해 숫자(ms)나 ISO 문자열로 넘어옴
+  const date = new Date(timestamp);
+  
+  if (isNaN(date.getTime())) return "";
+
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
 }
 

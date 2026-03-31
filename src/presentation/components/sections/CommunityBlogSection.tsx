@@ -27,7 +27,15 @@ const PLATFORM_LABELS: Record<string, string> = {
  */
 function formatDate(timestamp: any): string {
   if (!timestamp) return "";
-  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+
+  // 1. Firebase Timestamp 객체인 경우 (toDate 메서드가 있는 경우)
+  // 2. 숫자(milliseconds)나 문자열인 경우
+  const date = typeof timestamp.toDate === 'function'
+    ? timestamp.toDate()
+    : new Date(timestamp);
+
+  if (isNaN(date.getTime())) return "Invalid Date";
+
   return date.toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
