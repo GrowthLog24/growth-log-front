@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# main 브랜치에서 직접 커밋 방지
+branch="$(git rev-parse --abbrev-ref HEAD)"
+
+if [ "$branch" = "main" ]; then
+  echo ""
+  echo "🚫 main 브랜치에 직접 커밋할 수 없습니다!"
+  echo ""
+  echo "다음 단계를 따라주세요:"
+  echo "  1. 새 브랜치 생성: git checkout -b feature/your-feature-name"
+  echo "  2. 작업 후 커밋"
+  echo "  3. GitHub에서 Pull Request 생성"
+  echo ""
+  exit 1
+fi
