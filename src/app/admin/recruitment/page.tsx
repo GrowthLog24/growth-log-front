@@ -15,6 +15,7 @@ import {
   Bell,
   Calendar as CalendarIcon,
   Mail,
+  Phone,
   CreditCard,
   Clock,
   Plus,
