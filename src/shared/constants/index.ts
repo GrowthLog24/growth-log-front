@@ -49,7 +49,7 @@ export const NAV_ITEMS = [
 export const SOCIAL_LINKS = {
   kakaoChannel: "https://pf.kakao.com/_xgxkxkxj", // 예시 URL
   instagram: "https://instagram.com/growth_log",
-  email: "contact@growth-log.com",
+  email: "contact@growthlog.org",
 } as const;
 
 /**
@@ -58,6 +58,6 @@ export const SOCIAL_LINKS = {
 export const SITE_METADATA = {
   title: "Growth Log",
   description: "함께 성장하는 IT 커뮤니티, 그로스로그",
-  url: "https://www.growth-log.com",
+  url: "https://www.growthlog.org",
   slogan: "{CODE} {GROW}",
 } as const;

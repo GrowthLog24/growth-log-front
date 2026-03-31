@@ -40,6 +40,9 @@ export const metadata: Metadata = {
     ],
   },
   manifest: "/manifest.json",
+  verification: {
+    google: "88ziDUAadCqKBdYYPifKi_USWyroItS2b5awIefZ3SQ",
+  },
 };
 
 export default function RootLayout({

@@ -76,10 +76,10 @@ export async function Footer() {
               )}
               <li>
                 <a
-                  href="mailto:contact@growth-log.com"
+                  href="mailto:contact@growthlog.org"
                   className="hover:text-foreground transition-colors"
                 >
-                  contact@growth-log.com
+                  contact@growthlog.org
                 </a>
               </li>
             </ul>

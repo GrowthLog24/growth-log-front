@@ -714,18 +714,32 @@ export default function RecruitmentPage() {
                         placeholder="마감일 및 시간 선택"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="contactEmail" className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        문의 이메일
-                      </Label>
-                      <Input
-                        id="contactEmail"
-                        type="email"
-                        value={detailForm.contactEmail}
-                        onChange={(e) => setDetailForm({ ...detailForm, contactEmail: e.target.value })}
-                        placeholder="contact@growth-log.com"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="contactPhone" className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          문의 전화번호
+                        </Label>
+                        <Input
+                          id="contactPhone"
+                          value={detailForm.contactPhone}
+                          onChange={(e) => setDetailForm({ ...detailForm, contactPhone: e.target.value })}
+                          placeholder="010-0000-0000"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contactEmail" className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          문의 이메일
+                        </Label>
+                        <Input
+                          id="contactEmail"
+                          type="email"
+                          value={detailForm.contactEmail}
+                          onChange={(e) => setDetailForm({ ...detailForm, contactEmail: e.target.value })}
+                          placeholder="contact@growthlog.org"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-2">
