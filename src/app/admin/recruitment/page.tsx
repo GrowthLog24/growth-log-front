@@ -137,6 +137,7 @@ export default function RecruitmentPage() {
     activityScheduleMd: string;
     meetingGuideMd: string;
     // 기타
+    contactPhone: string;
     contactEmail: string;
     kakaoMessageTemplate: string;
   }>({
@@ -152,6 +153,7 @@ export default function RecruitmentPage() {
     regularMeetingsMd: "",
     activityScheduleMd: "",
     meetingGuideMd: "",
+    contactPhone: "",
     contactEmail: "",
     kakaoMessageTemplate: "",
   });
@@ -242,6 +244,7 @@ export default function RecruitmentPage() {
           activityScheduleMd: detail.activityScheduleMd || "",
           meetingGuideMd: detail.meetingGuideMd || "",
           // 기타
+          contactPhone: detail.contactPhone || "",
           contactEmail: detail.contactEmail || "",
           kakaoMessageTemplate: detail.kakaoMessageTemplate || "",
         });
@@ -429,6 +432,7 @@ export default function RecruitmentPage() {
         activityScheduleMd: detailForm.activityScheduleMd,
         meetingGuideMd: detailForm.meetingGuideMd,
         // 기타
+        contactPhone: detailForm.contactPhone,
         contactEmail: detailForm.contactEmail,
         kakaoMessageTemplate: detailForm.kakaoMessageTemplate,
       });
