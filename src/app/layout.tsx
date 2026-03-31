@@ -42,6 +42,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   verification: {
     google: "88ziDUAadCqKBdYYPifKi_USWyroItS2b5awIefZ3SQ",
+    // TODO: 네이버 서치 어드바이저 인증 코드 추가
+    // https://searchadvisor.naver.com/ 에서 사이트 등록 후 발급
+    // other: {
+    //   "naver-site-verification": "여기에_네이버_인증_코드_입력",
+    // },
   },
 };
 
