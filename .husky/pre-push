@@ -1,16 +1,21 @@
 #!/bin/sh
 
-# main 브랜치로 직접 push 방지
+# 보호된 브랜치로 직접 push 방지
 branch="$(git rev-parse --abbrev-ref HEAD)"
 
-if [ "$branch" = "main" ]; then
-  echo ""
-  echo "🚫 main 브랜치에 직접 push할 수 없습니다!"
-  echo ""
-  echo "다음 단계를 따라주세요:"
-  echo "  1. 새 브랜치 생성: git checkout -b feature/your-feature-name"
-  echo "  2. 브랜치에 push: git push -u origin feature/your-feature-name"
-  echo "  3. GitHub에서 Pull Request 생성"
-  echo ""
-  exit 1
-fi
+# 보호할 브랜치 목록
+protected_branches="main dev"
+
+for protected in $protected_branches; do
+  if [ "$branch" = "$protected" ]; then
+    echo ""
+    echo "🚫 $branch 브랜치에 직접 push할 수 없습니다!"
+    echo ""
+    echo "다음 단계를 따라주세요:"
+    echo "  1. 새 브랜치 생성: git checkout -b feature/your-feature-name"
+    echo "  2. 브랜치에 push: git push -u origin feature/your-feature-name"
+    echo "  3. GitHub에서 Pull Request 생성"
+    echo ""
+    exit 1
+  fi
+done
