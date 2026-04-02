@@ -9,6 +9,7 @@ import { noticeRepository } from "@/infrastructure/repositories/noticeRepository
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { formatDate } from "@/shared/utils/date";
 import { serializeFirestoreData } from "@/shared/utils/serialize";
+import type { FAQ, FAQCategoryItem } from "@/domain/entities";
 
 export const metadata: Metadata = {
   title: "Support",
@@ -19,8 +20,8 @@ export const metadata: Metadata = {
  * FAQ 데이터를 카테고리별로 그룹화
  */
 function groupFAQsByCategory(
-  faqs: any[],      //최선?
-  categories: any[]
+  faqs: FAQ[],
+  categories: FAQCategoryItem[]
 ): { serializedCategories: FAQCategory[]; groupedFAQs: Record<string, FAQItem[]> } {
   // 카테고리 직렬화
   const serializedCategories: FAQCategory[] = serializeFirestoreData(categories);

@@ -3,7 +3,7 @@ import { ACTIVITY_CATEGORIES } from "@/shared/constants";
 import { activityRepository } from "@/infrastructure/repositories/activityRepository";
 import type { Activity, ActivityCategory } from "@/domain/entities";
 import { ActivityCategorySection } from "./components/ActivityCategorySection";
-import { serializeFirestoreData } from "@/shared/utils/serialize";
+import { serializeFirestoreData, type SerializedFirestoreData } from "@/shared/utils/serialize";
 
 export const metadata: Metadata = {
   title: "Activity",
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ActivityPage() {
   // 카테고리별로 활동 가져오기
-  const activitiesByCategory: Record<ActivityCategory, Activity[]> = {
+  const activitiesByCategory: Record<ActivityCategory, SerializedFirestoreData<Activity>[]> = {
     project: [],
     study: [],
     "growth-log": [],
