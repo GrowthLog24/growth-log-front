@@ -3,6 +3,7 @@ import { ACTIVITY_CATEGORIES } from "@/shared/constants";
 import { activityRepository } from "@/infrastructure/repositories/activityRepository";
 import type { Activity, ActivityCategory } from "@/domain/entities";
 import { ActivityCategorySection } from "./components/ActivityCategorySection";
+import { serializeFirestoreData, type SerializedFirestoreData } from "@/shared/utils/serialize";
 
 export const metadata: Metadata = {
   title: "Activity",
@@ -14,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ActivityPage() {
   // 카테고리별로 활동 가져오기
-  const activitiesByCategory: Record<ActivityCategory, Activity[]> = {
+  const activitiesByCategory: Record<ActivityCategory, SerializedFirestoreData<Activity>[]> = {
     project: [],
     study: [],
     "growth-log": [],
@@ -32,9 +33,7 @@ export default async function ActivityPage() {
 
   // 결과를 카테고리별로 매핑 (Timestamp를 직렬화하여 Client Component에 전달)
   ACTIVITY_CATEGORIES.forEach((category, index) => {
-    activitiesByCategory[category as ActivityCategory] = results[index].map(
-      (activity) => JSON.parse(JSON.stringify(activity))
-    );
+    activitiesByCategory[category as ActivityCategory] = serializeFirestoreData(results[index]);
   });
 
   return (

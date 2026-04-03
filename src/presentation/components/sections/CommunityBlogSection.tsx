@@ -6,9 +6,10 @@ import { ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { CommunityBlog } from "@/domain/entities";
+import type { SerializedFirestoreData } from "@/shared/utils/serialize";
 
 interface CommunityBlogSectionProps {
-  initialBlogs: CommunityBlog[];
+  initialBlogs: SerializedFirestoreData<CommunityBlog>[];
 }
 
 const ITEMS_PER_LOAD = 6;
@@ -27,7 +28,15 @@ const PLATFORM_LABELS: Record<string, string> = {
  */
 function formatDate(timestamp: any): string {
   if (!timestamp) return "";
-  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+
+  // 1. Firebase Timestamp 객체인 경우 (toDate 메서드가 있는 경우)
+  // 2. 숫자(milliseconds)나 문자열인 경우
+  const date = typeof timestamp.toDate === 'function'
+    ? timestamp.toDate()
+    : new Date(timestamp);
+
+  if (isNaN(date.getTime())) return "Invalid Date";
+
   return date.toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",
@@ -36,7 +45,7 @@ function formatDate(timestamp: any): string {
 }
 
 export function CommunityBlogSection({ initialBlogs }: CommunityBlogSectionProps) {
-  const [blogs, setBlogs] = useState<CommunityBlog[]>(initialBlogs.slice(0, ITEMS_PER_LOAD));
+  const [blogs, setBlogs] = useState<SerializedFirestoreData<CommunityBlog>[]>(initialBlogs.slice(0, ITEMS_PER_LOAD));
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialBlogs.length > ITEMS_PER_LOAD);
 
@@ -113,7 +122,7 @@ export function CommunityBlogSection({ initialBlogs }: CommunityBlogSectionProps
 /**
  * 블로그 카드 컴포넌트
  */
-function BlogCard({ blog }: { blog: CommunityBlog }) {
+function BlogCard({ blog }: { blog: SerializedFirestoreData<CommunityBlog> }) {
   return (
     <a
       href={blog.url}
