@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description: "그로스로그를 소개합니다. 함께 성장하는 IT 커뮤니티입니다.",
 };
 
+/** 추후 방침따라 수정  **/
+export const dynamic = "force-dynamic";
+
 // 소개 아이템
 const introItems = [
   {
