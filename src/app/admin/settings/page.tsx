@@ -85,9 +85,10 @@ export default function AdminSettingsPage() {
     setSaving(true);
     try {
       // 운영 기간과 누적 기수는 현재 기수에서 자동 계산
+      // 운영 기간: 1기당 6개월이므로 올림 처리 (5기 = 2.5년 = 3년차)
       const calculatedStats = {
         ...stats,
-        operatingYears: Math.floor(config.currentGeneration / 2),
+        operatingYears: Math.ceil(config.currentGeneration / 2),
         generationsCount: config.currentGeneration,
       };
 
@@ -212,12 +213,12 @@ export default function AdminSettingsPage() {
               <Input
                 id="operatingYears"
                 type="text"
-                value={Math.floor(config.currentGeneration / 2) || ""}
+                value={Math.ceil(config.currentGeneration / 2) || ""}
                 disabled
-                className="pr-8 bg-muted"
+                className="pr-12 bg-muted"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
-                년
+                년차
               </span>
             </div>
           </div>
