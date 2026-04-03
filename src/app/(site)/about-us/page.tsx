@@ -59,11 +59,13 @@ export default async function AboutUsPage() {
   const currentGeneration = siteConfig?.currentGeneration || 5;
 
   // 통계 데이터 구성 (숫자 타입으로 전달하여 애니메이션 적용)
+  // 운영 기간과 누적 기수는 현재 기수에서 자동 계산 (관리자 페이지와 동일한 로직)
+  // 운영 기간: 1기당 6개월이므로 올림 처리 (5기 = 2.5년 = 3년차)
   const statsItems = [
-    { label: "운영 기간", value: stats?.operatingYears || 0, suffix: "년" },
+    { label: "운영 기간", value: Math.ceil(currentGeneration / 2), suffix: "년차" },
     { label: "현재 활동 회원", value: stats?.activeMembers || 0, suffix: "명" },
     { label: "프로젝트", value: stats?.projectsCount || 0, suffix: "개" },
-    { label: "누적 기수", value: stats?.generationsCount || 0, suffix: "기" },
+    { label: "누적 기수", value: currentGeneration, suffix: "기" },
     { label: "누적 멤버", value: stats?.totalMembers || 0, suffix: "명" },
     { label: "성장일지 발행", value: stats?.growthPostsCount || 0, suffix: "+" },
   ];
