@@ -21,12 +21,13 @@ import type {
   GrowthTalkActivity,
   ClubActivity,
 } from "@/domain/entities";
-import { ACTIVITY_CATEGORY_LABELS, isClickableActivity } from "@/domain/entities";
+import { ACTIVITY_CATEGORY_LABELS } from "@/domain/entities";
 import { ACTIVITY_CATEGORY_SUBTITLES } from "@/shared/constants";
+import type { SerializedFirestoreData } from "@/shared/utils/serialize";
 
 interface ActivityCategorySectionProps {
   category: ActivityCategory;
-  activities: Activity[];
+  activities: SerializedFirestoreData<Activity>[];
   isOdd: boolean;
 }
 
@@ -35,19 +36,14 @@ const ITEMS_PER_LOAD = 4;
 /**
  * 날짜를 포맷하는 헬퍼 함수
  */
-function formatDate(timestamp: { toDate?: () => Date; seconds?: number } | Date | string): string {
-  let date: Date;
-  if (timestamp instanceof Date) {
-    date = timestamp;
-  } else if (typeof timestamp === "string") {
-    date = new Date(timestamp);
-  } else if (typeof timestamp === "object" && "seconds" in timestamp && timestamp.seconds) {
-    date = new Date(timestamp.seconds * 1000);
-  } else if (typeof timestamp === "object" && "toDate" in timestamp && timestamp.toDate) {
-    date = timestamp.toDate();
-  } else {
-    return "";
-  }
+function formatDate(timestamp: any): string {
+  if (!timestamp) return "";
+  
+  // serializeFirestoreData 유틸리티를 통해 숫자(ms)나 ISO 문자열로 넘어옴
+  const date = new Date(timestamp);
+  
+  if (isNaN(date.getTime())) return "";
+
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
 }
 
@@ -56,7 +52,7 @@ export function ActivityCategorySection({
   activities: allActivities,
   isOdd,
 }: ActivityCategorySectionProps) {
-  const [activities, setActivities] = useState<Activity[]>(
+  const [activities, setActivities] = useState<SerializedFirestoreData<Activity>[]>(
     allActivities.slice(0, ITEMS_PER_LOAD)
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -141,22 +137,20 @@ export function ActivityCategorySection({
  * 활동 카드 컴포넌트
  * 카테고리에 따라 다른 UI를 표시합니다.
  */
-function ActivityCard({ activity }: { activity: Activity }) {
-  const isClickable = isClickableActivity(activity);
-
+function ActivityCard({ activity }: { activity: SerializedFirestoreData<Activity> }) {
   switch (activity.category) {
     case "project":
-      return <ProjectCard activity={activity} />;
+      return <ProjectCard activity={activity as SerializedFirestoreData<ProjectActivity>} />;
     case "study":
-      return <StudyCard activity={activity} />;
+      return <StudyCard activity={activity as SerializedFirestoreData<StudyActivity>} />;
     case "growth-log":
-      return <GrowthLogCard activity={activity} />;
+      return <GrowthLogCard activity={activity as SerializedFirestoreData<GrowthLogActivity>} />;
     case "lecture":
-      return <LectureCard activity={activity} />;
+      return <LectureCard activity={activity as SerializedFirestoreData<LectureActivity>} />;
     case "growth-talk":
-      return <GrowthTalkCard activity={activity} />;
+      return <GrowthTalkCard activity={activity as SerializedFirestoreData<GrowthTalkActivity>} />;
     case "club":
-      return <ClubCard activity={activity} />;
+      return <ClubCard activity={activity as SerializedFirestoreData<ClubActivity>} />;
     default:
       return null;
   }
@@ -165,7 +159,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
 /**
  * 프로젝트 카드 (클릭 시 PDF 다이얼로그)
  */
-function ProjectCard({ activity }: { activity: ProjectActivity }) {
+function ProjectCard({ activity }: { activity: SerializedFirestoreData<ProjectActivity> }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -240,7 +234,7 @@ function ProjectCard({ activity }: { activity: ProjectActivity }) {
 /**
  * 학사 스터디 카드 (클릭 불가)
  */
-function StudyCard({ activity }: { activity: StudyActivity }) {
+function StudyCard({ activity }: { activity: SerializedFirestoreData<StudyActivity> }) {
   return (
     <article className="bg-white rounded-xl overflow-hidden shadow-sm opacity-95">
       {/* Thumbnail */}
@@ -281,7 +275,7 @@ function StudyCard({ activity }: { activity: StudyActivity }) {
 /**
  * 성장일지 카드 (클릭 가능 → 블로그 이동)
  */
-function GrowthLogCard({ activity }: { activity: GrowthLogActivity }) {
+function GrowthLogCard({ activity }: { activity: SerializedFirestoreData<GrowthLogActivity> }) {
   return (
     <a
       href={activity.blogUrl}
@@ -341,7 +335,7 @@ function GrowthLogCard({ activity }: { activity: GrowthLogActivity }) {
 /**
  * 전문가 특강 카드 (클릭 불가)
  */
-function LectureCard({ activity }: { activity: LectureActivity }) {
+function LectureCard({ activity }: { activity: SerializedFirestoreData<LectureActivity> }) {
   const dateStr = activity.lectureDate
     ? formatDate(activity.lectureDate)
     : "";
@@ -390,7 +384,7 @@ function LectureCard({ activity }: { activity: LectureActivity }) {
 /**
  * 그로스톡 카드 (클릭 불가)
  */
-function GrowthTalkCard({ activity }: { activity: GrowthTalkActivity }) {
+function GrowthTalkCard({ activity }: { activity: SerializedFirestoreData<GrowthTalkActivity> }) {
   const dateStr = activity.eventDate
     ? formatDate(activity.eventDate)
     : "";
@@ -445,7 +439,7 @@ function GrowthTalkCard({ activity }: { activity: GrowthTalkActivity }) {
 /**
  * 클럽 활동 카드 (클릭 불가)
  */
-function ClubCard({ activity }: { activity: ClubActivity }) {
+function ClubCard({ activity }: { activity: SerializedFirestoreData<ClubActivity> }) {
   return (
     <article className="bg-white rounded-xl overflow-hidden shadow-sm opacity-95">
       {/* Thumbnail */}

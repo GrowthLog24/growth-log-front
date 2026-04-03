@@ -1,5 +1,6 @@
 import { communityBlogRepository } from "@/infrastructure/repositories/communityBlogRepository";
 import { CommunityBlogSection } from "./CommunityBlogSection";
+import { serializeFirestoreData } from "@/shared/utils/serialize";
 
 /**
  * Community Blog 서버 래퍼 컴포넌트
@@ -8,5 +9,8 @@ import { CommunityBlogSection } from "./CommunityBlogSection";
 export async function CommunityBlogWrapper() {
   const blogs = await communityBlogRepository.getBlogs();
 
-  return <CommunityBlogSection initialBlogs={blogs} />;
+  // Client Component로 전달하기 위해 Plain Object로 직렬화
+  const serializedBlogs = serializeFirestoreData(blogs);
+
+  return <CommunityBlogSection initialBlogs={serializedBlogs} />;
 }

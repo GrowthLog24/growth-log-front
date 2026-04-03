@@ -4,6 +4,8 @@ import { eventRepository } from "@/infrastructure/repositories/eventRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { TimetableClient } from "./TimetableClient";
 
+import { serializeFirestoreData } from "@/shared/utils/serialize";
+
 export const metadata: Metadata = {
   title: "행사 타임테이블 | Growth Log",
   description: "Growth Log 행사 타임테이블",
@@ -18,7 +20,7 @@ export default async function TimetablePage() {
   ]);
 
   const currentGeneration = siteConfig?.currentGeneration ?? 0;
-  const serializedEvents = JSON.parse(JSON.stringify(events));
+  const serializedEvents = serializeFirestoreData(events);
 
   return (
     <>

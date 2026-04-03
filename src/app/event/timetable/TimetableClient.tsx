@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import type { Event, EventTimeBlock } from "@/domain/entities";
+import type { Event } from "@/domain/entities";
+import type { SerializedFirestoreData } from "@/shared/utils/serialize";
 
 interface TimetableClientProps {
-  events: Event[];
+  events: SerializedFirestoreData<Event>[];
   currentGeneration: number;
 }
 
@@ -79,7 +80,7 @@ export function TimetableClient({ events, currentGeneration }: TimetableClientPr
 /**
  * 각 행사를 타임블록 카드로 표시
  */
-function EventCard({ event }: { event: Event }) {
+function EventCard({ event }: { event: SerializedFirestoreData<Event> }) {
   const eventIsNow = isNow(event.date, event.startTime, event.endTime);
 
   const sortedBlocks = [...(event.timeBlocks || [])].sort(

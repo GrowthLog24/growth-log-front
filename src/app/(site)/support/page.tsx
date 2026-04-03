@@ -8,6 +8,8 @@ import { faqCategoryRepository } from "@/infrastructure/repositories/faqCategory
 import { noticeRepository } from "@/infrastructure/repositories/noticeRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { formatDate } from "@/shared/utils/date";
+import { serializeFirestoreData } from "@/shared/utils/serialize";
+import type { FAQ, FAQCategoryItem } from "@/domain/entities";
 
 export const metadata: Metadata = {
   title: "Support",
@@ -15,18 +17,14 @@ export const metadata: Metadata = {
 };
 
 /**
- * FAQ 데이터를 카테고리별로 그룹화 (직렬화 가능한 형태로 변환)
+ * FAQ 데이터를 카테고리별로 그룹화
  */
 function groupFAQsByCategory(
-  faqs: Awaited<ReturnType<typeof faqRepository.getFAQs>>,
-  categories: Awaited<ReturnType<typeof faqCategoryRepository.getCategories>>
+  faqs: FAQ[],
+  categories: FAQCategoryItem[]
 ): { serializedCategories: FAQCategory[]; groupedFAQs: Record<string, FAQItem[]> } {
-  // 카테고리 직렬화 (Timestamp 제거)
-  const serializedCategories: FAQCategory[] = categories.map((cat) => ({
-    id: cat.id,
-    name: cat.name,
-    order: cat.order,
-  }));
+  // 카테고리 직렬화
+  const serializedCategories: FAQCategory[] = serializeFirestoreData(categories);
 
   // FAQ를 카테고리별로 그룹화 및 직렬화
   const groupedFAQs: Record<string, FAQItem[]> = {};
@@ -36,17 +34,11 @@ function groupFAQsByCategory(
     groupedFAQs[cat.name] = [];
   });
 
-  // FAQ를 해당 카테고리에 추가 (직렬화)
-  faqs.forEach((faq) => {
+  // FAQ를 해당 카테고리에 추가
+  const serializedFaqs = serializeFirestoreData(faqs);
+  serializedFaqs.forEach((faq) => {
     if (groupedFAQs[faq.category]) {
-      groupedFAQs[faq.category].push({
-        id: faq.id,
-        category: faq.category,
-        question: faq.question,
-        answerMd: faq.answerMd,
-        order: faq.order,
-        isActive: faq.isActive,
-      });
+      groupedFAQs[faq.category].push(faq);
     }
   });
 
@@ -61,6 +53,10 @@ export default async function SupportPage() {
     noticeRepository.getNotices(),
     siteConfigRepository.getSiteConfig(),
   ]);
+
+  // 데이터 직렬화
+  const serializedNotices = serializeFirestoreData(notices);
+  const serializedSiteConfig = serializeFirestoreData(siteConfig);
 
   // 카테고리별로 FAQ 그룹화 및 직렬화
   const { serializedCategories, groupedFAQs } = groupFAQsByCategory(faqs, categories);
@@ -79,7 +75,7 @@ export default async function SupportPage() {
 
           {/* Notice List */}
           <div className="border rounded-lg divide-y">
-            {notices.map((notice) => (
+            {serializedNotices.map((notice: any) => (
               <Link
                 key={notice.id}
                 href={`/support/notice/${notice.id}`}
@@ -127,8 +123,8 @@ export default async function SupportPage() {
 
           {/* Map */}
           <div className="aspect-[21/9] bg-gray-4 rounded-xl mb-8 overflow-hidden">
-            {siteConfig?.address ? (
-              <GoogleMap address={siteConfig.address} />
+            {serializedSiteConfig?.address ? (
+              <GoogleMap address={serializedSiteConfig.address} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                 주소가 설정되지 않았습니다.
@@ -143,19 +139,19 @@ export default async function SupportPage() {
                 <MapPin className="w-5 h-5 text-primary" />
                 오시는 길
               </h3>
-              {siteConfig?.address && (
+              {serializedSiteConfig?.address && (
                 <p className="text-foreground font-medium mb-2">
-                  {siteConfig.address}
-                  {siteConfig.addressDetail && ` ${siteConfig.addressDetail}`}
+                  {serializedSiteConfig.address}
+                  {serializedSiteConfig.addressDetail && ` ${serializedSiteConfig.addressDetail}`}
                 </p>
               )}
-              {siteConfig?.directionsText && (
+              {serializedSiteConfig?.directionsText && (
                 <MarkdownContent
-                  content={siteConfig.directionsText}
+                  content={serializedSiteConfig.directionsText}
                   className="text-muted-foreground"
                 />
               )}
-              {!siteConfig?.address && !siteConfig?.directionsText && (
+              {!serializedSiteConfig?.address && !serializedSiteConfig?.directionsText && (
                 <p className="text-muted-foreground">
                   오시는 길 정보가 설정되지 않았습니다.
                 </p>
@@ -166,12 +162,12 @@ export default async function SupportPage() {
                 <MessageCircle className="w-5 h-5 text-primary" />
                 문의하기
               </h3>
-              {siteConfig?.chatLink ? (
+              {serializedSiteConfig?.chatLink ? (
                 <p className="text-muted-foreground">
                   문의가 있을 경우 아래 링크를 통해 문의 바랍니다.
                   <br />
                   <a
-                    href={siteConfig.chatLink}
+                    href={serializedSiteConfig.chatLink}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline mt-2 inline-block"
