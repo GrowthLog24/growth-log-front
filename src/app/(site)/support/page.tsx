@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ChevronRight, MapPin, MessageCircle } from "lucide-react";
+import { MapPin, MessageCircle } from "lucide-react";
 import { FAQSection, type FAQCategory, type FAQItem } from "@/presentation/components/faq";
 import { GoogleMap, MarkdownContent } from "@/presentation/components/common";
+import { NoticeList } from "@/presentation/components/support";
 import { faqRepository } from "@/infrastructure/repositories/faqRepository";
 import { faqCategoryRepository } from "@/infrastructure/repositories/faqCategoryRepository";
 import { noticeRepository } from "@/infrastructure/repositories/noticeRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
-import { formatDate } from "@/shared/utils/date";
 import { serializeFirestoreData } from "@/shared/utils/serialize";
 import type { FAQ, FAQCategoryItem } from "@/domain/entities";
 
@@ -75,31 +74,8 @@ export default async function SupportPage() {
             </div>
           </div>
 
-          {/* Notice List */}
-          <div className="border rounded-lg divide-y">
-            {serializedNotices.map((notice: any) => (
-              <Link
-                key={notice.id}
-                href={`/support/notice/${notice.id}`}
-                className="flex items-center justify-between p-4 hover:bg-gray-6 transition-colors"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {notice.isPinned && (
-                    <span className="shrink-0 px-2 py-0.5 bg-primary text-white text-xs rounded">
-                      공지
-                    </span>
-                  )}
-                  <span className="text-foreground truncate">{notice.title}</span>
-                </div>
-                <div className="flex items-center gap-4 shrink-0 ml-4">
-                  <span className="text-sm text-muted-foreground hidden sm:block">
-                    {formatDate(notice.publishedAt)}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </Link>
-            ))}
-          </div>
+          {/* Notice List with Load More */}
+          <NoticeList notices={serializedNotices} />
         </div>
       </section>
 
