@@ -30,6 +30,7 @@ export default function CreateNoticePage() {
     summary: "",
     contentMd: "",
     isPinned: false,
+    publishedAt: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,13 +43,17 @@ export default function CreateNoticePage() {
 
     setSaving(true);
     try {
+      // 게시일을 Timestamp로 변환 (입력된 날짜의 자정 기준)
+      const publishedDate = new Date(form.publishedAt);
+      publishedDate.setHours(0, 0, 0, 0);
+
       await noticeAdminRepository.createNotice({
         title: form.title,
         summary: form.summary,
         contentMd: form.contentMd,
         isPinned: form.isPinned,
         sortOrder: Date.now(),
-        publishedAt: Timestamp.now(),
+        publishedAt: Timestamp.fromDate(publishedDate),
       });
       toast.success("공지사항이 등록되었습니다.");
       router.push("/admin/notices");
@@ -106,6 +111,17 @@ export default function CreateNoticePage() {
                 value={form.contentMd}
                 onChange={(value) => setForm({ ...form, contentMd: value })}
                 placeholder="공지사항 내용을 작성하세요."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="publishedAt">게시일</Label>
+              <Input
+                id="publishedAt"
+                type="date"
+                value={form.publishedAt}
+                onChange={(e) => setForm({ ...form, publishedAt: e.target.value })}
+                className="w-48"
               />
             </div>
 
