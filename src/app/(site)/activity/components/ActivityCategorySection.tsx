@@ -157,64 +157,66 @@ function ActivityCard({ activity }: { activity: SerializedFirestoreData<Activity
 }
 
 /**
- * 프로젝트 카드 (클릭 시 PDF 다이얼로그)
+ * 프로젝트 카드 (PDF 보기 비활성화)
+ * TODO: 발표 PPT 공유는 금지 - 개인정보(이름+학번 등) 포함 우려
  */
 function ProjectCard({ activity }: { activity: SerializedFirestoreData<ProjectActivity> }) {
-  const [open, setOpen] = useState(false);
+  // const [open, setOpen] = useState(false);
 
   return (
-    <>
-      <div
-        className="group cursor-pointer"
-        onClick={() => setOpen(true)}
-      >
-        <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all h-full flex flex-col">
-          {/* Thumbnail */}
-          <div className="relative aspect-[4/3] bg-gray-4 overflow-hidden">
-            {activity.thumbnailUrl ? (
-              <Image
-                src={activity.thumbnailUrl}
-                alt={activity.projectName}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                unoptimized
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-5">
-                <FileText className="w-12 h-12 text-muted-foreground/50" />
-              </div>
-            )}
-            {/* PDF Indicator */}
-            <div className="absolute top-3 right-3">
-              <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
-                <FileText className="w-4 h-4 text-primary" />
-              </div>
-            </div>
-            {/* Platform Badge */}
-            <div className="absolute top-3 left-3">
-              <Badge variant="secondary" className="bg-white/90 text-foreground">
-                {activity.platform}
-              </Badge>
-            </div>
+    <article className="bg-white rounded-xl overflow-hidden shadow-sm opacity-95 h-full flex flex-col">
+      {/* Thumbnail */}
+      <div className="relative aspect-[4/3] bg-gray-4 overflow-hidden">
+        {activity.thumbnailUrl ? (
+          <Image
+            src={activity.thumbnailUrl}
+            alt={activity.projectName}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-5">
+            <FileText className="w-12 h-12 text-muted-foreground/50" />
           </div>
-
-          {/* Content */}
-          <div className="p-4 flex flex-col flex-1">
-            <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-              {activity.projectName}
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-              {activity.description}
-            </p>
-            <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground mt-auto">
-              <span>{activity.generation}기</span>
-              <span>·</span>
-              <span>PM {activity.leaderName}</span>
-            </div>
+        )}
+        {/* PDF Indicator - 비활성화 */}
+        {/* <div className="absolute top-3 right-3">
+          <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+            <FileText className="w-4 h-4 text-primary" />
           </div>
-        </article>
+        </div> */}
+        {/* Platform Badge */}
+        <div className="absolute top-3 left-3">
+          <Badge variant="secondary" className="bg-white/90 text-foreground">
+            {activity.platform}
+          </Badge>
+        </div>
       </div>
 
+      {/* Content */}
+      <div className="p-4 flex flex-col flex-1">
+        <h3 className="text-base font-semibold text-foreground line-clamp-1">
+          {activity.projectName}
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+          {activity.description}
+        </p>
+        <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground mt-auto">
+          <span>{activity.generation}기</span>
+          <span>·</span>
+          <span>PM {activity.leaderName}</span>
+        </div>
+      </div>
+    </article>
+  );
+
+  /* PDF Dialog - 비활성화 (발표 PPT 공유 금지 정책)
+  return (
+    <>
+      <div className="group cursor-pointer" onClick={() => setOpen(true)}>
+        ...카드 UI...
+      </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="!max-w-[65vw] w-[65vw] h-[85vh] p-0 gap-0 flex flex-col">
           <DialogHeader className="px-5 py-3 border-b shrink-0 flex flex-row items-center justify-between">
@@ -229,6 +231,7 @@ function ProjectCard({ activity }: { activity: SerializedFirestoreData<ProjectAc
       </Dialog>
     </>
   );
+  */
 }
 
 /**
@@ -479,7 +482,9 @@ function ClubCard({ activity }: { activity: SerializedFirestoreData<ClubActivity
 
 /**
  * PDF 뷰어 (로딩 프로그레스바 포함)
+ * 비활성화: 발표 PPT 공유 금지 정책 - 개인정보(이름+학번 등) 포함 우려
  */
+/*
 function PdfViewer({ url, title }: { url: string; title: string }) {
   const [loading, setLoading] = useState(true);
 
@@ -503,3 +508,4 @@ function PdfViewer({ url, title }: { url: string; title: string }) {
     </div>
   );
 }
+*/

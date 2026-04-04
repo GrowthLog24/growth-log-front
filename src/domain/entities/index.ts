@@ -66,6 +66,8 @@ export interface Notice {
   summary: string;
   contentMd: string;
   isPinned: boolean;
+  /** 정렬 순서 (낮을수록 먼저 표시) */
+  sortOrder: number;
   publishedAt: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;

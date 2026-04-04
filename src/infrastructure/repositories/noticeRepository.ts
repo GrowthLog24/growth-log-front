@@ -19,21 +19,28 @@ export class NoticeRepository implements INoticeRepository {
   private noticesRef = collection(db, COLLECTIONS.NOTICES);
 
   async getNotices(limit?: number): Promise<Notice[]> {
-    let q = query(
-      this.noticesRef,
-      orderBy("isPinned", "desc"),
-      orderBy("publishedAt", "desc")
-    );
-
-    if (limit) {
-      q = query(q, firestoreLimit(limit));
-    }
-
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
+    const snapshot = await getDocs(this.noticesRef);
+    const notices = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as Notice[];
+
+    // sortOrder 기준 정렬 (없는 경우 publishedAt desc 기준으로 뒤에 배치)
+    notices.sort((a, b) => {
+      const aOrder = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      const bOrder = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      // sortOrder 동일 시 publishedAt 내림차순
+      const aTime = a.publishedAt?.toMillis() ?? 0;
+      const bTime = b.publishedAt?.toMillis() ?? 0;
+      return bTime - aTime;
+    });
+
+    if (limit) {
+      return notices.slice(0, limit);
+    }
+
+    return notices;
   }
 
   async getNoticeById(id: string): Promise<Notice | null> {
