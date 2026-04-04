@@ -209,9 +209,10 @@ export default function AdminNoticesPage() {
 
     setReordering(true);
     try {
+      // sortOrder는 내림차순 정렬이므로, 맨 위 아이템이 가장 큰 숫자를 가져야 함
       const orders = newNotices.map((notice, index) => ({
         id: notice.id,
-        sortOrder: index,
+        sortOrder: newNotices.length - 1 - index,
       }));
       await noticeAdminRepository.updateNoticesOrder(orders);
       toast.success("순서가 변경되었습니다.");
