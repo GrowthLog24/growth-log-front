@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   description: "그로스로그 멤버를 모집합니다. 함께 성장할 분들을 기다립니다.",
 };
 
+/** 매 요청마다 최신 데이터 조회 (인덱스 안정화 후 revalidate = 3600으로 전환) */
+export const dynamic = "force-dynamic";
+
 export default async function RecruitPage() {
   // Firebase에서 모집 설정 가져오기
   const siteConfig = await siteConfigRepository.getSiteConfig();
