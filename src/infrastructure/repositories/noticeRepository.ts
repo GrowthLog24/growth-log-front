@@ -25,16 +25,16 @@ export class NoticeRepository implements INoticeRepository {
       ...doc.data(),
     })) as Notice[];
 
-    // 정렬 순서: 1) isPinned (고정 공지 우선) 2) sortOrder 내림차순 (숫자가 높을수록 위로)
+    // 정렬 순서: 1) isPinned (고정 공지 우선) 2) publishedAt 내림차순 (최신순)
     notices.sort((a, b) => {
       // 고정 공지가 항상 위로
       if (a.isPinned !== b.isPinned) {
         return a.isPinned ? -1 : 1;
       }
-      // sortOrder 내림차순 (숫자가 높을수록 위로, 신규 등록이 위로)
-      const aOrder = a.sortOrder ?? 0;
-      const bOrder = b.sortOrder ?? 0;
-      return bOrder - aOrder;
+      // publishedAt 내림차순 (최신이 위로)
+      const aTime = a.publishedAt?.toMillis?.() ?? (typeof a.publishedAt === 'number' ? a.publishedAt : 0);
+      const bTime = b.publishedAt?.toMillis?.() ?? (typeof b.publishedAt === 'number' ? b.publishedAt : 0);
+      return bTime - aTime;
     });
 
     if (limit) {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
+import { Timestamp } from "firebase/firestore";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ export default function EditNoticePage() {
     summary: "",
     contentMd: "",
     isPinned: false,
+    publishedAt: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
   });
 
   useEffect(() => {
@@ -42,11 +44,18 @@ export default function EditNoticePage() {
       try {
         const notice = await noticeRepository.getNoticeById(noticeId);
         if (notice) {
+          // publishedAt을 YYYY-MM-DD 형식으로 변환
+          const publishedDate = notice.publishedAt?.toDate?.()
+            ? notice.publishedAt.toDate()
+            : new Date();
+          const publishedAtStr = publishedDate.toISOString().split("T")[0];
+
           setForm({
             title: notice.title,
             summary: notice.summary,
             contentMd: notice.contentMd,
             isPinned: notice.isPinned,
+            publishedAt: publishedAtStr,
           });
         } else {
           toast.error("공지사항을 찾을 수 없습니다.");
@@ -73,11 +82,16 @@ export default function EditNoticePage() {
 
     setSaving(true);
     try {
+      // 게시일을 Timestamp로 변환
+      const publishedDate = new Date(form.publishedAt);
+      publishedDate.setHours(0, 0, 0, 0);
+
       await noticeAdminRepository.updateNotice(noticeId, {
         title: form.title,
         summary: form.summary,
         contentMd: form.contentMd,
         isPinned: form.isPinned,
+        publishedAt: Timestamp.fromDate(publishedDate),
       });
       toast.success("공지사항이 수정되었습니다.");
       router.push("/admin/notices");
@@ -143,6 +157,17 @@ export default function EditNoticePage() {
                 value={form.contentMd}
                 onChange={(value) => setForm({ ...form, contentMd: value })}
                 placeholder="공지사항 내용을 작성하세요."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="publishedAt">게시일</Label>
+              <Input
+                id="publishedAt"
+                type="date"
+                value={form.publishedAt}
+                onChange={(e) => setForm({ ...form, publishedAt: e.target.value })}
+                className="w-48"
               />
             </div>
 
