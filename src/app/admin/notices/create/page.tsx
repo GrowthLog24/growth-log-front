@@ -47,6 +47,7 @@ export default function CreateNoticePage() {
         summary: form.summary,
         contentMd: form.contentMd,
         isPinned: form.isPinned,
+        sortOrder: Date.now(),
         publishedAt: Timestamp.now(),
       });
       toast.success("공지사항이 등록되었습니다.");

@@ -5,6 +5,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  writeBatch,
   Timestamp,
 } from "firebase/firestore";
 import { db, COLLECTIONS } from "@/infrastructure/firebase";
@@ -56,6 +57,18 @@ export class NoticeAdminRepository {
    */
   async togglePinned(id: string, isPinned: boolean): Promise<void> {
     await this.updateNotice(id, { isPinned });
+  }
+
+  /**
+   * 공지사항 순서 일괄 변경
+   */
+  async updateNoticesOrder(orders: { id: string; sortOrder: number }[]): Promise<void> {
+    const batch = writeBatch(db);
+    for (const { id, sortOrder } of orders) {
+      const docRef = doc(this.noticesRef, id);
+      batch.update(docRef, { sortOrder, updatedAt: serverTimestamp() });
+    }
+    await batch.commit();
   }
 }
 

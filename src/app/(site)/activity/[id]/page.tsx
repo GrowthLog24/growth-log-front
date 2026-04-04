@@ -28,10 +28,10 @@ export default async function ActivityDetailPage({ params }: PageProps) {
   // 카테고리별 리다이렉트 처리
   switch (activity.category) {
     case "project":
-      // 프로젝트는 PDF URL로 리다이렉트
-      if (activity.pdfUrl) {
-        redirect(activity.pdfUrl);
-      }
+      // 프로젝트 PDF 리다이렉트 비활성화 (발표 PPT 공유 금지 정책)
+      // if (activity.pdfUrl) {
+      //   redirect(activity.pdfUrl);
+      // }
       break;
     case "growth-log":
       // 성장일지는 블로그 URL로 리다이렉트

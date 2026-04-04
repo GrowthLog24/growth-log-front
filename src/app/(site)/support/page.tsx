@@ -11,6 +11,8 @@ import { formatDate } from "@/shared/utils/date";
 import { serializeFirestoreData } from "@/shared/utils/serialize";
 import type { FAQ, FAQCategoryItem } from "@/domain/entities";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Support",
   description: "그로스로그 공지사항, FAQ, 찾아오시는 길을 안내합니다.",
