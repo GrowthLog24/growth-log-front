@@ -119,29 +119,66 @@ function EventCard({ event }: { event: SerializedFirestoreData<Event> }) {
             const blockIsNow = isNow(event.date, block.startTime, block.endTime);
 
             return (
-              <div
-                key={block.id}
-                className={`flex items-start gap-3 px-4 py-3 ${
-                  i > 0 ? "border-t border-dashed border-gray-5" : ""
-                } ${blockIsNow ? "bg-green-9/30 mx-2 px-3 rounded-lg" : ""}`}
-              >
-                <span
-                  className={`text-[13px] font-semibold whitespace-nowrap min-w-[96px] shrink-0 pt-px text-green-1 ${
-                    blockIsNow ? "font-bold" : ""
-                  }`}
+              <div key={block.id}>
+                <div
+                  className={`flex items-start gap-3 px-4 py-3 ${
+                    i > 0 ? "border-t border-dashed border-gray-5" : ""
+                  } ${blockIsNow ? "bg-green-9/30 mx-2 px-3 rounded-lg" : ""}`}
                 >
-                  {block.startTime} - {block.endTime}
-                </span>
-                <div className="text-sm text-gray-1 leading-relaxed">
-                  <strong className="text-gray-black font-semibold">
-                    {block.title}
-                  </strong>
-                  {block.description && (
-                    <span className="block text-xs text-gray-2 mt-1 leading-snug">
-                      {block.description}
-                    </span>
-                  )}
+                  <span
+                    className={`text-[13px] font-semibold whitespace-nowrap min-w-[96px] shrink-0 pt-px text-green-1 ${
+                      blockIsNow ? "font-bold" : ""
+                    }`}
+                  >
+                    {block.startTime} - {block.endTime}
+                  </span>
+                  <div className="text-sm text-gray-1 leading-relaxed">
+                    <strong className="text-gray-black font-semibold">
+                      {block.title}
+                    </strong>
+                    {block.description && (
+                      <span className="block text-xs text-gray-2 mt-1 leading-snug">
+                        {block.description}
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* 세부 항목 (subItems) */}
+                {block.subItems && block.subItems.length > 0 && (
+                  <div className="ml-8 pl-4 border-l-2 border-gray-5 space-y-2 py-2">
+                    {block.subItems.map((subItem, j) => {
+                      const subItemIsNow = isNow(event.date, subItem.startTime, subItem.endTime);
+
+                      return (
+                        <div
+                          key={j}
+                          className={`flex items-start gap-3 py-1.5 px-2 rounded ${
+                            subItemIsNow ? "bg-green-9/30" : ""
+                          }`}
+                        >
+                          <span
+                            className={`text-xs font-medium whitespace-nowrap min-w-[88px] shrink-0 text-gray-3 ${
+                              subItemIsNow ? "text-green-1 font-semibold" : ""
+                            }`}
+                          >
+                            {subItem.startTime} - {subItem.endTime}
+                          </span>
+                          <div className="text-sm text-gray-2">
+                            <span className={subItemIsNow ? "text-gray-black font-medium" : ""}>
+                              {subItem.title}
+                            </span>
+                            {subItem.description && (
+                              <span className="block text-xs text-gray-3 mt-0.5">
+                                {subItem.description}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
