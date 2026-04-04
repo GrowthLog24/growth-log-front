@@ -8,6 +8,7 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { MarkdownEditor } from "@/presentation/components/common";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -30,7 +31,7 @@ export default function CreateNoticePage() {
     summary: "",
     contentMd: "",
     isPinned: false,
-    publishedAt: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
+    publishedAt: new Date(),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,17 +44,13 @@ export default function CreateNoticePage() {
 
     setSaving(true);
     try {
-      // 게시일을 Timestamp로 변환 (입력된 날짜의 자정 기준)
-      const publishedDate = new Date(form.publishedAt);
-      publishedDate.setHours(0, 0, 0, 0);
-
       await noticeAdminRepository.createNotice({
         title: form.title,
         summary: form.summary,
         contentMd: form.contentMd,
         isPinned: form.isPinned,
         sortOrder: Date.now(),
-        publishedAt: Timestamp.fromDate(publishedDate),
+        publishedAt: Timestamp.fromDate(form.publishedAt),
       });
       toast.success("공지사항이 등록되었습니다.");
       router.push("/admin/notices");
@@ -115,12 +112,11 @@ export default function CreateNoticePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="publishedAt">게시일</Label>
-              <Input
-                id="publishedAt"
-                type="date"
+              <Label>게시일</Label>
+              <DatePicker
                 value={form.publishedAt}
-                onChange={(e) => setForm({ ...form, publishedAt: e.target.value })}
+                onChange={(date) => setForm({ ...form, publishedAt: date || new Date() })}
+                placeholder="게시일 선택"
                 className="w-48"
               />
             </div>
