@@ -1,6 +1,6 @@
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { HeroSection } from "./HeroSection";
-import type { RecruitmentStatus } from "@/domain/entities";
+import type { RecruitmentStatus, CtaMode } from "@/domain/entities";
 
 // Fallback 값 - Firestore 데이터가 없을 때 사용
 const FALLBACK_GENERATION = 1;
@@ -21,10 +21,20 @@ export async function HeroWrapper() {
     ? (siteConfig?.recruitmentGeneration ?? FALLBACK_GENERATION)
     : (siteConfig?.currentGeneration ?? FALLBACK_GENERATION);
 
+  // CTA 설정 구성
+  const ctaConfig = {
+    mode: (siteConfig?.ctaMode ?? "auto") as CtaMode,
+    primaryText: siteConfig?.primaryCtaText,
+    primaryLink: siteConfig?.primaryCtaLink,
+    secondaryText: siteConfig?.secondaryCtaText,
+    secondaryLink: siteConfig?.secondaryCtaLink,
+  };
+
   return (
     <HeroSection
       generation={generation}
       recruitmentStatus={recruitmentStatus}
+      ctaConfig={ctaConfig}
     />
   );
 }
