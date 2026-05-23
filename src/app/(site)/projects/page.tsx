@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { awardRepository } from "@/infrastructure/repositories/awardRepository";
 import { projectRepository } from "@/infrastructure/repositories/projectRepository";
+import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { serializeFirestoreData } from "@/shared/utils/serialize";
+import { ProjectScheduleSection } from "./components/ProjectScheduleSection";
 import { AwardsSection } from "./components/AwardsSection";
 import { ProjectsSection } from "./components/ProjectsSection";
 
@@ -15,11 +17,15 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  // 수상 내역과 프로젝트 목록을 병렬로 가져오기
-  const [awards, projects] = await Promise.all([
+  // 수상 내역, 프로젝트 목록, 사이트 설정을 병렬로 가져오기
+  const [awards, projects, siteConfig] = await Promise.all([
     awardRepository.getActiveAwards(),
     projectRepository.getActiveProjects(),
+    siteConfigRepository.getSiteConfig(),
   ]);
+
+  // 참여 신청 CTA 링크 (헤더 CTA와 동일하게 siteConfig의 구글폼 링크 사용)
+  const applyLink = siteConfig?.primaryCtaLink ?? "";
 
   // 수상한 프로젝트 ID Set 생성
   const awardedProjectIds = new Set(
@@ -32,6 +38,9 @@ export default async function ProjectsPage() {
 
   return (
     <>
+      {/* Project Schedule Section - 최상단 (5기 프로젝트 일정) */}
+      <ProjectScheduleSection applyLink={applyLink} />
+
       {/* Awards Section - 상단 */}
       <AwardsSection awards={serializedAwards} />
 
