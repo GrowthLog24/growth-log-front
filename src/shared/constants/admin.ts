@@ -10,6 +10,8 @@ import {
   Rss,
   UserRoundSearch,
   CalendarClock,
+  Trophy,
+  MousePointerClick,
   type LucideIcon,
 } from "lucide-react";
 
@@ -49,6 +51,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: FolderKanban,
   },
   {
+    title: "수상 내역",
+    href: "/admin/awards",
+    icon: Trophy,
+  },
+  {
     title: "멤버 후기",
     href: "/admin/testimonials",
     icon: MessageSquare,
@@ -79,6 +86,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: CalendarClock,
   },
   {
+    title: "CTA 버튼 설정",
+    href: "/admin/cta",
+    icon: MousePointerClick,
+  },
+  {
     title: "사이트 정보 설정",
     href: "/admin/settings",
     icon: Settings,
@@ -93,11 +105,13 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/recruitment": "모집/사전등록 신청",
   "/admin/community-blogs": "커뮤니티 블로그",
   "/admin/activities": "활동 기록",
+  "/admin/awards": "수상 내역",
   "/admin/testimonials": "멤버 후기",
   "/admin/notices": "공지사항",
   "/admin/faqs": "FAQ",
   "/admin/schedules": "월별 일정",
   "/admin/members": "멤버 관리",
   "/admin/events": "행사 타임테이블",
+  "/admin/cta": "CTA 버튼 설정",
   "/admin/settings": "사이트 정보 설정",
 };

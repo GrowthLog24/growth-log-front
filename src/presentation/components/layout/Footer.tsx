@@ -36,6 +36,62 @@ export async function Footer() {
                 <span>{fullAddress}</span>
               </p>
             )}
+            {/* 소셜 채널 아이콘 */}
+            {(siteConfig?.instagramLink || siteConfig?.blogLink || siteConfig?.chatLink) && (
+              <div className="mt-4 flex items-center gap-4">
+                {siteConfig?.instagramLink && (
+                  <a
+                    href={siteConfig.instagramLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-70 transition-opacity"
+                    aria-label="인스타그램"
+                  >
+                    <Image
+                      src="/instagram.svg"
+                      alt="Instagram"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </a>
+                )}
+                {siteConfig?.blogLink && (
+                  <a
+                    href={siteConfig.blogLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-70 transition-opacity"
+                    aria-label="블로그"
+                  >
+                    <Image
+                      src="/tistory.svg"
+                      alt="Tistory"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </a>
+                )}
+                {siteConfig?.chatLink && (
+                  <a
+                    href={siteConfig.chatLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-70 transition-opacity"
+                    aria-label="카카오톡 채널"
+                  >
+                    <Image
+                      src="/kakao.svg"
+                      alt="KakaoTalk"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </a>
+                )}
+              </div>
+            )}
             <p className="mt-4 text-sm text-muted-foreground">
               © Copyright 2024-{currentYear} {SITE_METADATA.title}. All rights reserved.
             </p>

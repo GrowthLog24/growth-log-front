@@ -19,12 +19,21 @@ export interface User {
 }
 
 /**
+ * CTA 설정 모드
+ * - auto: 모집 상태 기반 자동 생성
+ * - manual: 어드민에서 설정한 텍스트/링크 사용
+ */
+export type CtaMode = "auto" | "manual";
+
+/**
  * 사이트 전역 설정
  * Collection: siteConfig/{docId}
  */
 export interface SiteConfig {
   currentGeneration: number;
+  /** @deprecated 사용하지 않음. ctaMode와 primaryCtaText를 사용하세요. */
   navCtaText: string;
+  /** @deprecated 사용하지 않음. ctaMode와 primaryCtaLink를 사용하세요. */
   navCtaLink: string;
   chatLink: string;
   /** 모집 활성화 여부 */
@@ -39,6 +48,20 @@ export interface SiteConfig {
   addressDetail?: string;
   /** 오시는 길 안내 텍스트 */
   directionsText?: string;
+  /** CTA 설정 모드 - auto: 모집상태 기반 자동, manual: 수동 설정 */
+  ctaMode?: CtaMode;
+  /** 메인 CTA 텍스트 (manual 모드에서 사용) */
+  primaryCtaText?: string;
+  /** 메인 CTA 링크 (manual 모드에서 사용) */
+  primaryCtaLink?: string;
+  /** 보조 CTA 텍스트 (HeroSection 두번째 버튼, manual 모드에서 사용) */
+  secondaryCtaText?: string;
+  /** 보조 CTA 링크 (HeroSection 두번째 버튼, manual 모드에서 사용) */
+  secondaryCtaLink?: string;
+  /** 인스타그램 링크 */
+  instagramLink?: string;
+  /** 블로그 링크 (티스토리) */
+  blogLink?: string;
   updatedAt: Timestamp;
 }
 
@@ -537,6 +560,32 @@ export interface Event {
   /** 타임테이블 블록 목록 */
   timeBlocks: EventTimeBlock[];
   /** 활성화 여부 (공개 페이지에 표시) */
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
+ * 수상 내역
+ * Collection: awards/{awardId}
+ */
+export interface Award {
+  id: string;
+  /** 연결된 프로젝트 ID (activities 컬렉션의 project) */
+  projectId: string;
+  /** 수상명 (대상, 최우수상, 우수상 등) */
+  awardTitle: string;
+  /** 대회명 */
+  competitionName: string;
+  /** 수상 프로젝트명 (projectId로 자동 채워지거나 직접 입력) */
+  projectName: string;
+  /** 수상일 */
+  awardDate: Timestamp;
+  /** 기수 */
+  generation: number;
+  /** 정렬 순서 */
+  order: number;
+  /** 활성화 여부 */
   isActive: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;

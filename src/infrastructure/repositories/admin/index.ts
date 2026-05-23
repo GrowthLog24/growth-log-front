@@ -6,3 +6,4 @@ export { faqAdminRepository } from "./faqAdminRepository";
 export { activityAdminRepository } from "./activityAdminRepository";
 export { testimonialAdminRepository } from "./testimonialAdminRepository";
 export { recruitmentAdminRepository } from "./recruitmentAdminRepository";
+export { awardAdminRepository } from "./awardAdminRepository";

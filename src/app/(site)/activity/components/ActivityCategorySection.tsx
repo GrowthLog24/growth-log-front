@@ -1,20 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
-import { ExternalLink, FileText, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useInfiniteScroll } from "@/shared/hooks";
 import type {
   Activity,
   ActivityCategory,
-  ProjectActivity,
   StudyActivity,
   GrowthLogActivity,
   LectureActivity,
@@ -31,7 +23,7 @@ interface ActivityCategorySectionProps {
   isOdd: boolean;
 }
 
-const ITEMS_PER_LOAD = 4;
+const ITEMS_PER_LOAD = 8;
 
 /**
  * 날짜를 포맷하는 헬퍼 함수
@@ -52,26 +44,10 @@ export function ActivityCategorySection({
   activities: allActivities,
   isOdd,
 }: ActivityCategorySectionProps) {
-  const [activities, setActivities] = useState<SerializedFirestoreData<Activity>[]>(
-    allActivities.slice(0, ITEMS_PER_LOAD)
-  );
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(allActivities.length > ITEMS_PER_LOAD);
-
-  const loadMore = async () => {
-    setIsLoading(true);
-
-    const nextItems = allActivities.slice(
-      activities.length,
-      activities.length + ITEMS_PER_LOAD
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    setActivities((prev) => [...prev, ...nextItems]);
-    setHasMore(activities.length + nextItems.length < allActivities.length);
-    setIsLoading(false);
-  };
+  const { visibleItems, hasMore, isLoading, observerRef } = useInfiniteScroll({
+    items: allActivities,
+    itemsPerLoad: ITEMS_PER_LOAD,
+  });
 
   const title = ACTIVITY_CATEGORY_LABELS[category];
   const subtitle = ACTIVITY_CATEGORY_SUBTITLES[category];
@@ -102,30 +78,21 @@ export function ActivityCategorySection({
         {/* Activity Cards */}
         {!isEmpty && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {activities.map((activity) => (
+            {visibleItems.map((activity) => (
               <ActivityCard key={activity.id} activity={activity} />
             ))}
           </div>
         )}
 
-        {/* Load More Button */}
+        {/* Infinite Scroll Observer */}
         {hasMore && (
-          <div className="mt-10 text-center">
-            <Button
-              variant="outline"
-              onClick={loadMore}
-              disabled={isLoading}
-              className="min-w-[140px]"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  불러오는 중...
-                </>
-              ) : (
-                "더 보기"
-              )}
-            </Button>
+          <div
+            ref={observerRef}
+            className="flex justify-center items-center py-8"
+          >
+            {isLoading && (
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            )}
           </div>
         )}
       </div>
@@ -136,11 +103,10 @@ export function ActivityCategorySection({
 /**
  * 활동 카드 컴포넌트
  * 카테고리에 따라 다른 UI를 표시합니다.
+ * Note: project는 /projects 페이지로 분리됨
  */
 function ActivityCard({ activity }: { activity: SerializedFirestoreData<Activity> }) {
   switch (activity.category) {
-    case "project":
-      return <ProjectCard activity={activity as SerializedFirestoreData<ProjectActivity>} />;
     case "study":
       return <StudyCard activity={activity as SerializedFirestoreData<StudyActivity>} />;
     case "growth-log":
@@ -154,84 +120,6 @@ function ActivityCard({ activity }: { activity: SerializedFirestoreData<Activity
     default:
       return null;
   }
-}
-
-/**
- * 프로젝트 카드 (PDF 보기 비활성화)
- * TODO: 발표 PPT 공유는 금지 - 개인정보(이름+학번 등) 포함 우려
- */
-function ProjectCard({ activity }: { activity: SerializedFirestoreData<ProjectActivity> }) {
-  // const [open, setOpen] = useState(false);
-
-  return (
-    <article className="bg-white rounded-xl overflow-hidden shadow-sm opacity-95 h-full flex flex-col">
-      {/* Thumbnail */}
-      <div className="relative aspect-[4/3] bg-gray-4 overflow-hidden">
-        {activity.thumbnailUrl ? (
-          <Image
-            src={activity.thumbnailUrl}
-            alt={activity.projectName}
-            fill
-            className="object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-5">
-            <FileText className="w-12 h-12 text-muted-foreground/50" />
-          </div>
-        )}
-        {/* PDF Indicator - 비활성화 */}
-        {/* <div className="absolute top-3 right-3">
-          <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
-            <FileText className="w-4 h-4 text-primary" />
-          </div>
-        </div> */}
-        {/* Platform Badge */}
-        <div className="absolute top-3 left-3">
-          <Badge variant="secondary" className="bg-white/90 text-foreground">
-            {activity.platform}
-          </Badge>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="text-base font-semibold text-foreground line-clamp-1">
-          {activity.projectName}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-          {activity.description}
-        </p>
-        <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground mt-auto">
-          <span>{activity.generation}기</span>
-          <span>·</span>
-          <span>PM {activity.leaderName}</span>
-        </div>
-      </div>
-    </article>
-  );
-
-  /* PDF Dialog - 비활성화 (발표 PPT 공유 금지 정책)
-  return (
-    <>
-      <div className="group cursor-pointer" onClick={() => setOpen(true)}>
-        ...카드 UI...
-      </div>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="!max-w-[65vw] w-[65vw] h-[85vh] p-0 gap-0 flex flex-col">
-          <DialogHeader className="px-5 py-3 border-b shrink-0 flex flex-row items-center justify-between">
-            <DialogTitle className="flex items-center gap-2 text-sm">
-              {activity.projectName}
-              <Badge variant="secondary">{activity.platform}</Badge>
-              <span className="text-muted-foreground font-normal">{activity.generation}기 · PM {activity.leaderName}</span>
-            </DialogTitle>
-          </DialogHeader>
-          <PdfViewer url={activity.pdfUrl} title={activity.projectName} />
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-  */
 }
 
 /**
@@ -480,32 +368,3 @@ function ClubCard({ activity }: { activity: SerializedFirestoreData<ClubActivity
   );
 }
 
-/**
- * PDF 뷰어 (로딩 프로그레스바 포함)
- * 비활성화: 발표 PPT 공유 금지 정책 - 개인정보(이름+학번 등) 포함 우려
- */
-/*
-function PdfViewer({ url, title }: { url: string; title: string }) {
-  const [loading, setLoading] = useState(true);
-
-  return (
-    <div className="flex-1 min-h-0 relative">
-      {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background z-10">
-          <FileText className="w-10 h-10 text-primary/30" />
-          <p className="text-sm text-muted-foreground">PDF 불러오는 중...</p>
-          <div className="w-48 h-1.5 bg-gray-5 rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full animate-progress" />
-          </div>
-        </div>
-      )}
-      <iframe
-        src={`${url}#toolbar=0&navpanes=0`}
-        className="w-full h-full"
-        title={title}
-        onLoad={() => setLoading(false)}
-      />
-    </div>
-  );
-}
-*/

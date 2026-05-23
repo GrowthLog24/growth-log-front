@@ -53,6 +53,9 @@ export const COLLECTIONS = {
 
   /** 행사 */
   EVENTS: "events",
+
+  /** 수상 내역 */
+  AWARDS: "awards",
 } as const;
 
 /**

@@ -23,15 +23,23 @@ export function Header() {
         const config = await siteConfigRepository.getSiteConfig();
         if (config) {
           setIsRecruitmentOpen(config.isRecruitmentOpen);
-          if (config.isRecruitmentOpen) {
-            // 모집 중: "{모집기수}기 지원하기"
-            setCtaText(`${config.recruitmentGeneration}기 지원하기`);
-            setCtaLink("/recruit");
+
+          // 수동 모드: 어드민에서 설정한 텍스트/링크 사용
+          if (config.ctaMode === "manual" && config.primaryCtaText && config.primaryCtaLink) {
+            setCtaText(config.primaryCtaText);
+            setCtaLink(config.primaryCtaLink);
           } else {
-            // 모집 종료: "{현재기수+1}기 사전 등록하기"
-            const nextGeneration = (config.currentGeneration || 0) + 1;
-            setCtaText(`${nextGeneration}기 사전 등록하기`);
-            setCtaLink("/pre-register");
+            // 자동 모드: 모집 상태에 따라 자동 생성
+            if (config.isRecruitmentOpen) {
+              // 모집 중: "{모집기수}기 지원하기"
+              setCtaText(`${config.recruitmentGeneration}기 지원하기`);
+              setCtaLink("/recruit");
+            } else {
+              // 모집 종료: "{현재기수+1}기 사전 등록하기"
+              const nextGeneration = (config.currentGeneration || 0) + 1;
+              setCtaText(`${nextGeneration}기 사전 등록하기`);
+              setCtaLink("/pre-register");
+            }
           }
         }
       } catch (error) {

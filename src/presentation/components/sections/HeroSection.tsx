@@ -4,20 +4,54 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
-import type { RecruitmentStatus } from "@/domain/entities";
+import type { RecruitmentStatus, CtaMode } from "@/domain/entities";
+
+interface CtaConfig {
+  mode: CtaMode;
+  primaryText?: string;
+  primaryLink?: string;
+  secondaryText?: string;
+  secondaryLink?: string;
+}
 
 interface HeroSectionProps {
   generation: number;
   recruitmentStatus: RecruitmentStatus;
+  ctaConfig?: CtaConfig;
 }
 
-export function HeroSection({ generation, recruitmentStatus }: HeroSectionProps) {
+export function HeroSection({ generation, recruitmentStatus, ctaConfig }: HeroSectionProps) {
   const [isContentVisible, setIsContentVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const videoUrl = getStorageUrl(STORAGE_PATHS.HERO_BG_VIDEO);
 
   const isRecruiting = recruitmentStatus === "OPEN";
   const nextGeneration = generation + 1;
+
+  // CTA 텍스트/링크 결정
+  const getPrimaryCta = () => {
+    // 수동 모드이고 설정이 있으면 사용
+    if (ctaConfig?.mode === "manual" && ctaConfig.primaryText && ctaConfig.primaryLink) {
+      return { text: ctaConfig.primaryText, link: ctaConfig.primaryLink };
+    }
+    // 자동 모드 또는 설정 없음
+    if (isRecruiting) {
+      return { text: `${generation}기 지원하기`, link: "/recruit" };
+    }
+    return { text: `${nextGeneration}기 사전등록하기`, link: "/pre-register" };
+  };
+
+  const getSecondaryCta = () => {
+    // 수동 모드이고 설정이 있으면 사용
+    if (ctaConfig?.mode === "manual" && ctaConfig.secondaryText && ctaConfig.secondaryLink) {
+      return { text: ctaConfig.secondaryText, link: ctaConfig.secondaryLink };
+    }
+    // 기본값
+    return { text: "더 알아보기", link: "/about-us" };
+  };
+
+  const primaryCta = getPrimaryCta();
+  const secondaryCta = getSecondaryCta();
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
     if (!sectionRef.current) return;
@@ -89,22 +123,16 @@ export function HeroSection({ generation, recruitmentStatus }: HeroSectionProps)
             다양한 분야에 종사하는 멤버들과 함께하며 새로운 인사이트를 얻어가세요.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            {isRecruiting ? (
-              <Button asChild size="lg" className="text-base">
-                <Link href="/recruit">{generation}기 지원하기</Link>
-              </Button>
-            ) : (
-              <Button asChild size="lg" className="text-base">
-                <Link href="/pre-register">{nextGeneration}기 사전등록하기</Link>
-              </Button>
-            )}
+            <Button asChild size="lg" className="text-base">
+              <Link href={primaryCta.link}>{primaryCta.text}</Link>
+            </Button>
             <Button
               asChild
               size="lg"
               variant="outline"
               className="text-base bg-transparent text-white border-white hover:bg-white hover:text-gray-black"
             >
-              <Link href="/about-us">더 알아보기</Link>
+              <Link href={secondaryCta.link}>{secondaryCta.text}</Link>
             </Button>
           </div>
         </div>

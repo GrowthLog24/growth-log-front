@@ -185,7 +185,7 @@ export default async function AboutUsPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
             <div className="absolute bottom-6 left-6 text-white">
-              <p className="text-sm opacity-80">그로스로그 {currentGeneration - 1}기</p>
+              <p className="text-sm opacity-80">그로스로그 {currentGeneration}기</p>
               <h3 className="text-2xl font-bold">함께 성장하는 우리</h3>
             </div>
           </div>

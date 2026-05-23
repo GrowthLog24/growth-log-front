@@ -1,8 +1,8 @@
 /**
  * 활동 카테고리 (영문 slug)
+ * Note: project는 /projects 페이지로 분리됨
  */
 export const ACTIVITY_CATEGORIES = [
-  "project",
   "study",
   "growth-log",
   "lecture",
@@ -14,7 +14,6 @@ export const ACTIVITY_CATEGORIES = [
  * 활동 카테고리 영문 서브타이틀
  */
 export const ACTIVITY_CATEGORY_SUBTITLES: Record<string, string> = {
-  project: "TEAM PROJECT",
   study: "COMPUTER SCIENCE STUDY",
   "growth-log": "TECH BLOG CURATION",
   lecture: "GROWTH PRIME",
@@ -39,6 +38,7 @@ export const FAQ_CATEGORIES = [
 export const NAV_ITEMS = [
   { label: "About us", href: "/about-us" },
   { label: "Activity", href: "/activity" },
+  { label: "Projects", href: "/projects" },
   { label: "Recruit", href: "/recruit" },
   { label: "Support", href: "/support" },
 ] as const;

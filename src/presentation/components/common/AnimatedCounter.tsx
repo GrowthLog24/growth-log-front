@@ -61,6 +61,9 @@ export function AnimatedCounter({
 
       if (progress < 1) {
         requestAnimationFrame(animate);
+      } else {
+        // 애니메이션 종료 시 최종값을 정확히 설정
+        setCount(end);
       }
     };
 

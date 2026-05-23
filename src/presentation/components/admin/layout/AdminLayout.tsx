@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
@@ -26,6 +27,13 @@ interface AdminLayoutProps {
  * 관리자 페이지 전체 레이아웃
  */
 export function AdminLayout({ children, user }: AdminLayoutProps) {
+  // Radix UI ID hydration 불일치 방지를 위해 클라이언트 마운트 후 렌더링
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-6">
       {/* 상단 헤더 - 전체 너비 */}
@@ -43,22 +51,28 @@ export function AdminLayout({ children, user }: AdminLayoutProps) {
           </Link>
 
           {/* 우측 사용자 정보 */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm text-gray-black hover:text-primary transition-colors outline-none">
-              <span>{user?.name || "관리자"} 님</span>
-              <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href="/" target="_blank">
-                  사이트 보기
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/admin/login" })}>
-                로그아웃
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {mounted ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-sm text-gray-black hover:text-primary transition-colors outline-none">
+                <span>{user?.name || "관리자"} 님</span>
+                <ChevronDown className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href="/" target="_blank">
+                    사이트 보기
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/admin/login" })}>
+                  로그아웃
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <span className="text-sm text-gray-black">
+              {user?.name || "관리자"} 님
+            </span>
+          )}
         </div>
       </header>
 

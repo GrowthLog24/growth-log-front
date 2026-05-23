@@ -52,6 +52,8 @@ export default function AdminSettingsPage() {
             address: "",
             addressDetail: "",
             directionsText: "",
+            instagramLink: "",
+            blogLink: "",
           });
         }
 
@@ -186,8 +188,38 @@ export default function AdminSettingsPage() {
               placeholder="오시는 길 안내를 작성하세요..."
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 소셜 채널 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>소셜 채널</CardTitle>
+          <CardDescription>
+            푸터에 표시되는 소셜 채널 링크를 설정합니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="chatLink">문의 채팅 링크</Label>
+            <Label htmlFor="instagramLink">인스타그램</Label>
+            <Input
+              id="instagramLink"
+              value={config.instagramLink || ""}
+              onChange={(e) => updateConfig("instagramLink", e.target.value)}
+              placeholder="예: https://instagram.com/growthlog"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="blogLink">블로그 (티스토리)</Label>
+            <Input
+              id="blogLink"
+              value={config.blogLink || ""}
+              onChange={(e) => updateConfig("blogLink", e.target.value)}
+              placeholder="예: https://growthlog.tistory.com"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="chatLink">카카오톡 채널</Label>
             <Input
               id="chatLink"
               value={config.chatLink}
