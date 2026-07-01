@@ -9,7 +9,7 @@ import { StatsSection } from "@/presentation/components/about";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "그로스로그를 소개합니다. 함께 성장하는 IT 커뮤니티입니다.",
+  description: "그로스로그를 소개합니다. 함께 성장하는 개발자 커뮤니티입니다.",
 };
 
 /** 추후 방침따라 수정  **/
