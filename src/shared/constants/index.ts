@@ -57,7 +57,7 @@ export const SOCIAL_LINKS = {
  */
 export const SITE_METADATA = {
   title: "Growth Log",
-  description: "함께 성장하는 IT 커뮤니티, 그로스로그",
+  description: "함께 성장하는 개발자 커뮤니티, 그로스로그",
   url: "https://www.growthlog.org",
-  slogan: "{CODE} {GROW}",
+  slogan: "{LEARN} {CONNECT} {BUILD}",
 } as const;

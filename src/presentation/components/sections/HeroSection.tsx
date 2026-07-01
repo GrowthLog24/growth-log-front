@@ -117,7 +117,7 @@ export function HeroSection({ generation, recruitmentStatus, ctaConfig }: HeroSe
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
             함께 성장하는
             <br />
-            IT 커뮤니티
+            개발자 커뮤니티
           </h1>
           <p className="mt-6 text-lg md:text-xl text-white/80 max-w-lg">
             다양한 분야에 종사하는 멤버들과 함께하며 새로운 인사이트를 얻어가세요.
