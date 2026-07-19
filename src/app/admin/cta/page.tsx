@@ -296,7 +296,7 @@ export default function AdminCtaPage() {
         <CardHeader>
           <CardTitle>현재 모집 상태</CardTitle>
           <CardDescription>
-            자동 모드에서 참고하는 현재 설정값입니다. 변경은 &quot;사이트 정보 설정&quot;에서 할 수 있습니다.
+            자동 모드에서 참고하는 현재 설정값입니다. 변경은 &quot;사이트 정보 설정&quot;(현재 기수) / &quot;모집/사전등록 신청&quot;(모집 상태·모집 대상 기수) 페이지에서 할 수 있습니다.
           </CardDescription>
         </CardHeader>
         <CardContent>
