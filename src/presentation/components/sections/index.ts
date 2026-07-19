@@ -5,4 +5,3 @@ export { CommunityBlogSection } from "./CommunityBlogSection";
 export { CommunityBlogWrapper } from "./CommunityBlogWrapper";
 export { MemberTestimonialSection } from "./MemberTestimonialSection";
 export { RoleMarqueeSection } from "./RoleMarqueeSection";
-export { CTASection } from "./CTASection";
