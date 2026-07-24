@@ -229,7 +229,10 @@ export default async function RecruitPage() {
                 )}
                 {recruitment?.kakaoMessageTemplate && (
                   <div className="pt-2 border-t">
-                    <KakaoMessageCopyCard message={recruitment.kakaoMessageTemplate} />
+                    <KakaoMessageCopyCard
+                      message={recruitment.kakaoMessageTemplate}
+                      generation={recruitmentGeneration}
+                    />
                   </div>
                 )}
               </CardContent>
@@ -308,7 +311,10 @@ export default async function RecruitPage() {
                     </p>
                   </div>
                 )}
-                <BankAccountCard bankAccountText={recruitment?.bankAccountText || "미정"} />
+                <BankAccountCard
+                  bankAccountText={recruitment?.bankAccountText || "미정"}
+                  generation={recruitmentGeneration}
+                />
                 {recruitment?.feeDescriptionMd && (
                   <div className="pt-2 border-t">
                     <p className="text-sm whitespace-pre-line">

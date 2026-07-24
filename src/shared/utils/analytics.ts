@@ -1,7 +1,8 @@
 export type AnalyticsEventName =
   | "cta_click"
   | "contact_click"
-  | "generate_lead";
+  | "generate_lead"
+  | "recruitment_action";
 
 export type AnalyticsEventParams = Record<
   string,
