@@ -1,11 +1,14 @@
 export type AnalyticsEventName =
   | "cta_click"
   | "contact_click"
+  | "directions_click"
   | "form_submit_error"
   | "generate_lead"
   | "faq_open"
+  | "list_expand"
   | "recruitment_action"
-  | "select_content";
+  | "select_content"
+  | "social_click";
 
 export type AnalyticsEventParams = Record<
   string,

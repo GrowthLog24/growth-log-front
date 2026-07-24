@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/shared/utils/date";
+import { trackEvent } from "@/shared/utils/analytics";
 import type { Notice } from "@/domain/entities";
 import type { SerializedFirestoreData } from "@/shared/utils/serialize";
 
@@ -38,6 +39,11 @@ export function NoticeList({ notices: allNotices }: NoticeListProps) {
 
     setNotices((prev) => [...prev, ...nextItems]);
     setHasMore(notices.length + nextItems.length < allNotices.length);
+    trackEvent("list_expand", {
+      list_type: "notices",
+      items_loaded: nextItems.length,
+      visible_items: notices.length + nextItems.length,
+    });
     setIsLoading(false);
   };
 
@@ -53,7 +59,7 @@ export function NoticeList({ notices: allNotices }: NoticeListProps) {
     <>
       {/* Notice List */}
       <div className="border rounded-lg divide-y">
-        {notices.map((notice: any) => (
+        {notices.map((notice) => (
           <Link
             key={notice.id}
             href={`/support/notice/${notice.id}`}

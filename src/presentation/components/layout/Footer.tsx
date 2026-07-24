@@ -41,10 +41,15 @@ export async function Footer() {
             {(siteConfig?.instagramLink || siteConfig?.blogLink || siteConfig?.chatLink) && (
               <div className="mt-4 flex items-center gap-4">
                 {siteConfig?.instagramLink && (
-                  <a
+                  <TrackedLink
                     href={siteConfig.instagramLink}
                     target="_blank"
                     rel="noopener noreferrer"
+                    eventName="social_click"
+                    eventParams={{
+                      social_platform: "instagram",
+                      social_location: "footer",
+                    }}
                     className="hover:opacity-70 transition-opacity"
                     aria-label="인스타그램"
                   >
@@ -55,13 +60,18 @@ export async function Footer() {
                       height={20}
                       className="w-5 h-5"
                     />
-                  </a>
+                  </TrackedLink>
                 )}
                 {siteConfig?.blogLink && (
-                  <a
+                  <TrackedLink
                     href={siteConfig.blogLink}
                     target="_blank"
                     rel="noopener noreferrer"
+                    eventName="social_click"
+                    eventParams={{
+                      social_platform: "blog",
+                      social_location: "footer",
+                    }}
                     className="hover:opacity-70 transition-opacity"
                     aria-label="블로그"
                   >
@@ -72,7 +82,7 @@ export async function Footer() {
                       height={20}
                       className="w-5 h-5"
                     />
-                  </a>
+                  </TrackedLink>
                 )}
                 {siteConfig?.chatLink && (
                   <TrackedLink
