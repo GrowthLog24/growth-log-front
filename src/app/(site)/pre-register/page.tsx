@@ -99,6 +99,11 @@ export default function PreRegisterPage() {
       toast.success("사전 등록이 완료되었습니다!");
     } catch (error) {
       console.error("Failed to submit:", error);
+      trackEvent("form_submit_error", {
+        form_name: "pre_registration",
+        error_type: "submission_failed",
+        generation: nextGeneration,
+      });
       toast.error("사전 등록에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setSubmitting(false);
