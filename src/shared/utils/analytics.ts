@@ -6,6 +6,7 @@ export type AnalyticsEventName =
   | "generate_lead"
   | "faq_open"
   | "list_expand"
+  | "nav_click"
   | "recruitment_action"
   | "select_content"
   | "social_click";

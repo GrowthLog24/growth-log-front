@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
@@ -150,7 +149,16 @@ export function HeroSection({ generation, recruitmentStatus, ctaConfig }: HeroSe
               variant="outline"
               className="text-base bg-transparent text-white border-white hover:bg-white hover:text-gray-black"
             >
-              <Link href={secondaryCta.link}>{secondaryCta.text}</Link>
+              <TrackedLink
+                href={secondaryCta.link}
+                eventName="cta_click"
+                eventParams={{
+                  cta_type: "secondary_action",
+                  cta_location: "home_hero",
+                }}
+              >
+                {secondaryCta.text}
+              </TrackedLink>
             </Button>
           </div>
         </div>
