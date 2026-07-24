@@ -2,6 +2,7 @@ export type AnalyticsEventName =
   | "cta_click"
   | "contact_click"
   | "generate_lead"
+  | "faq_open"
   | "recruitment_action"
   | "select_content";
 
