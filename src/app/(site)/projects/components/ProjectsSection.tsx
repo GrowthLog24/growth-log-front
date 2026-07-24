@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import { FileText, Loader2, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { trackEvent } from "@/shared/utils/analytics";
 import { useInfiniteScroll } from "@/shared/hooks";
 import type { ProjectActivity } from "@/domain/entities";
 import type { SerializedFirestoreData } from "@/shared/utils/serialize";
@@ -24,6 +26,18 @@ export function ProjectsSection({ projects, awardedProjectIds }: ProjectsSection
     items: projects,
     itemsPerLoad: ITEMS_PER_LOAD,
   });
+
+  const prevVisibleCountRef = useRef(visibleItems.length);
+  useEffect(() => {
+    if (visibleItems.length > prevVisibleCountRef.current) {
+      trackEvent("list_expand", {
+        list_type: "projects",
+        items_loaded: visibleItems.length - prevVisibleCountRef.current,
+        visible_items: visibleItems.length,
+      });
+    }
+    prevVisibleCountRef.current = visibleItems.length;
+  }, [visibleItems.length]);
 
   // 수상 프로젝트 ID를 Set으로 변환 (빠른 조회)
   const awardedSet = new Set(awardedProjectIds);

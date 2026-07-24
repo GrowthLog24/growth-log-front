@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TrackedLink } from "@/presentation/components/common/TrackedLink";
+import { trackEvent } from "@/shared/utils/analytics";
 import { useInfiniteScroll } from "@/shared/hooks";
 import type {
   Activity,
@@ -49,6 +51,18 @@ export function ActivityCategorySection({
     items: allActivities,
     itemsPerLoad: ITEMS_PER_LOAD,
   });
+
+  const prevVisibleCountRef = useRef(visibleItems.length);
+  useEffect(() => {
+    if (visibleItems.length > prevVisibleCountRef.current) {
+      trackEvent("list_expand", {
+        list_type: `activity_${category}`,
+        items_loaded: visibleItems.length - prevVisibleCountRef.current,
+        visible_items: visibleItems.length,
+      });
+    }
+    prevVisibleCountRef.current = visibleItems.length;
+  }, [visibleItems.length, category]);
 
   const title = ACTIVITY_CATEGORY_LABELS[category];
   const subtitle = ACTIVITY_CATEGORY_SUBTITLES[category];
