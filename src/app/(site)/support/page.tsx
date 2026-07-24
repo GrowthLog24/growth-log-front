@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { MapPin, MessageCircle } from "lucide-react";
 import { FAQSection, type FAQCategory, type FAQItem } from "@/presentation/components/faq";
-import { GoogleMap, MarkdownContent } from "@/presentation/components/common";
+import { GoogleMap, MarkdownContent, TrackedLink } from "@/presentation/components/common";
 import { NoticeList } from "@/presentation/components/support";
 import { faqRepository } from "@/infrastructure/repositories/faqRepository";
 import { faqCategoryRepository } from "@/infrastructure/repositories/faqCategoryRepository";
@@ -144,14 +144,19 @@ export default async function SupportPage() {
                 <p className="text-muted-foreground">
                   문의가 있을 경우 아래 링크를 통해 문의 바랍니다.
                   <br />
-                  <a
+                  <TrackedLink
                     href={serializedSiteConfig.chatLink}
                     target="_blank"
                     rel="noopener noreferrer"
+                    eventName="contact_click"
+                    eventParams={{
+                      contact_type: "kakao",
+                      contact_location: "support",
+                    }}
                     className="text-primary hover:underline mt-2 inline-block"
                   >
                     오픈 채팅 바로가기 →
-                  </a>
+                  </TrackedLink>
                 </p>
               ) : (
                 <p className="text-muted-foreground">

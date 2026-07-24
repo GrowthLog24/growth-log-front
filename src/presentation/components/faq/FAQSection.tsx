@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { MarkdownContent } from "@/presentation/components/common";
+import { trackEvent } from "@/shared/utils/analytics";
 
 /**
  * 클라이언트 컴포넌트용 FAQ 카테고리 (직렬화 가능)
@@ -39,6 +40,15 @@ interface FAQSectionProps {
  * Radix UI Accordion의 SSR 하이드레이션 이슈를 방지하기 위해 분리
  */
 export function FAQSection({ categories, groupedFAQs }: FAQSectionProps) {
+  function handleFaqValueChange(faqId: string, faqCategory: string) {
+    if (!faqId) return;
+
+    trackEvent("faq_open", {
+      faq_id: faqId,
+      faq_category: faqCategory,
+    });
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {categories.map((category) => {
@@ -51,7 +61,14 @@ export function FAQSection({ categories, groupedFAQs }: FAQSectionProps) {
               <span className="w-2 h-2 bg-primary rounded-full" />
               {category.name}
             </h3>
-            <Accordion type="single" collapsible className="space-y-2">
+            <Accordion
+              type="single"
+              collapsible
+              className="space-y-2"
+              onValueChange={(faqId) =>
+                handleFaqValueChange(faqId, category.name)
+              }
+            >
               {categoryFaqs.map((faq) => (
                 <AccordionItem
                   key={faq.id}

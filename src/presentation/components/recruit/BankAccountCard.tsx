@@ -3,19 +3,28 @@
 import { useState } from "react";
 import { Copy, Check, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/shared/utils/analytics";
 
 interface BankAccountCardProps {
   bankAccountText: string;
+  generation: number;
 }
 
 /**
  * 입금 계좌 정보를 표시하고 복사할 수 있는 컴포넌트
  */
-export function BankAccountCard({ bankAccountText }: BankAccountCardProps) {
+export function BankAccountCard({
+  bankAccountText,
+  generation,
+}: BankAccountCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(bankAccountText);
+    trackEvent("recruitment_action", {
+      action_type: "copy_bank_account",
+      generation,
+    });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

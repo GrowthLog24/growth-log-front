@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { GoogleMap as GoogleMapComponent, useJsApiLoader, Marker } from "@react-google-maps/api";
 import { MapPin } from "lucide-react";
+import { TrackedLink } from "./TrackedLink";
 
 interface GoogleMapProps {
   address: string;
@@ -89,16 +90,21 @@ export function GoogleMap({ address, className = "", zoom = 17 }: GoogleMapProps
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
 
     return (
-      <a
+      <TrackedLink
         href={googleMapsUrl}
         target="_blank"
         rel="noopener noreferrer"
+        eventName="directions_click"
+        eventParams={{
+          directions_provider: "google_maps",
+          directions_location: "support_map_fallback",
+        }}
         className={`w-full h-full flex flex-col items-center justify-center bg-gray-4 text-muted-foreground hover:bg-gray-5 transition-colors cursor-pointer ${className}`}
       >
         <MapPin className="w-8 h-8 mb-2 text-primary" />
         <span className="text-sm">지도 보기</span>
         <span className="text-xs mt-1 max-w-[80%] truncate">{address}</span>
-      </a>
+      </TrackedLink>
     );
   }
 

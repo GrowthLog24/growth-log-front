@@ -3,19 +3,28 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/shared/utils/analytics";
 
 interface KakaoMessageCopyCardProps {
   message: string;
+  generation: number;
 }
 
 /**
  * 카카오톡 문자 양식을 표시하고 복사할 수 있는 컴포넌트
  */
-export function KakaoMessageCopyCard({ message }: KakaoMessageCopyCardProps) {
+export function KakaoMessageCopyCard({
+  message,
+  generation,
+}: KakaoMessageCopyCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message);
+    trackEvent("recruitment_action", {
+      action_type: "copy_kakao_template",
+      generation,
+    });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

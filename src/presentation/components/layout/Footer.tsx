@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin } from "lucide-react";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import { NAV_ITEMS, SITE_METADATA } from "@/shared/constants";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 
@@ -40,10 +41,15 @@ export async function Footer() {
             {(siteConfig?.instagramLink || siteConfig?.blogLink || siteConfig?.chatLink) && (
               <div className="mt-4 flex items-center gap-4">
                 {siteConfig?.instagramLink && (
-                  <a
+                  <TrackedLink
                     href={siteConfig.instagramLink}
                     target="_blank"
                     rel="noopener noreferrer"
+                    eventName="social_click"
+                    eventParams={{
+                      social_platform: "instagram",
+                      social_location: "footer",
+                    }}
                     className="hover:opacity-70 transition-opacity"
                     aria-label="인스타그램"
                   >
@@ -54,13 +60,18 @@ export async function Footer() {
                       height={20}
                       className="w-5 h-5"
                     />
-                  </a>
+                  </TrackedLink>
                 )}
                 {siteConfig?.blogLink && (
-                  <a
+                  <TrackedLink
                     href={siteConfig.blogLink}
                     target="_blank"
                     rel="noopener noreferrer"
+                    eventName="social_click"
+                    eventParams={{
+                      social_platform: "blog",
+                      social_location: "footer",
+                    }}
                     className="hover:opacity-70 transition-opacity"
                     aria-label="블로그"
                   >
@@ -71,13 +82,18 @@ export async function Footer() {
                       height={20}
                       className="w-5 h-5"
                     />
-                  </a>
+                  </TrackedLink>
                 )}
                 {siteConfig?.chatLink && (
-                  <a
+                  <TrackedLink
                     href={siteConfig.chatLink}
                     target="_blank"
                     rel="noopener noreferrer"
+                    eventName="contact_click"
+                    eventParams={{
+                      contact_type: "kakao",
+                      contact_location: "footer_social",
+                    }}
                     className="hover:opacity-70 transition-opacity"
                     aria-label="카카오톡 채널"
                   >
@@ -88,7 +104,7 @@ export async function Footer() {
                       height={20}
                       className="w-5 h-5"
                     />
-                  </a>
+                  </TrackedLink>
                 )}
               </div>
             )}
@@ -120,23 +136,33 @@ export async function Footer() {
             <ul className="space-y-3 text-sm text-muted-foreground">
               {siteConfig?.chatLink && (
                 <li>
-                  <a
+                  <TrackedLink
                     href={siteConfig.chatLink}
                     target="_blank"
                     rel="noopener noreferrer"
+                    eventName="contact_click"
+                    eventParams={{
+                      contact_type: "kakao",
+                      contact_location: "footer_contact",
+                    }}
                     className="hover:text-foreground transition-colors"
                   >
                     카카오톡 채널
-                  </a>
+                  </TrackedLink>
                 </li>
               )}
               <li>
-                <a
+                <TrackedLink
                   href="mailto:contact@growthlog.org"
+                  eventName="contact_click"
+                  eventParams={{
+                    contact_type: "email",
+                    contact_location: "footer_contact",
+                  }}
                   className="hover:text-foreground transition-colors"
                 >
                   contact@growthlog.org
-                </a>
+                </TrackedLink>
               </li>
             </ul>
           </div>

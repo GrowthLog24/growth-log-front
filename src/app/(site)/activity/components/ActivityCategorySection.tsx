@@ -1,8 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
+import { trackEvent } from "@/shared/utils/analytics";
 import { useInfiniteScroll } from "@/shared/hooks";
 import type {
   Activity,
@@ -48,6 +51,18 @@ export function ActivityCategorySection({
     items: allActivities,
     itemsPerLoad: ITEMS_PER_LOAD,
   });
+
+  const prevVisibleCountRef = useRef(visibleItems.length);
+  useEffect(() => {
+    if (visibleItems.length > prevVisibleCountRef.current) {
+      trackEvent("list_expand", {
+        list_type: `activity_${category}`,
+        items_loaded: visibleItems.length - prevVisibleCountRef.current,
+        visible_items: visibleItems.length,
+      });
+    }
+    prevVisibleCountRef.current = visibleItems.length;
+  }, [visibleItems.length, category]);
 
   const title = ACTIVITY_CATEGORY_LABELS[category];
   const subtitle = ACTIVITY_CATEGORY_SUBTITLES[category];
@@ -168,10 +183,17 @@ function StudyCard({ activity }: { activity: SerializedFirestoreData<StudyActivi
  */
 function GrowthLogCard({ activity }: { activity: SerializedFirestoreData<GrowthLogActivity> }) {
   return (
-    <a
+    <TrackedLink
       href={activity.blogUrl}
       target="_blank"
       rel="noopener noreferrer"
+      eventName="select_content"
+      eventParams={{
+        content_type: "growth_log",
+        item_id: activity.id,
+        generation: activity.generation,
+        field: activity.field,
+      }}
       className="group"
     >
       <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer">
@@ -219,7 +241,7 @@ function GrowthLogCard({ activity }: { activity: SerializedFirestoreData<GrowthL
           </div>
         </div>
       </article>
-    </a>
+    </TrackedLink>
   );
 }
 
@@ -367,4 +389,3 @@ function ClubCard({ activity }: { activity: SerializedFirestoreData<ClubActivity
     </article>
   );
 }
-
