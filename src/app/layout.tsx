@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@/presentation/components/common/GoogleAnalytics";
 import { SITE_METADATA } from "@/shared/constants";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
@@ -61,6 +62,7 @@ export default function RootLayout({
         className={`${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         {children}
+        <GoogleAnalytics />
       </body>
     </html>
   );
