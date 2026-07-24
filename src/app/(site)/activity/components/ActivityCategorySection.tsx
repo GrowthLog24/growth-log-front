@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import { useInfiniteScroll } from "@/shared/hooks";
 import type {
   Activity,
@@ -168,10 +169,17 @@ function StudyCard({ activity }: { activity: SerializedFirestoreData<StudyActivi
  */
 function GrowthLogCard({ activity }: { activity: SerializedFirestoreData<GrowthLogActivity> }) {
   return (
-    <a
+    <TrackedLink
       href={activity.blogUrl}
       target="_blank"
       rel="noopener noreferrer"
+      eventName="select_content"
+      eventParams={{
+        content_type: "growth_log",
+        item_id: activity.id,
+        generation: activity.generation,
+        field: activity.field,
+      }}
       className="group"
     >
       <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer">
@@ -219,7 +227,7 @@ function GrowthLogCard({ activity }: { activity: SerializedFirestoreData<GrowthL
           </div>
         </div>
       </article>
-    </a>
+    </TrackedLink>
   );
 }
 
@@ -367,4 +375,3 @@ function ClubCard({ activity }: { activity: SerializedFirestoreData<ClubActivity
     </article>
   );
 }
-

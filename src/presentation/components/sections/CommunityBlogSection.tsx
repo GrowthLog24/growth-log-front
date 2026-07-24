@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import type { CommunityBlog } from "@/domain/entities";
 import type { SerializedFirestoreData } from "@/shared/utils/serialize";
 
@@ -124,10 +125,17 @@ export function CommunityBlogSection({ initialBlogs }: CommunityBlogSectionProps
  */
 function BlogCard({ blog }: { blog: SerializedFirestoreData<CommunityBlog> }) {
   return (
-    <a
+    <TrackedLink
       href={blog.url}
       target="_blank"
       rel="noopener noreferrer"
+      eventName="select_content"
+      eventParams={{
+        content_type: "community_blog",
+        item_id: blog.id,
+        generation: blog.generation,
+        platform: blog.platform,
+      }}
       className="group"
     >
       <article className="bg-white rounded-xl overflow-hidden hover:shadow-md transition-shadow">
@@ -172,6 +180,6 @@ function BlogCard({ blog }: { blog: SerializedFirestoreData<CommunityBlog> }) {
           </div>
         </div>
       </article>
-    </a>
+    </TrackedLink>
   );
 }
