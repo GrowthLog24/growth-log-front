@@ -5,7 +5,9 @@ import Image from "next/image";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import type { CommunityBlog } from "@/domain/entities";
+import { trackEvent } from "@/shared/utils/analytics";
 import type { SerializedFirestoreData } from "@/shared/utils/serialize";
 
 interface CommunityBlogSectionProps {
@@ -26,14 +28,12 @@ const PLATFORM_LABELS: Record<string, string> = {
 /**
  * 날짜 포맷 헬퍼
  */
-function formatDate(timestamp: any): string {
+function formatDate(
+  timestamp: SerializedFirestoreData<CommunityBlog>["publishedAt"]
+): string {
   if (!timestamp) return "";
 
-  // 1. Firebase Timestamp 객체인 경우 (toDate 메서드가 있는 경우)
-  // 2. 숫자(milliseconds)나 문자열인 경우
-  const date = typeof timestamp.toDate === 'function'
-    ? timestamp.toDate()
-    : new Date(timestamp);
+  const date = new Date(timestamp);
 
   if (isNaN(date.getTime())) return "Invalid Date";
 
@@ -61,6 +61,11 @@ export function CommunityBlogSection({ initialBlogs }: CommunityBlogSectionProps
 
     setBlogs((prev) => [...prev, ...nextItems]);
     setHasMore(blogs.length + nextItems.length < initialBlogs.length);
+    trackEvent("list_expand", {
+      list_type: "community_blogs",
+      items_loaded: nextItems.length,
+      visible_items: blogs.length + nextItems.length,
+    });
     setIsLoading(false);
   };
 
@@ -124,10 +129,17 @@ export function CommunityBlogSection({ initialBlogs }: CommunityBlogSectionProps
  */
 function BlogCard({ blog }: { blog: SerializedFirestoreData<CommunityBlog> }) {
   return (
-    <a
+    <TrackedLink
       href={blog.url}
       target="_blank"
       rel="noopener noreferrer"
+      eventName="select_content"
+      eventParams={{
+        content_type: "community_blog",
+        item_id: blog.id,
+        generation: blog.generation,
+        platform: blog.platform,
+      }}
       className="group"
     >
       <article className="bg-white rounded-xl overflow-hidden hover:shadow-md transition-shadow">
@@ -172,6 +184,6 @@ function BlogCard({ blog }: { blog: SerializedFirestoreData<CommunityBlog> }) {
           </div>
         </div>
       </article>
-    </a>
+    </TrackedLink>
   );
 }

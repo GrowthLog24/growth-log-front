@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   ClipboardList,
   Rocket,
@@ -9,6 +8,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 
 interface ProjectScheduleSectionProps {
   applyLink: string;
@@ -109,15 +109,19 @@ export function ProjectScheduleSection({ applyLink }: ProjectScheduleSectionProp
           </div>
           {applyLink && (
             <Button asChild className="bg-stone-800 hover:bg-stone-900">
-              {external ? (
-                <a href={applyLink} target="_blank" rel="noopener noreferrer">
-                  5기 프로젝트 참여 신청
-                </a>
-              ) : (
-                <Link href={applyLink}>
-                  5기 프로젝트 참여 신청
-                </Link>
-              )}
+              <TrackedLink
+                href={applyLink}
+                target={external ? "_blank" : undefined}
+                rel={external ? "noopener noreferrer" : undefined}
+                eventName="cta_click"
+                eventParams={{
+                  cta_type: "project_application",
+                  cta_location: "project_schedule",
+                  generation: 5,
+                }}
+              >
+                5기 프로젝트 참여 신청
+              </TrackedLink>
             </Button>
           )}
         </div>

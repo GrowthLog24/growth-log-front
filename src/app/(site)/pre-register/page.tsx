@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { preRegistrationRepository } from "@/infrastructure/repositories/preRegistrationRepository";
+import { trackEvent } from "@/shared/utils/analytics";
 import type { PreRegistrationField } from "@/domain/entities";
 
 export default function PreRegisterPage() {
@@ -90,10 +91,19 @@ export default function PreRegisterPage() {
         name: name.trim(),
         formData,
       });
+      trackEvent("generate_lead", {
+        lead_type: "pre_registration",
+        generation: nextGeneration,
+      });
       setSubmitted(true);
       toast.success("사전 등록이 완료되었습니다!");
     } catch (error) {
       console.error("Failed to submit:", error);
+      trackEvent("form_submit_error", {
+        form_name: "pre_registration",
+        error_type: "submission_failed",
+        generation: nextGeneration,
+      });
       toast.error("사전 등록에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setSubmitting(false);

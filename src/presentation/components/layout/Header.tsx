@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import { NAV_ITEMS } from "@/shared/constants";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 
@@ -51,6 +52,12 @@ export function Header() {
     fetchConfig();
   }, []);
 
+  const ctaType = ctaLink.includes("/pre-register")
+    ? "pre_registration"
+    : ctaLink.includes("/recruit") || isRecruitmentOpen
+      ? "membership_application"
+      : "primary_action";
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container-custom flex h-16 items-center justify-between">
@@ -69,13 +76,18 @@ export function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           {NAV_ITEMS.map((item) => (
-            <Link
+            <TrackedLink
               key={item.href}
               href={item.href}
+              eventName="nav_click"
+              eventParams={{
+                nav_item: item.label,
+                nav_location: "header_desktop",
+              }}
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {item.label}
-            </Link>
+            </TrackedLink>
           ))}
         </nav>
 
@@ -83,7 +95,16 @@ export function Header() {
         <div className="hidden md:flex items-center gap-4">
           {ctaText && (
             <Button asChild variant={isRecruitmentOpen ? "default" : "outline"}>
-              <Link href={ctaLink}>{ctaText}</Link>
+              <TrackedLink
+                href={ctaLink}
+                eventName="cta_click"
+                eventParams={{
+                  cta_type: ctaType,
+                  cta_location: "header",
+                }}
+              >
+                {ctaText}
+              </TrackedLink>
             </Button>
           )}
         </div>
@@ -101,21 +122,34 @@ export function Header() {
               <SheetTitle className="sr-only">네비게이션 메뉴</SheetTitle>
               <nav className="flex flex-col gap-6 mt-6">
                 {NAV_ITEMS.map((item) => (
-                  <Link
+                  <TrackedLink
                     key={item.href}
                     href={item.href}
+                    eventName="nav_click"
+                    eventParams={{
+                      nav_item: item.label,
+                      nav_location: "header_mobile",
+                    }}
                     onClick={() => setIsOpen(false)}
                     className="text-lg font-medium text-foreground transition-colors hover:text-primary"
                   >
                     {item.label}
-                  </Link>
+                  </TrackedLink>
                 ))}
                 {ctaText && (
                   <div className="mt-4 pt-4 border-t">
                     <Button asChild variant={isRecruitmentOpen ? "default" : "outline"} className="w-full">
-                      <Link href={ctaLink} onClick={() => setIsOpen(false)}>
+                      <TrackedLink
+                        href={ctaLink}
+                        eventName="cta_click"
+                        eventParams={{
+                          cta_type: ctaType,
+                          cta_location: "header",
+                        }}
+                        onClick={() => setIsOpen(false)}
+                      >
                         {ctaText}
-                      </Link>
+                      </TrackedLink>
                     </Button>
                   </div>
                 )}
