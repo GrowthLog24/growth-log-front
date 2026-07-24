@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { Calendar, Mail, Clock, CreditCard, Users, Bell, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MarkdownContent } from "@/presentation/components/common";
+import { MarkdownContent, TrackedLink } from "@/presentation/components/common";
 import { KakaoMessageCopyCard } from "@/presentation/components/recruit/KakaoMessageCopyCard";
 import { BankAccountCard } from "@/presentation/components/recruit/BankAccountCard";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
@@ -60,10 +59,18 @@ export default async function RecruitPage() {
                   size="lg"
                   className="bg-white text-gray-2 hover:bg-white/90"
                 >
-                  <Link href="/pre-register">
+                  <TrackedLink
+                    href="/pre-register"
+                    eventName="cta_click"
+                    eventParams={{
+                      cta_type: "pre_registration",
+                      cta_location: "recruit_hero",
+                      generation: nextGeneration,
+                    }}
+                  >
                     <Bell className="mr-2 h-5 w-5" />
                     {nextGeneration}기 사전 등록하기
-                  </Link>
+                  </TrackedLink>
                 </Button>
               </div>
             </div>
@@ -127,9 +134,17 @@ export default async function RecruitPage() {
             </p>
             <div className="mt-8">
               <Button asChild size="lg">
-                <Link href="/pre-register">
+                <TrackedLink
+                  href="/pre-register"
+                  eventName="cta_click"
+                  eventParams={{
+                    cta_type: "pre_registration",
+                    cta_location: "recruit_bottom",
+                    generation: nextGeneration,
+                  }}
+                >
                   {nextGeneration}기 사전 등록하기
-                </Link>
+                </TrackedLink>
               </Button>
             </div>
           </div>
@@ -160,9 +175,19 @@ export default async function RecruitPage() {
                 size="lg"
                 className="bg-white text-primary hover:bg-white/90"
               >
-                <a href={recruitmentFormLink} target="_blank" rel="noopener noreferrer">
+                <TrackedLink
+                  href={recruitmentFormLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  eventName="cta_click"
+                  eventParams={{
+                    cta_type: "membership_application",
+                    cta_location: "recruit_hero",
+                    generation: recruitmentGeneration,
+                  }}
+                >
                   {recruitmentGeneration}기 지원서 작성하기
-                </a>
+                </TrackedLink>
               </Button>
             </div>
           </div>
@@ -371,9 +396,19 @@ export default async function RecruitPage() {
           </p>
           <div className="mt-8">
             <Button asChild size="lg">
-              <a href={recruitmentFormLink} target="_blank" rel="noopener noreferrer">
+              <TrackedLink
+                href={recruitmentFormLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                eventName="cta_click"
+                eventParams={{
+                  cta_type: "membership_application",
+                  cta_location: "recruit_bottom",
+                  generation: recruitmentGeneration,
+                }}
+              >
                 지금 지원하기
-              </a>
+              </TrackedLink>
             </Button>
           </div>
         </div>

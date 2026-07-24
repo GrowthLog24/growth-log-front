@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import { NAV_ITEMS } from "@/shared/constants";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 
@@ -51,6 +52,12 @@ export function Header() {
     fetchConfig();
   }, []);
 
+  const ctaType = ctaLink.includes("/pre-register")
+    ? "pre_registration"
+    : ctaLink.includes("/recruit") || isRecruitmentOpen
+      ? "membership_application"
+      : "primary_action";
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container-custom flex h-16 items-center justify-between">
@@ -83,7 +90,16 @@ export function Header() {
         <div className="hidden md:flex items-center gap-4">
           {ctaText && (
             <Button asChild variant={isRecruitmentOpen ? "default" : "outline"}>
-              <Link href={ctaLink}>{ctaText}</Link>
+              <TrackedLink
+                href={ctaLink}
+                eventName="cta_click"
+                eventParams={{
+                  cta_type: ctaType,
+                  cta_location: "header",
+                }}
+              >
+                {ctaText}
+              </TrackedLink>
             </Button>
           )}
         </div>
@@ -113,9 +129,17 @@ export function Header() {
                 {ctaText && (
                   <div className="mt-4 pt-4 border-t">
                     <Button asChild variant={isRecruitmentOpen ? "default" : "outline"} className="w-full">
-                      <Link href={ctaLink} onClick={() => setIsOpen(false)}>
+                      <TrackedLink
+                        href={ctaLink}
+                        eventName="cta_click"
+                        eventParams={{
+                          cta_type: ctaType,
+                          cta_location: "header",
+                        }}
+                        onClick={() => setIsOpen(false)}
+                      >
                         {ctaText}
-                      </Link>
+                      </TrackedLink>
                     </Button>
                   </div>
                 )}

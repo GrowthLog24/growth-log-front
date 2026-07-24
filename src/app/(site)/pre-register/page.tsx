@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { preRegistrationRepository } from "@/infrastructure/repositories/preRegistrationRepository";
+import { trackEvent } from "@/shared/utils/analytics";
 import type { PreRegistrationField } from "@/domain/entities";
 
 export default function PreRegisterPage() {
@@ -89,6 +90,10 @@ export default function PreRegisterPage() {
         generation: nextGeneration,
         name: name.trim(),
         formData,
+      });
+      trackEvent("generate_lead", {
+        lead_type: "pre_registration",
+        generation: nextGeneration,
       });
       setSubmitted(true);
       toast.success("사전 등록이 완료되었습니다!");
