@@ -34,6 +34,7 @@ export class RecruitmentAdminRepository {
     isOpen: boolean;
     generation: number;
     formLink: string;
+    formLinkOther: string;
     currentGeneration: number;
   } | null> {
     const snapshot = await getDoc(this.siteConfigRef);
@@ -44,18 +45,45 @@ export class RecruitmentAdminRepository {
       isOpen: data.isRecruitmentOpen ?? false,
       generation: data.recruitmentGeneration ?? data.currentGeneration + 1,
       formLink: data.recruitmentFormLink ?? "",
+      formLinkOther: data.recruitmentFormLinkOther ?? "",
       currentGeneration: data.currentGeneration,
     };
   }
 
   /**
    * 모집 활성화 (새 기수 모집 시작)
+   *
+   * @param generation - 모집 기수
+   * @param formLink - 방송대 컴퓨터과학과 지원서 링크
+   * @param formLinkOther - 방송대 그 외 학과 지원서 링크
    */
-  async openRecruitment(generation: number, formLink: string): Promise<void> {
+  async openRecruitment(
+    generation: number,
+    formLink: string,
+    formLinkOther: string
+  ): Promise<void> {
     await updateDoc(this.siteConfigRef, {
       isRecruitmentOpen: true,
       recruitmentGeneration: generation,
       recruitmentFormLink: formLink,
+      recruitmentFormLinkOther: formLinkOther,
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  /**
+   * 모집 중인 기수의 지원서 링크만 수정
+   *
+   * @param formLink - 방송대 컴퓨터과학과 지원서 링크
+   * @param formLinkOther - 방송대 그 외 학과 지원서 링크
+   */
+  async updateRecruitmentFormLinks(
+    formLink: string,
+    formLinkOther: string
+  ): Promise<void> {
+    await updateDoc(this.siteConfigRef, {
+      recruitmentFormLink: formLink,
+      recruitmentFormLinkOther: formLinkOther,
       updatedAt: serverTimestamp(),
     });
   }
