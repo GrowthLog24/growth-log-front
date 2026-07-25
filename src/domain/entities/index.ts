@@ -40,8 +40,10 @@ export interface SiteConfig {
   isRecruitmentOpen: boolean;
   /** 모집 대상 기수 */
   recruitmentGeneration: number;
-  /** 구글폼 링크 */
+  /** 구글폼 링크 - 방송대 컴퓨터과학과 학우용 지원서 */
   recruitmentFormLink: string;
+  /** 구글폼 링크 - 방송대 그 외 학과 학우용 지원서 (미설정 시 DEFAULT_KNOU_OTHER_FORM_LINK 폴백) */
+  recruitmentFormLinkOther?: string;
   /** 그로스로그 주소 (지도용) */
   address?: string;
   /** 상세 주소 */
