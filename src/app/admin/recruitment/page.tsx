@@ -84,13 +84,19 @@ export default function RecruitmentPage() {
   const [isRecruitmentOpen, setIsRecruitmentOpen] = useState(false);
   const [recruitmentGeneration, setRecruitmentGeneration] = useState(0);
   const [recruitmentFormLink, setRecruitmentFormLink] = useState("");
+  const [recruitmentFormLinkOther, setRecruitmentFormLinkOther] = useState("");
 
   // 다이얼로그 상태
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogGeneration, setDialogGeneration] = useState(0);
   const [dialogFormLink, setDialogFormLink] = useState("");
+  const [dialogFormLinkOther, setDialogFormLinkOther] = useState("");
   const [dialogLoading, setDialogLoading] = useState(false);
   const [generationConfirmOpen, setGenerationConfirmOpen] = useState(false);
+
+  // 지원서 링크 수정 다이얼로그 상태
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkDialogSaving, setLinkDialogSaving] = useState(false);
 
   // 사전등록 신청 목록 상태
   const [registrations, setRegistrations] = useState<PreRegistration[]>([]);
@@ -191,6 +197,7 @@ export default function RecruitmentPage() {
           setIsRecruitmentOpen(settings.isOpen);
           setRecruitmentGeneration(settings.generation);
           setRecruitmentFormLink(settings.formLink);
+          setRecruitmentFormLinkOther(settings.formLinkOther);
         }
 
         if (siteConfig) {
@@ -318,6 +325,7 @@ export default function RecruitmentPage() {
       // ON으로 변경 시 다이얼로그 열기
       setDialogGeneration(nextGeneration);
       setDialogFormLink("");
+      setDialogFormLinkOther("");
       setOpenDialog(true);
     } else {
       // OFF로 변경 시 확인 다이얼로그 열기
@@ -332,7 +340,11 @@ export default function RecruitmentPage() {
       return;
     }
     if (!dialogFormLink.trim()) {
-      toast.error("구글폼 링크를 입력해주세요.");
+      toast.error("컴퓨터과학과 지원서 링크를 입력해주세요.");
+      return;
+    }
+    if (!dialogFormLinkOther.trim()) {
+      toast.error("그 외 학과 지원서 링크를 입력해주세요.");
       return;
     }
 
@@ -350,11 +362,13 @@ export default function RecruitmentPage() {
     try {
       await recruitmentAdminRepository.openRecruitment(
         dialogGeneration,
-        dialogFormLink.trim()
+        dialogFormLink.trim(),
+        dialogFormLinkOther.trim()
       );
       setIsRecruitmentOpen(true);
       setRecruitmentGeneration(dialogGeneration);
       setRecruitmentFormLink(dialogFormLink.trim());
+      setRecruitmentFormLinkOther(dialogFormLinkOther.trim());
       setOpenDialog(false);
       setGenerationConfirmOpen(false);
       toast.success(`${dialogGeneration}기 모집이 시작되었습니다.`);
@@ -363,6 +377,42 @@ export default function RecruitmentPage() {
       toast.error("모집 시작에 실패했습니다.");
     } finally {
       setDialogLoading(false);
+    }
+  };
+
+  // 지원서 링크 수정 다이얼로그 열기 (현재 값으로 프리필)
+  const handleOpenLinkDialog = () => {
+    setDialogFormLink(recruitmentFormLink);
+    setDialogFormLinkOther(recruitmentFormLinkOther);
+    setLinkDialogOpen(true);
+  };
+
+  // 지원서 링크 저장 (모집 상태/기수는 변경하지 않음)
+  const handleSaveFormLinks = async () => {
+    if (!dialogFormLink.trim()) {
+      toast.error("컴퓨터과학과 지원서 링크를 입력해주세요.");
+      return;
+    }
+    if (!dialogFormLinkOther.trim()) {
+      toast.error("그 외 학과 지원서 링크를 입력해주세요.");
+      return;
+    }
+
+    setLinkDialogSaving(true);
+    try {
+      await recruitmentAdminRepository.updateRecruitmentFormLinks(
+        dialogFormLink.trim(),
+        dialogFormLinkOther.trim()
+      );
+      setRecruitmentFormLink(dialogFormLink.trim());
+      setRecruitmentFormLinkOther(dialogFormLinkOther.trim());
+      setLinkDialogOpen(false);
+      toast.success("지원서 링크가 수정되었습니다.");
+    } catch (error) {
+      console.error("Failed to update recruitment form links:", error);
+      toast.error("지원서 링크 수정에 실패했습니다.");
+    } finally {
+      setLinkDialogSaving(false);
     }
   };
 
@@ -650,18 +700,52 @@ export default function RecruitmentPage() {
               <span className="text-sm text-muted-foreground">모집 없음</span>
             )}
           </div>
-          {/* 구글폼 링크 - 모집 중일 때만 표시 */}
-          {isRecruitmentOpen && recruitmentFormLink && (
-            <div className="flex items-center justify-between py-2 border-t">
-              <span className="text-sm text-muted-foreground">구글폼 링크</span>
-              <a
-                href={recruitmentFormLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline truncate max-w-[200px]"
-              >
-                {recruitmentFormLink}
-              </a>
+          {/* 지원서 구글폼 링크 - 모집 중일 때만 표시 */}
+          {isRecruitmentOpen && (
+            <div className="space-y-2 pt-3 border-t">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">지원서 구글폼 링크</span>
+                <Button variant="outline" size="sm" onClick={handleOpenLinkDialog}>
+                  <Pencil className="mr-2 h-3.5 w-3.5" />
+                  링크 수정
+                </Button>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm text-muted-foreground shrink-0">
+                  컴퓨터과학과
+                </span>
+                {recruitmentFormLink ? (
+                  <a
+                    href={recruitmentFormLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline truncate"
+                  >
+                    {recruitmentFormLink}
+                  </a>
+                ) : (
+                  <span className="text-sm text-muted-foreground">미설정</span>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm text-muted-foreground shrink-0">
+                  그 외 학과
+                </span>
+                {recruitmentFormLinkOther ? (
+                  <a
+                    href={recruitmentFormLinkOther}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline truncate"
+                  >
+                    {recruitmentFormLinkOther}
+                  </a>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    미설정 (기본 링크 사용)
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
@@ -1065,7 +1149,7 @@ export default function RecruitmentPage() {
           <DialogHeader>
             <DialogTitle>새로운 기수 모집 시작</DialogTitle>
             <DialogDescription>
-              모집할 기수를 설정하고 구글폼 링크를 입력하세요.
+              모집할 기수를 설정하고 지원서 구글폼 링크 2개를 입력하세요.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1086,13 +1170,25 @@ export default function RecruitmentPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="formLink">구글폼 링크</Label>
+              <Label htmlFor="formLink">구글폼 링크 (컴퓨터과학과)</Label>
               <Input
                 id="formLink"
                 value={dialogFormLink}
                 onChange={(e) => setDialogFormLink(e.target.value)}
-                placeholder="https://forms.google.com/..."
+                placeholder="https://docs.google.com/forms/..."
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="formLinkOther">구글폼 링크 (그 외 학과)</Label>
+              <Input
+                id="formLinkOther"
+                value={dialogFormLinkOther}
+                onChange={(e) => setDialogFormLinkOther(e.target.value)}
+                placeholder="https://docs.google.com/forms/..."
+              />
+              <p className="text-xs text-muted-foreground">
+                방송대 컴퓨터과학과가 아닌 학우가 작성할 지원서 링크입니다.
+              </p>
             </div>
           </div>
           <DialogFooter>
@@ -1106,6 +1202,52 @@ export default function RecruitmentPage() {
             <Button onClick={handleOpenRecruitmentClick} disabled={dialogLoading}>
               {dialogLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {dialogGeneration || nextGeneration}기 모집 시작
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 지원서 링크 수정 다이얼로그 */}
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>지원서 링크 수정</DialogTitle>
+            <DialogDescription>
+              {recruitmentGeneration}기 지원서 구글폼 링크를 수정합니다. 모집 상태와 기수는
+              변경되지 않습니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editFormLink">구글폼 링크 (컴퓨터과학과)</Label>
+              <Input
+                id="editFormLink"
+                value={dialogFormLink}
+                onChange={(e) => setDialogFormLink(e.target.value)}
+                placeholder="https://docs.google.com/forms/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editFormLinkOther">구글폼 링크 (그 외 학과)</Label>
+              <Input
+                id="editFormLinkOther"
+                value={dialogFormLinkOther}
+                onChange={(e) => setDialogFormLinkOther(e.target.value)}
+                placeholder="https://docs.google.com/forms/..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setLinkDialogOpen(false)}
+              disabled={linkDialogSaving}
+            >
+              취소
+            </Button>
+            <Button onClick={handleSaveFormLinks} disabled={linkDialogSaving}>
+              {linkDialogSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              저장
             </Button>
           </DialogFooter>
         </DialogContent>

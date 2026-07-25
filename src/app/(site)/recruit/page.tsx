@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MarkdownContent, TrackedLink } from "@/presentation/components/common";
 import { KakaoMessageCopyCard } from "@/presentation/components/recruit/KakaoMessageCopyCard";
 import { BankAccountCard } from "@/presentation/components/recruit/BankAccountCard";
+import { ApplyTrackDialog } from "@/presentation/components/recruit/ApplyTrackDialog";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
+import { DEFAULT_KNOU_OTHER_FORM_LINK } from "@/shared/constants/recruit";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { recruitmentRepository } from "@/infrastructure/repositories/recruitmentRepository";
 import { formatDateKorean, formatDateWithDay } from "@/shared/utils/date";
@@ -27,6 +29,9 @@ export default async function RecruitPage() {
   const currentGeneration = siteConfig?.currentGeneration ?? 0;
   const recruitmentGeneration = siteConfig?.recruitmentGeneration ?? 1;
   const recruitmentFormLink = siteConfig?.recruitmentFormLink ?? "";
+  // 어드민 값이 비어 있으면 기본 링크로 폴백
+  const recruitmentFormLinkOther =
+    siteConfig?.recruitmentFormLinkOther || DEFAULT_KNOU_OTHER_FORM_LINK;
 
   // 모집 중일 때 실제 모집 정보 가져오기
   const recruitment = isRecruitmentOpen
@@ -170,25 +175,14 @@ export default async function RecruitPage() {
               다양한 사람들과 새로운 인사이트를 얻어요
             </p>
             <div className="mt-8">
-              <Button
-                asChild
-                size="lg"
-                className="bg-white text-primary hover:bg-white/90"
-              >
-                <TrackedLink
-                  href={recruitmentFormLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  eventName="cta_click"
-                  eventParams={{
-                    cta_type: "membership_application",
-                    cta_location: "recruit_hero",
-                    generation: recruitmentGeneration,
-                  }}
-                >
-                  {recruitmentGeneration}기 지원서 작성하기
-                </TrackedLink>
-              </Button>
+              <ApplyTrackDialog
+                generation={recruitmentGeneration}
+                csFormLink={recruitmentFormLink}
+                otherFormLink={recruitmentFormLinkOther}
+                triggerLabel={`${recruitmentGeneration}기 지원서 작성하기`}
+                triggerClassName="bg-white text-primary hover:bg-white/90"
+                ctaLocation="recruit_hero"
+              />
             </div>
           </div>
         </div>
@@ -400,22 +394,14 @@ export default async function RecruitPage() {
           <p className="mt-4 text-muted-foreground">
             그로스로그 {recruitmentGeneration}기와 함께 새로운 도전을 시작하세요.
           </p>
-          <div className="mt-8">
-            <Button asChild size="lg">
-              <TrackedLink
-                href={recruitmentFormLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                eventName="cta_click"
-                eventParams={{
-                  cta_type: "membership_application",
-                  cta_location: "recruit_bottom",
-                  generation: recruitmentGeneration,
-                }}
-              >
-                지금 지원하기
-              </TrackedLink>
-            </Button>
+          <div className="mt-8 flex justify-center">
+            <ApplyTrackDialog
+              generation={recruitmentGeneration}
+              csFormLink={recruitmentFormLink}
+              otherFormLink={recruitmentFormLinkOther}
+              triggerLabel="지금 지원하기"
+              ctaLocation="recruit_bottom"
+            />
           </div>
         </div>
       </section>
