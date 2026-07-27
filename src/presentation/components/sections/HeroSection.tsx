@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
@@ -14,15 +13,26 @@ interface CtaConfig {
   secondaryLink?: string;
 }
 
+interface HeroStat {
+  /** 표시값 (예: "5기+") */
+  value: string;
+  /** 지표명 (예: "운영 기수") */
+  label: string;
+}
+
 interface HeroSectionProps {
   generation: number;
   recruitmentStatus: RecruitmentStatus;
   ctaConfig?: CtaConfig;
+  stats?: HeroStat[];
 }
 
-export function HeroSection({ generation, recruitmentStatus, ctaConfig }: HeroSectionProps) {
-  const [isContentVisible, setIsContentVisible] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
+export function HeroSection({
+  generation,
+  recruitmentStatus,
+  ctaConfig,
+  stats,
+}: HeroSectionProps) {
   const videoUrl = getStorageUrl(STORAGE_PATHS.HERO_BG_VIDEO);
 
   const isRecruiting = recruitmentStatus === "OPEN";
@@ -60,49 +70,14 @@ export function HeroSection({ generation, recruitmentStatus, ctaConfig }: HeroSe
   const primaryCtaGeneration =
     primaryCtaType === "pre_registration" ? nextGeneration : generation;
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if (!sectionRef.current) return;
-
-    const rect = sectionRef.current.getBoundingClientRect();
-    const mouseY = e.clientY - rect.top;
-
-    if (!isContentVisible) {
-      // 콘텐츠가 보이지 않을 때: 하단 30% 영역에서 트리거
-      const triggerHeight = rect.height * 0.7;
-      if (mouseY > triggerHeight) {
-        setIsContentVisible(true);
-      }
-    } else {
-      // 콘텐츠가 보일 때: 상단 절반 영역으로 가면 숨김
-      const hideThreshold = rect.height * 0.5;
-      if (mouseY < hideThreshold) {
-        setIsContentVisible(false);
-      }
-    }
-  };
-
-  const handleMouseLeave = () => {
-    // 영상 영역을 완전히 벗어나면 콘텐츠 숨김
-    setIsContentVisible(false);
-  };
-
   return (
-    <section
-      ref={sectionRef}
-      className="relative w-full h-[600px] md:h-[700px] overflow-hidden"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
+    <section className="group relative w-full h-[600px] md:h-[700px] overflow-hidden">
       {/* Background Video */}
       <div className="absolute inset-0 bg-gray-black">
-        {/* Overlay - 하단 1/4 그라데이션으로 섹션 구분, 콘텐츠 표시 시 더 어두워짐 */}
-        <div
-          className={`absolute inset-0 z-10 transition-all duration-500 ${
-            isContentVisible
-              ? "bg-gradient-to-t from-gray-black/80 to-gray-black/40"
-              : "bg-gradient-to-t from-gray-black/50 to-transparent to-25%"
-          }`}
-        />
+        {/* 기본 오버레이 - 영상이 잘 보이도록 옅게 */}
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-gray-black/50 to-transparent to-25%" />
+        {/* 호버 오버레이 - 카피가 뜰 때만 어둡게 (터치 기기는 hover가 없어 항상 적용) */}
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-gray-black/80 to-gray-black/40 opacity-0 transition-opacity duration-500 group-hover:opacity-100 [@media(hover:none)]:opacity-100" />
         <video
           autoPlay
           muted
@@ -114,20 +89,20 @@ export function HeroSection({ generation, recruitmentStatus, ctaConfig }: HeroSe
         </video>
       </div>
 
-      {/* Content - 하단 호버 후 표시, 영역 벗어나면 숨김 */}
-      <div
-        className={`relative z-20 container-custom h-full flex flex-col justify-center transition-all duration-500 ${
-          isContentVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        }`}
-      >
+      {/* Content - 마우스를 올리면 노출 (터치 기기는 hover가 없어 항상 노출) */}
+      <div className="relative z-20 container-custom h-full flex flex-col justify-center opacity-0 translate-y-4 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0 [@media(hover:none)]:opacity-100 [@media(hover:none)]:translate-y-0">
         <div className="max-w-2xl">
+          <span className="inline-block px-4 py-1.5 mb-5 rounded-full bg-white/15 text-sm font-medium text-white backdrop-blur-sm">
+            AI-Native Developer Community
+          </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-            함께 성장하는
+            AI와 함께
             <br />
-            개발자 커뮤니티
+            성장하는 개발 커뮤니티
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-white/80 max-w-lg">
-            다양한 분야에 종사하는 멤버들과 함께하며 새로운 인사이트를 얻어가세요.
+          <p className="mt-6 text-lg md:text-xl text-white/80 max-w-xl">
+            코드만 짜는 시대는 끝났습니다. 그로스로그는 AI를 도구가 아닌 동료로 삼아,
+            함께 배우고 만들고 성장하는 개발자들의 커뮤니티입니다.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <Button asChild size="lg" className="text-base">
@@ -161,21 +136,32 @@ export function HeroSection({ generation, recruitmentStatus, ctaConfig }: HeroSe
               </TrackedLink>
             </Button>
           </div>
+
+          {stats && stats.length > 0 && (
+            <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-4">
+              {stats.map((stat) => (
+                <div key={stat.label}>
+                  <dt className="sr-only">{stat.label}</dt>
+                  <dd className="text-2xl md:text-3xl font-bold text-white tabular-nums">
+                    {stat.value}
+                  </dd>
+                  <p className="mt-1 text-sm text-white/70">{stat.label}</p>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
       </div>
 
-      {/* 호버 힌트 - 하단 중앙, 콘텐츠 표시 전에만 보임 */}
-      <div
-        className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 transition-all duration-500 ${
-          isContentVisible ? "opacity-0" : "opacity-100"
-        }`}
-      >
+      {/* 호버 힌트 - 카피가 뜨기 전에만 보임 (터치 기기에서는 숨김) */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 transition-opacity duration-500 group-hover:opacity-0 [@media(hover:none)]:hidden">
         <div className="flex flex-col items-center text-white/60">
           <svg
             className="w-6 h-6 mb-2 animate-bounce"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

@@ -306,6 +306,11 @@ export interface LectureActivity extends ActivityBase {
   speakerTitle: string;
   /** 특강 일자 */
   lectureDate: Timestamp;
+  /**
+   * 구분 (개발, 커리어, 학사) - 그로스톡의 field와 동일 규약
+   * 트랙 페이지 분기에 사용하며, 값이 없으면 Dev×AI로 분류합니다.
+   */
+  field?: string;
 }
 
 /**
