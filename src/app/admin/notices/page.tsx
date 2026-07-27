@@ -97,6 +97,9 @@ function SortableNoticeRow({ notice, onTogglePinned, onEdit, onDelete }: Sortabl
       <TableCell className="w-[120px] align-top">
         {notice.publishedAt?.toDate().toLocaleDateString("ko-KR")}
       </TableCell>
+      <TableCell className="w-[120px] align-top">
+        {(notice.eventDate ?? notice.publishedAt)?.toDate().toLocaleDateString("ko-KR")}
+      </TableCell>
       <TableCell className="w-[150px] align-top">
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
           <Button
@@ -271,6 +274,7 @@ export default function AdminNoticesPage() {
                     <TableHead className="w-[60px]">고정</TableHead>
                     <TableHead>제목</TableHead>
                     <TableHead className="w-[120px]">게시일</TableHead>
+                    <TableHead className="w-[120px]">행사날짜</TableHead>
                     <TableHead className="w-[150px]">작업</TableHead>
                   </TableRow>
                 </TableHeader>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Timestamp } from "firebase/firestore";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +18,7 @@ import {
 } from "@/components/ui/card";
 import { noticeRepository } from "@/infrastructure/repositories/noticeRepository";
 import { noticeAdminRepository } from "@/infrastructure/repositories/admin/noticeAdminRepository";
-import type { Notice } from "@/domain/entities";
+import { dateInputToTimestamp, timestampToDateInputValue } from "@/shared/utils/date";
 
 /**
  * 공지사항 수정 페이지
@@ -36,7 +35,8 @@ export default function EditNoticePage() {
     summary: "",
     contentMd: "",
     isPinned: false,
-    publishedAt: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
+    publishedAt: timestampToDateInputValue(),
+    eventDate: timestampToDateInputValue(),
   });
 
   useEffect(() => {
@@ -44,18 +44,16 @@ export default function EditNoticePage() {
       try {
         const notice = await noticeRepository.getNoticeById(noticeId);
         if (notice) {
-          // publishedAt을 YYYY-MM-DD 형식으로 변환
-          const publishedDate = notice.publishedAt?.toDate?.()
-            ? notice.publishedAt.toDate()
-            : new Date();
-          const publishedAtStr = publishedDate.toISOString().split("T")[0];
+          // 마이그레이션 이전 데이터는 eventDate가 없을 수 있어 publishedAt으로 대체
+          const publishedDate = notice.publishedAt?.toDate?.() ?? new Date();
 
           setForm({
             title: notice.title,
             summary: notice.summary,
             contentMd: notice.contentMd,
             isPinned: notice.isPinned,
-            publishedAt: publishedAtStr,
+            publishedAt: timestampToDateInputValue(notice.publishedAt),
+            eventDate: timestampToDateInputValue(notice.eventDate, publishedDate),
           });
         } else {
           toast.error("공지사항을 찾을 수 없습니다.");
@@ -82,16 +80,13 @@ export default function EditNoticePage() {
 
     setSaving(true);
     try {
-      // 게시일을 Timestamp로 변환
-      const publishedDate = new Date(form.publishedAt);
-      publishedDate.setHours(0, 0, 0, 0);
-
       await noticeAdminRepository.updateNotice(noticeId, {
         title: form.title,
         summary: form.summary,
         contentMd: form.contentMd,
         isPinned: form.isPinned,
-        publishedAt: Timestamp.fromDate(publishedDate),
+        publishedAt: dateInputToTimestamp(form.publishedAt),
+        eventDate: dateInputToTimestamp(form.eventDate),
       });
       toast.success("공지사항이 수정되었습니다.");
       router.push("/admin/notices");
@@ -167,6 +162,17 @@ export default function EditNoticePage() {
                 type="date"
                 value={form.publishedAt}
                 onChange={(e) => setForm({ ...form, publishedAt: e.target.value })}
+                className="w-48"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="eventDate">행사날짜</Label>
+              <Input
+                id="eventDate"
+                type="date"
+                value={form.eventDate}
+                onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
                 className="w-48"
               />
             </div>

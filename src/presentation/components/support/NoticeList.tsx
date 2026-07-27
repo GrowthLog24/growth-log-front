@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/shared/utils/date";
+import { formatDate, getEventStatus, type EventStatus } from "@/shared/utils/date";
 import { trackEvent } from "@/shared/utils/analytics";
 import type { Notice } from "@/domain/entities";
 import type { SerializedFirestoreData } from "@/shared/utils/serialize";
@@ -14,6 +14,28 @@ interface NoticeListProps {
 }
 
 const ITEMS_PER_PAGE = 5;
+
+const ROW_GRID = "grid-cols-[1fr_20px] sm:grid-cols-[104px_88px_1fr_20px]";
+
+const STATUS_CONFIG: Record<EventStatus, { label: string; className: string }> = {
+  ongoing: { label: "진행중", className: "bg-primary/10 text-primary" },
+  done: { label: "완료", className: "bg-gray-6 text-gray-2" },
+  upcoming: { label: "예정", className: "bg-blue-50 text-blue-600" },
+};
+
+function StatusChip({ status }: { status: EventStatus }) {
+  const { label, className } = STATUS_CONFIG[status];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${className}`}
+    >
+      {status === "ongoing" && (
+        <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+      )}
+      {label}
+    </span>
+  );
+}
 
 /**
  * 공지사항 리스트 컴포넌트 (더보기 기능 포함)
@@ -58,29 +80,55 @@ export function NoticeList({ notices: allNotices }: NoticeListProps) {
   return (
     <>
       {/* Notice List */}
-      <div className="border rounded-lg divide-y">
-        {notices.map((notice) => (
-          <Link
-            key={notice.id}
-            href={`/support/notice/${notice.id}`}
-            className="flex items-center justify-between p-4 hover:bg-gray-6 transition-colors"
-          >
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              {notice.isPinned && (
-                <span className="shrink-0 px-2 py-0.5 bg-primary text-white text-xs rounded">
-                  공지
+      <div className="border rounded-lg overflow-hidden">
+        {/* Column Header */}
+        <div
+          className={`hidden sm:grid ${ROW_GRID} items-center gap-4 px-4 py-2.5 bg-gray-6 text-xs font-medium text-gray-2`}
+        >
+          <span>행사날짜</span>
+          <span>현황</span>
+          <span>제목</span>
+          <span aria-hidden="true" />
+        </div>
+
+        <div className="divide-y">
+          {notices.map((notice) => {
+            const eventDate = notice.eventDate ?? notice.publishedAt;
+            const status = getEventStatus(eventDate);
+
+            return (
+              <Link
+                key={notice.id}
+                href={`/support/notice/${notice.id}`}
+                className={`grid ${ROW_GRID} items-center gap-4 p-4 hover:bg-gray-6 transition-colors`}
+              >
+                <span className="hidden sm:block text-sm text-muted-foreground tabular-nums">
+                  {formatDate(eventDate)}
                 </span>
-              )}
-              <span className="text-foreground truncate">{notice.title}</span>
-            </div>
-            <div className="flex items-center gap-4 shrink-0 ml-4">
-              <span className="text-sm text-muted-foreground hidden sm:block">
-                {formatDate(notice.publishedAt)}
-              </span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </Link>
-        ))}
+                <span className="hidden sm:block">
+                  <StatusChip status={status} />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex sm:hidden items-center gap-2 mb-1.5">
+                    <StatusChip status={status} />
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {formatDate(eventDate)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    {notice.isPinned && (
+                      <span className="shrink-0 px-2 py-0.5 bg-primary text-white text-xs rounded">
+                        공지
+                      </span>
+                    )}
+                    <span className="text-foreground truncate">{notice.title}</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground justify-self-end" />
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Load More Button */}

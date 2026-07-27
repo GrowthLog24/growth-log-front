@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Timestamp } from "firebase/firestore";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { noticeAdminRepository } from "@/infrastructure/repositories/admin/noticeAdminRepository";
+import { dateInputToTimestamp, timestampToDateInputValue } from "@/shared/utils/date";
 
 /**
  * 공지사항 생성 페이지
@@ -30,7 +30,8 @@ export default function CreateNoticePage() {
     summary: "",
     contentMd: "",
     isPinned: false,
-    publishedAt: new Date().toISOString().split("T")[0], // YYYY-MM-DD 형식
+    publishedAt: timestampToDateInputValue(),
+    eventDate: timestampToDateInputValue(),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,17 +44,14 @@ export default function CreateNoticePage() {
 
     setSaving(true);
     try {
-      // 게시일을 Timestamp로 변환 (입력된 날짜의 자정 기준)
-      const publishedDate = new Date(form.publishedAt);
-      publishedDate.setHours(0, 0, 0, 0);
-
       await noticeAdminRepository.createNotice({
         title: form.title,
         summary: form.summary,
         contentMd: form.contentMd,
         isPinned: form.isPinned,
         sortOrder: Date.now(),
-        publishedAt: Timestamp.fromDate(publishedDate),
+        publishedAt: dateInputToTimestamp(form.publishedAt),
+        eventDate: dateInputToTimestamp(form.eventDate),
       });
       toast.success("공지사항이 등록되었습니다.");
       router.push("/admin/notices");
@@ -121,6 +119,17 @@ export default function CreateNoticePage() {
                 type="date"
                 value={form.publishedAt}
                 onChange={(e) => setForm({ ...form, publishedAt: e.target.value })}
+                className="w-48"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="eventDate">행사날짜</Label>
+              <Input
+                id="eventDate"
+                type="date"
+                value={form.eventDate}
+                onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
                 className="w-48"
               />
             </div>
