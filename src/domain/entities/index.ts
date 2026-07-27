@@ -94,6 +94,8 @@ export interface Notice {
   /** 정렬 순서 (낮을수록 먼저 표시) */
   sortOrder: number;
   publishedAt: Timestamp;
+  /** 행사 날짜 (공지 목록 정렬 기준) */
+  eventDate: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

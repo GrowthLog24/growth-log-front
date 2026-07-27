@@ -12,6 +12,12 @@ import { db, COLLECTIONS } from "@/infrastructure/firebase";
 import type { INoticeRepository } from "@/domain/repositories";
 import type { Notice } from "@/domain/entities";
 
+/** Firestore Timestamp 또는 직렬화된 number를 밀리초로 변환 */
+function toMillis(value: Notice["eventDate"] | number | undefined): number {
+  if (!value) return 0;
+  return typeof value === "number" ? value : value.toMillis();
+}
+
 /**
  * 공지사항 Repository Firestore 구현체
  */
@@ -25,15 +31,15 @@ export class NoticeRepository implements INoticeRepository {
       ...doc.data(),
     })) as Notice[];
 
-    // 정렬 순서: 1) isPinned (고정 공지 우선) 2) publishedAt 내림차순 (최신순)
+    // 정렬 순서: 1) isPinned (고정 공지 우선) 2) eventDate 내림차순 (행사일이 최신인 순)
     notices.sort((a, b) => {
       // 고정 공지가 항상 위로
       if (a.isPinned !== b.isPinned) {
         return a.isPinned ? -1 : 1;
       }
-      // publishedAt 내림차순 (최신이 위로)
-      const aTime = a.publishedAt?.toMillis?.() ?? (typeof a.publishedAt === 'number' ? a.publishedAt : 0);
-      const bTime = b.publishedAt?.toMillis?.() ?? (typeof b.publishedAt === 'number' ? b.publishedAt : 0);
+      // eventDate 내림차순, 마이그레이션 이전 데이터는 publishedAt으로 대체
+      const aTime = toMillis(a.eventDate ?? a.publishedAt);
+      const bTime = toMillis(b.eventDate ?? b.publishedAt);
       return bTime - aTime;
     });
 
@@ -62,7 +68,7 @@ export class NoticeRepository implements INoticeRepository {
     const q = query(
       this.noticesRef,
       where("isPinned", "==", true),
-      orderBy("publishedAt", "desc")
+      orderBy("eventDate", "desc")
     );
 
     const snapshot = await getDocs(q);

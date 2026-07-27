@@ -69,6 +69,43 @@ export function formatDateWithDay(date: any): string {
 }
 
 /**
+ * <input type="date"> 값(YYYY-MM-DD)을 자정 기준 Timestamp로 변환
+ */
+export function dateInputToTimestamp(value: string): Timestamp {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return Timestamp.fromDate(date);
+}
+
+/**
+ * Timestamp를 <input type="date"> 값(YYYY-MM-DD)으로 변환. 값이 없으면 fallback(기본값: 오늘)을 사용
+ */
+export function timestampToDateInputValue(
+  timestamp?: Timestamp | null,
+  fallback: Date = new Date()
+): string {
+  const date = timestamp?.toDate?.() ?? fallback;
+  return date.toISOString().split("T")[0];
+}
+
+export type EventStatus = "ongoing" | "done" | "upcoming";
+
+/**
+ * 행사 날짜를 오늘과 비교해 진행 상태를 판단 (시간은 무시하고 날짜만 비교)
+ */
+export function getEventStatus(date: any): EventStatus {
+  const d = toDate(date);
+  if (!d) return "upcoming";
+
+  const eventDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const today = new Date();
+  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+
+  if (eventDay === todayDay) return "ongoing";
+  return eventDay < todayDay ? "done" : "upcoming";
+}
+
+/**
  * 상대적 시간 표시 (예: "3일 전", "2시간 전")
  */
 export function formatRelativeTime(date: any): string {
