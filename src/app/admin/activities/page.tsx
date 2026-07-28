@@ -482,6 +482,7 @@ function ActivityFormDialog({
               lectureName: l.lectureName,
               speakerOrganization: l.speakerOrganization,
               speakerTitle: l.speakerTitle,
+              field: l.field ?? "",
               lectureDate: l.lectureDate?.toDate?.() || undefined,
             });
             break;
@@ -609,6 +610,7 @@ function ActivityFormDialog({
               lectureName: String(formData.lectureName || ""),
               speakerOrganization: String(formData.speakerOrganization || ""),
               speakerTitle: String(formData.speakerTitle || ""),
+              field: String(formData.field || ""),
               lectureDate: formData.lectureDate as Date | undefined,
             });
             break;
@@ -669,6 +671,7 @@ function ActivityFormDialog({
               lectureName: String(formData.lectureName || ""),
               speakerOrganization: String(formData.speakerOrganization || ""),
               speakerTitle: String(formData.speakerTitle || ""),
+              field: String(formData.field || ""),
               lectureDate: (formData.lectureDate as Date | undefined) ?? new Date(),
             });
             break;
@@ -985,6 +988,18 @@ function ActivityFormDialog({
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="field">특강 분야</Label>
+                <Input
+                  id="field"
+                  value={String(formData.field || "")}
+                  onChange={(e) => updateField("field", e.target.value)}
+                  placeholder="예: 개발, 커리어, 학사"
+                />
+                <p className="text-xs text-muted-foreground">
+                  &ldquo;학사&rdquo;로 입력하면 KNOU CS 페이지에 노출됩니다. 비워두면 Dev×AI 페이지로 분류됩니다.
+                </p>
+              </div>
+              <div className="space-y-2">
                 <Label>특강 진행일</Label>
                 <DatePicker
                   value={formData.lectureDate as Date | undefined}
@@ -1027,6 +1042,9 @@ function ActivityFormDialog({
                   onChange={(e) => updateField("field", e.target.value)}
                   placeholder="예: 개발, 커리어, 학사, 취업"
                 />
+                <p className="text-xs text-muted-foreground">
+                  &ldquo;학사&rdquo;로 입력하면 KNOU CS 페이지에 노출됩니다. 그 외 값은 Dev×AI 페이지로 분류됩니다.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="hostName">진행자</Label>

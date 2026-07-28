@@ -1,6 +1,17 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Flame, FileText, Laptop } from "lucide-react";
+import Link from "next/link";
+import {
+  Handshake,
+  Zap,
+  TrendingUp,
+  Bot,
+  GraduationCap,
+  Wrench,
+  NotebookPen,
+  ArrowRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
 import { monthlyScheduleRepository } from "@/infrastructure/repositories/monthlyScheduleRepository";
 import { statsRepository } from "@/infrastructure/repositories/siteConfigRepository";
@@ -9,33 +20,50 @@ import { StatsSection } from "@/presentation/components/about";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "그로스로그를 소개합니다. 함께 성장하는 개발자 커뮤니티입니다.",
+  description: "그로스로그를 소개합니다. AI와 함께 성장하는 개발 커뮤니티입니다.",
 };
 
 /** 추후 방침따라 수정  **/
 export const dynamic = "force-dynamic";
 
-// 소개 아이템
-const introItems = [
+/** 컨셉 전환 - 기존 회원에게 "뿌리는 유지된다"를 보여주는 대비 블록 */
+const SHIFT = {
+  asIs: {
+    title: "KNOU CS 교내 개발자 커뮤니티",
+    description: "방송대 전공생 중심의 스터디 모임",
+  },
+  toBe: {
+    title: "AI와 함께 성장하는 개발 커뮤니티",
+    description: "전공·직군 무관, AI를 동료로 삼는 성장 커뮤니티",
+  },
+} as const;
+
+/** 우리가 믿는 세 가지 */
+const VALUES = [
   {
-    icon: FileText,
-    title: "그로스로그는 KNOU CS의 유일한 개발자 모임입니다.",
-    description:
-      "KNOU에서 CS를 공부하는 현직 개발자이거나 예비 개발자라면 누구나 함께할 수 있습니다.",
+    icon: Handshake,
+    title: "Together",
+    description: "혼자 빠르게보다 함께 멀리. 서로의 성장을 기록하고 응원합니다.",
   },
   {
-    icon: Flame,
-    title: "그로스로그에는 열정적인 자기계발러들이 모여있습니다.",
-    description:
-      "개발에 관해 어떤 질문이라도 편하게 물어보고 알려줄 사람들과 함께 전공 지식과 실무감각을 동시에 키워보세요.",
+    icon: Zap,
+    title: "AI-Native",
+    description: "AI를 두려워하지 않고 능숙하게. 도구가 아닌 페어로 씁니다.",
   },
   {
-    icon: Laptop,
-    title: "그로스로그에서 함께 성장하세요.",
-    description:
-      "각자의 성장을 진심으로 응원하는 커뮤니티 멤버들과 서로 자극을 주고 받으며 개발자로서 한 해 한 해 성장하세요.",
+    icon: TrendingUp,
+    title: "Real Growth",
+    description: "인증샷용 활동이 아니라, 실제 결과물과 커리어로 이어지는 성장.",
   },
-];
+] as const;
+
+/** Growth Log에서 성장하는 네 갈래 */
+const GROWTH_TRACKS = [
+  { icon: Bot, title: "Dev×AI", description: "AI 개발 특강 · 커리어 세미나", href: "/dev-ai" },
+  { icon: GraduationCap, title: "KNOU CS", description: "전공 스터디 · 기출 CBT", href: "/knou-cs" },
+  { icon: Wrench, title: "Project", description: "월간 · 수익화 프로젝트", href: "/projects" },
+  { icon: NotebookPen, title: "Club", description: "성장일지 · 오프라인 네트워킹", href: "/activity" },
+] as const;
 
 /**
  * 월별 일정 라벨
@@ -78,33 +106,123 @@ export default async function AboutUsPage() {
       {/* Hero Section */}
       <section className="section-padding bg-white">
         <div className="container-custom">
-          <div className="text-center mb-12">
+          <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
+            ABOUT US
+          </span>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
+            AI와 함께 성장하는
+            <br />
+            개발 커뮤니티, Growth Log
+          </h1>
+          <p className="mt-5 text-muted-foreground max-w-2xl">
+            우리는 더 이상 &lsquo;방통대 교내 개발자 모임&rsquo;에 머무르지 않습니다. AI 시대에 맞게,
+            배움의 방식을 다시 씁니다.
+          </p>
+        </div>
+      </section>
+
+      {/* Our Shift - AS-IS → TO-BE */}
+      <section className="section-padding bg-gray-6">
+        <div className="container-custom grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+          <div>
             <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
-              INTRODUCING OUR COMMUNITY
+              OUR SHIFT
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              우리를 소개합니다
-            </h1>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-snug">
+              교내 커뮤니티에서
+              <br />
+              AI-Native 커뮤니티로
+            </h2>
+            <p className="mt-5 text-muted-foreground">
+              Growth Log는 KNOU 컴퓨터과학과에서 시작했습니다. 그 뿌리는 그대로 KNOU CS 트랙으로
+              이어가되, 이제는 전공과 소속을 넘어{" "}
+              <strong className="font-semibold text-foreground">
+                &lsquo;AI와 함께 성장하려는 모든 개발자&rsquo;
+              </strong>
+              에게 문을 엽니다.
+            </p>
           </div>
 
-          {/* Intro Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {introItems.map((item, index) => (
+          <div className="rounded-2xl border border-border bg-white p-6 md:p-8">
+            <div className="rounded-xl border border-border p-5">
+              <span className="text-xs font-bold tracking-wider text-muted-foreground">AS-IS</span>
+              <h3 className="mt-2 font-semibold text-foreground">{SHIFT.asIs.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{SHIFT.asIs.description}</p>
+            </div>
+
+            <div className="py-3 text-center text-xl text-muted-foreground" aria-hidden="true">
+              ↓
+            </div>
+
+            <div className="rounded-xl border-2 border-primary bg-primary/5 p-5">
+              <span className="text-xs font-bold tracking-wider text-primary">TO-BE</span>
+              <h3 className="mt-2 font-semibold text-foreground">{SHIFT.toBe.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{SHIFT.toBe.description}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="section-padding bg-white">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
+              VALUES
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground">우리가 믿는 세 가지</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {VALUES.map((value) => (
               <div
-                key={index}
-                className="flex flex-col items-center text-center p-6"
+                key={value.title}
+                className="rounded-2xl border border-border bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <item.icon className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2 leading-snug">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {item.description}
-                </p>
+                <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <value.icon className="h-6 w-6 text-primary" />
+                </span>
+                <h3 className="text-lg font-bold text-foreground">{value.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{value.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How we grow */}
+      <section className="section-padding bg-gray-6">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
+              HOW WE GROW
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+              Growth Log에서 이렇게 성장합니다
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {GROWTH_TRACKS.map((track) => (
+              <Link
+                key={track.title}
+                href={track.href}
+                className="group rounded-2xl border border-border bg-white p-6 transition-colors hover:border-primary"
+              >
+                <track.icon className="h-6 w-6 text-primary" />
+                <h3 className="mt-4 font-bold text-foreground">{track.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{track.description}</p>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Button asChild size="lg" className="text-base">
+              <Link href="/recruit">
+                {currentGeneration + 1}기 멤버로 함께하기
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

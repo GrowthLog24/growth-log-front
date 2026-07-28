@@ -1,11 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import { FileText, Loader2, Trophy } from "lucide-react";
+import { FileText, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { trackEvent } from "@/shared/utils/analytics";
-import { useInfiniteScroll } from "@/shared/hooks";
+import { CollapsibleCardGrid } from "@/presentation/components/common/CollapsibleCardGrid";
 import type { ProjectActivity } from "@/domain/entities";
 import type { SerializedFirestoreData } from "@/shared/utils/serialize";
 
@@ -15,30 +13,11 @@ interface ProjectsSectionProps {
   awardedProjectIds: string[];
 }
 
-const ITEMS_PER_LOAD = 8;
-
 /**
  * 프로젝트 목록 섹션 컴포넌트
- * 인피니티 스크롤로 프로젝트 카드 표시
+ * 기본 2줄만 표시하고 "더 보기"로 전체 펼침
  */
 export function ProjectsSection({ projects, awardedProjectIds }: ProjectsSectionProps) {
-  const { visibleItems, hasMore, isLoading, observerRef } = useInfiniteScroll({
-    items: projects,
-    itemsPerLoad: ITEMS_PER_LOAD,
-  });
-
-  const prevVisibleCountRef = useRef(visibleItems.length);
-  useEffect(() => {
-    if (visibleItems.length > prevVisibleCountRef.current) {
-      trackEvent("list_expand", {
-        list_type: "projects",
-        items_loaded: visibleItems.length - prevVisibleCountRef.current,
-        visible_items: visibleItems.length,
-      });
-    }
-    prevVisibleCountRef.current = visibleItems.length;
-  }, [visibleItems.length]);
-
   // 수상 프로젝트 ID를 Set으로 변환 (빠른 조회)
   const awardedSet = new Set(awardedProjectIds);
 
@@ -80,28 +59,15 @@ export function ProjectsSection({ projects, awardedProjectIds }: ProjectsSection
           </p>
         </div>
 
-        {/* Project Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {visibleItems.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              isAwarded={awardedSet.has(project.id)}
-            />
-          ))}
-        </div>
-
-        {/* Infinite Scroll Observer */}
-        {hasMore && (
-          <div
-            ref={observerRef}
-            className="flex justify-center items-center py-8"
-          >
-            {isLoading && (
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            )}
-          </div>
-        )}
+        {/* Project Cards - 기본 2줄, 나머지는 "더 보기"로 */}
+        <CollapsibleCardGrid
+          items={projects}
+          getKey={(project) => project.id}
+          renderItem={(project) => (
+            <ProjectCard project={project} isAwarded={awardedSet.has(project.id)} />
+          )}
+          listType="projects"
+        />
       </div>
     </section>
   );

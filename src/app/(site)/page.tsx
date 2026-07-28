@@ -1,6 +1,7 @@
 import {
   HeroWrapper,
   IntroSection,
+  TrackExploreSection,
   CommunityBlogWrapper,
   MemberTestimonialSection,
   RoleMarqueeSection,
@@ -14,6 +15,7 @@ export default function Home() {
     <>
       <HeroWrapper />
       <IntroSection />
+      <TrackExploreSection />
       <CommunityBlogWrapper />
       <MemberTestimonialSection />
       <RoleMarqueeSection />

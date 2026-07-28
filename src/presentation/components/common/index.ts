@@ -5,3 +5,4 @@ export { AddressSearch } from "./AddressSearch";
 export { AnimatedCounter } from "./AnimatedCounter";
 export { InstagramIcon, TistoryIcon, KakaoTalkIcon } from "./SocialIcons";
 export { TrackedLink } from "./TrackedLink";
+export { CollapsibleCardGrid } from "./CollapsibleCardGrid";

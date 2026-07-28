@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Growth Log — AI와 함께 성장하는 개발 커뮤니티</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f8fb;
+  --bg-soft-2:#eef1f8;
+  --ink:#0e1017;
+  --ink-2:#3a3f4c;
+  --ink-3:#6b7280;
+  --line:#e6e8ef;
+  --brand:#4f46e5;        /* AI indigo */
+  --brand-2:#7c6cf0;
+  --grow:#10b981;         /* growth green */
+  --grow-2:#34d399;
+  --accent-soft:#eef0ff;
+  --radius:18px;
+  --radius-sm:12px;
+  --shadow:0 8px 30px rgba(20,23,40,.08);
+  --shadow-lg:0 20px 60px rgba(20,23,40,.14);
+  --maxw:1160px;
+  --grad:linear-gradient(120deg,#4f46e5 0%,#7c6cf0 45%,#10b981 120%);
+  --grad-soft:linear-gradient(120deg,#eef0ff 0%,#eafaf3 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"Helvetica Neue","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;
+  letter-spacing:-.01em;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+/* ---------- NAV ---------- */
+header.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:var(--maxw);margin:0 auto;padding:0 24px;height:66px;display:flex;align-items:center;gap:28px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;letter-spacing:-.03em;cursor:pointer}
+.logo .mark{width:26px;height:26px;border-radius:8px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:15px;font-weight:900}
+.logo b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+nav.menu{display:flex;gap:4px;margin-left:8px;flex:1}
+nav.menu a{padding:9px 13px;border-radius:10px;font-size:14.5px;font-weight:600;color:var(--ink-2);cursor:pointer;transition:.15s;white-space:nowrap}
+nav.menu a:hover{background:var(--bg-soft-2);color:var(--ink)}
+nav.menu a.active{color:var(--brand);background:var(--accent-soft)}
+.nav-cta{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;background:var(--grad);color:#fff;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 6px 18px rgba(79,70,229,.32);transition:.15s}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(79,70,229,.4)}
+.burger{display:none;font-size:24px;background:none;border:0;cursor:pointer;color:var(--ink)}
+
+/* ---------- GENERIC ---------- */
+.page{display:none;animation:fade .35s ease}
+.page.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+section{padding:76px 0}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);background:var(--accent-soft);padding:6px 12px;border-radius:100px;margin-bottom:16px}
+.eyebrow.g{color:var(--grow);background:#e7faf1}
+h1{font-size:clamp(34px,5vw,56px);line-height:1.12;font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(26px,3.4vw,38px);line-height:1.2;font-weight:800;letter-spacing:-.03em}
+h3{font-size:20px;font-weight:750;letter-spacing:-.02em}
+.lead{font-size:clamp(16px,1.6vw,19px);color:var(--ink-2);max-width:640px}
+.center{text-align:center}.center .lead{margin-left:auto;margin-right:auto}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border-radius:13px;font-weight:700;font-size:15px;cursor:pointer;transition:.16s;border:0}
+.btn.primary{background:var(--grad);color:#fff;box-shadow:0 8px 22px rgba(79,70,229,.32)}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(79,70,229,.42)}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn.ghost:hover{border-color:var(--brand);color:var(--brand)}
+.pill{display:inline-block;padding:6px 13px;border-radius:100px;background:var(--bg-soft-2);color:var(--ink-2);font-size:13px;font-weight:600;margin:4px 4px 0 0}
+.grid{display:grid;gap:22px}
+.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:.18s}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:transparent}
+.card .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:22px;margin-bottom:16px;background:var(--accent-soft)}
+.card.soft{background:var(--bg-soft)}
+.muted{color:var(--ink-3)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:7px;background:var(--accent-soft);color:var(--brand)}
+.tag.g{background:#e7faf1;color:var(--grow)}
+.tag.o{background:#fff2e6;color:#d97706}
+.divider{height:1px;background:var(--line);margin:0}
+.badge-move{font-size:11px;font-weight:700;color:var(--ink-3);border:1px dashed var(--line);padding:3px 8px;border-radius:6px}
+
+/* ---------- HERO ---------- */
+.hero{position:relative;overflow:hidden;padding:96px 0 84px;background:radial-gradient(1100px 500px at 78% -10%,#eef0ff 0,transparent 60%),radial-gradient(800px 400px at 0% 20%,#eafaf3 0,transparent 55%)}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.hero h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{margin-top:20px}
+.hero-cta{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:28px;margin-top:36px}
+.hero-stats .n{font-size:28px;font-weight:800;letter-spacing:-.03em}
+.hero-stats .n b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-stats small{color:var(--ink-3);font-size:13px}
+.hero-visual{position:relative}
+.orb{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);padding:22px}
+.orb .row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.orb .row:last-child{border:0}
+.orb .av{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;flex:none}
+.floaty{position:absolute;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:12px 15px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px}
+.f1{top:-20px;right:-8px;animation:bob 4s ease-in-out infinite}
+.f2{bottom:-18px;left:-16px;animation:bob 5s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px)}}
+
+/* logos strip */
+.strip{background:var(--bg-soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:26px 0}
+.strip .wrap{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.strip .pill{background:#fff;border:1px solid var(--line)}
+
+/* page hero */
+.phero{padding:70px 0 40px;background:var(--grad-soft);border-bottom:1px solid var(--line)}
+.phero h1{font-size:clamp(30px,4vw,46px)}
+.phero .lead{margin-top:14px}
+
+/* timeline / list rows */
+.rowcard{display:flex;gap:18px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:.18s}
+.rowcard:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.rowcard .no{width:40px;height:40px;border-radius:11px;background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+/* feature split */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.panel{background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--radius);padding:30px}
+
+/* blog */
+.blog{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.post{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:.18s;cursor:pointer}
+.post:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.post .thumb{height:150px;background:var(--grad-soft);display:grid;place-items:center;font-size:34px}
+.post .body{padding:20px}
+.post h3{font-size:17px;margin:8px 0}
+
+/* cta band */
+.cta-band{background:var(--grad);border-radius:26px;padding:56px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.cta-band h2{color:#fff}
+.cta-band .lead{color:rgba(255,255,255,.9);margin:14px auto 28px}
+.cta-band .btn.primary{background:#fff;color:var(--brand)}
+.cta-band .btn.ghost{background:transparent;border-color:rgba(255,255,255,.5);color:#fff}
+
+/* recruit price */
+.plan{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:30px;position:relative}
+.plan.hi{border:2px solid var(--brand);box-shadow:var(--shadow-lg)}
+.plan .ribbon{position:absolute;top:-13px;left:30px;background:var(--grad);color:#fff;font-size:12px;font-weight:800;padding:5px 12px;border-radius:100px}
+.check{display:flex;gap:10px;align-items:flex-start;margin:11px 0;font-size:14.5px;color:var(--ink-2)}
+.check svg{flex:none;margin-top:3px}
+
+/* faq */
+.faq{border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.faq details{border-bottom:1px solid var(--line)}
+.faq details:last-child{border:0}
+.faq summary{padding:18px 22px;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:20px;color:var(--brand)}
+.faq details[open] summary::after{content:"−"}
+.faq .ans{padding:0 22px 20px;color:var(--ink-2)}
+
+/* notice */
+.notice{display:flex;gap:14px;align-items:center;padding:16px 20px;border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;transition:.15s}
+.notice:hover{border-color:var(--brand);background:var(--bg-soft)}
+.notice .dt{font-size:13px;color:var(--ink-3);flex:none;width:96px}
+
+/* footer */
+footer{background:#0e1017;color:#c7cbd6;padding:60px 0 34px;margin-top:20px}
+footer .cols{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:32px}
+footer h4{color:#fff;font-size:14px;margin-bottom:14px;letter-spacing:.02em}
+footer a{display:block;color:#9aa0af;font-size:14px;padding:5px 0;cursor:pointer}
+footer a:hover{color:#fff}
+footer .logo{color:#fff}
+footer .logo b{color:#fff;-webkit-text-fill-color:#fff}
+footer .fbot{border-top:1px solid #23262f;margin-top:40px;padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13px;color:#6b7280}
+.soc{display:flex;gap:10px;margin-top:14px}
+.soc span{width:36px;height:36px;border-radius:10px;background:#1a1d26;display:grid;place-items:center;font-size:16px}
+
+/* prototype banner */
+.proto{position:fixed;bottom:16px;right:16px;z-index:200;background:var(--ink);color:#fff;font-size:12.5px;font-weight:600;padding:9px 14px;border-radius:100px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;opacity:.92}
+.proto b{color:var(--grow-2)}
+
+@media(max-width:900px){
+  .hero-grid,.split,.g3,.g2,.g4,.blog,footer .cols{grid-template-columns:1fr}
+  nav.menu,.nav-cta{display:none}
+  .burger{display:block;margin-left:auto}
+  .hero-visual{display:none}
+  section{padding:52px 0}
+  .cta-band{padding:38px 22px}
+  .hero-stats{gap:18px}
+  footer .cols{gap:24px}
+  nav.menu.open{display:flex;position:absolute;top:66px;left:0;right:0;flex-direction:column;background:#fff;border-bottom:1px solid var(--line);padding:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<header class="nav">
+  <div class="nav-inner">
+    <div class="logo" onclick="go('home')"><span class="mark">G</span><span>Growth<b>Log</b></span></div>
+    <nav class="menu" id="menu">
+      <a data-nav="about" onclick="go('about')">About us</a>
+      <a data-nav="activity" onclick="go('activity')">Activity</a>
+      <a data-nav="devai" onclick="go('devai')">Dev×AI</a>
+      <a data-nav="project" onclick="go('project')">Project</a>
+      <a data-nav="knou" onclick="go('knou')">KNOU CS</a>
+      <a data-nav="recruit" onclick="go('recruit')">Recruit</a>
+      <a data-nav="support" onclick="go('support')">Support</a>
+    </nav>
+    <div class="nav-cta" onclick="go('recruit')">🚀 6기 얼리버드</div>
+    <button class="burger" onclick="document.getElementById('menu').classList.toggle('open')">☰</button>
+  </div>
+</header>
+
+<!-- ================= HOME ================= -->
+<main id="home" class="page active">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">🤖 AI-Native Developer Community</span>
+        <h1>AI와 함께<br><span>성장하는 개발 커뮤니티</span></h1>
+        <p class="lead">코드만 짜는 시대는 끝났습니다. Growth Log는 AI를 도구가 아닌 <b>동료</b>로 삼아, 함께 배우고 만들고 성장하는 개발자들의 커뮤니티입니다.</p>
+        <div class="hero-cta">
+          <button class="btn primary" onclick="go('recruit')">6기 얼리버드 신청 →</button>
+          <button class="btn ghost" onclick="go('about')">더 알아보기</button>
+        </div>
+        <div class="hero-stats">
+          <div><div class="n"><b>5기+</b></div><small>운영 기수</small></div>
+          <div><div class="n"><b>200+</b></div><small>누적 멤버</small></div>
+          <div><div class="n"><b>6</b></div><small>활동 트랙</small></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="orb">
+          <div class="row"><div class="av" style="background:var(--brand)">AI</div><div><b>Dev×AI 스터디</b><br><small class="muted">Claude Code로 사이드프로젝트 자동화</small></div></div>
+          <div class="row"><div class="av" style="background:var(--grow)">CS</div><div><b>KNOU CS 전공스터디</b><br><small class="muted">자료구조 · 알고리즘 기출 CBT</small></div></div>
+          <div class="row"><div class="av" style="background:#f59e0b">PJ</div><div><b>월간 프로젝트</b><br><small class="muted">수익화 가능한 미니 프로덕트</small></div></div>
+        </div>
+        <div class="floaty f1">✨ AI 페어코딩</div>
+        <div class="floaty f2">🌱 함께 성장</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="strip"><div class="wrap">
+    <span class="muted" style="font-weight:600;font-size:13px">멤버가 활동하는 분야</span>
+    <span class="pill">Frontend</span><span class="pill">Backend</span><span class="pill">AI · ML</span>
+    <span class="pill">Mobile</span><span class="pill">Data</span><span class="pill">PM · 기획</span><span class="pill">디자인</span><span class="pill">마케팅</span>
+  </div></div>
+
+  <!-- what's growth log -->
+  <section>
+    <div class="wrap center">
+      <span class="eyebrow g">What's Growth Log</span>
+      <h2>혼자 배우면 도구, 함께 배우면 문화</h2>
+      <p class="lead">AI 시대의 개발자에게 필요한 세 가지를 한 곳에서.</p>
+      <div class="grid g3" style="margin-top:40px;text-align:left">
+        <div class="card"><div class="ic">🤖</div><h3>AI × 실전</h3><p class="muted" style="margin-top:8px">Claude, Cursor, Copilot을 실무처럼. AI 페어코딩으로 혼자서는 못 만들던 걸 만들어봅니다.</p></div>
+        <div class="card"><div class="ic">🌱</div><h3>함께 성장</h3><p class="muted" style="margin-top:8px">다양한 분야의 멤버들과 성장일지를 쓰고, 스터디하고, 서로의 코드를 리뷰합니다.</p></div>
+        <div class="card"><div class="ic">🚀</div><h3>기회로 연결</h3><p class="muted" style="margin-top:8px">프로젝트 · 경진대회 · 커리어 세미나로 배움을 실제 결과물과 기회로 이어갑니다.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- explore tracks -->
+  <section style="background:var(--bg-soft)">
+    <div class="wrap">
+      <div class="center"><span class="eyebrow">Explore</span><h2>6개의 활동 트랙</h2><p class="lead">관심사에 맞게 골라 참여하세요.</p></div>
+      <div class="grid g3" style="margin-top:40px">
+        <div class="card" onclick="go('devai')" style="cursor:pointer"><div class="ic">🤖</div><h3>Dev×AI</h3><p class="muted" style="margin:8px 0 14px">AI 개발 특강 · 개발/커리어 세미나</p><span class="tag">신규 트랙 →</span></div>
+        <div class="card" onclick="go('knou')" style="cursor:pointer"><div class="ic" style="background:#e7faf1">🎓</div><h3>KNOU CS</h3><p class="muted" style="margin:8px 0 14px">전공 스터디 · 기출 CBT · 학사 공지</p><span class="tag g">전공생 필수 →</span></div>
+        <div class="card" onclick="go('project')" style="cursor:pointer"><div class="ic" style="background:#fff2e6">🛠️</div><h3>Project</h3><p class="muted" style="margin:8px 0 14px">월간 프로젝트 · 수익화 · 경진대회</p><span class="tag o">범위 확장 →</span></div>
+        <div class="card" onclick="go('activity')" style="cursor:pointer"><div class="ic">📓</div><h3>성장일지</h3><p class="muted" style="margin:8px 0 14px">5기까지 이어온 성장 큐레이션</p><span class="tag">Activity →</span></div>
+        <div class="card" onclick="go('activity')" style="cursor:pointer"><div class="ic">🎏</div><h3>클럽 활동</h3><p class="muted" style="margin:8px 0 14px">오프라인 모임 · 네트워킹 · 취미</p><span class="tag">Activity →</span></div>
+        <div class="card" onclick="go('support')" style="cursor:pointer"><div class="ic" style="background:#e7faf1">💬</div><h3>Support</h3><p class="muted" style="margin:8px 0 14px">공지 · FAQ · 운영 문의</p><span class="tag g">문의 →</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- blog / 성장일지 -->
+  <section>
+    <div class="wrap">
+      <div class="center"><span class="eyebrow g">Community Blog · 성장일지</span><h2>5기 멤버들의 성장 기록</h2></div>
+      <div class="blog" style="margin-top:40px">
+        <div class="post"><div class="thumb">🤖</div><div class="body"><span class="tag">Dev×AI</span><h3>Claude Code로 주말에 SaaS 하나 만든 후기</h3><p class="muted" style="font-size:14px">AI 페어코딩으로 배포까지 — 5기 · 2026.07</p></div></div>
+        <div class="post"><div class="thumb">🎓</div><div class="body"><span class="tag g">KNOU CS</span><h3>운영체제 기말, CBT 300문제로 A+ 받은 방법</h3><p class="muted" style="font-size:14px">전공 스터디 회고 — 5기 · 2026.06</p></div></div>
+        <div class="post"><div class="thumb">🚀</div><div class="body"><span class="tag o">Project</span><h3>월간 프로젝트에서 첫 유료 결제를 받기까지</h3><p class="muted" style="font-size:14px">수익화 실험 로그 — 5기 · 2026.05</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- testimonials -->
+  <section style="background:var(--bg-soft)">
+    <div class="wrap">
+      <div class="center"><span class="eyebrow">Voices</span><h2>먼저 성장한 멤버들의 이야기</h2></div>
+      <div class="grid g3" style="margin-top:40px">
+        <div class="card">"혼자 유튜브만 보다가, 여기서 AI 도구를 실무처럼 쓰기 시작했어요. 개발 속도가 완전히 달라졌습니다." <div style="margin-top:14px;font-weight:700">김OO · 1기 → Frontend</div></div>
+        <div class="card">"방통대 전공 공부가 막막했는데, KNOU CS 스터디 덕에 혼자가 아니게 됐어요." <div style="margin-top:14px;font-weight:700">이OO · 2기 → 재학생</div></div>
+        <div class="card">"다양한 직군 멤버들이랑 프로젝트 하면서 얻는 인사이트가 진짜예요." <div style="margin-top:14px;font-weight:700">박OO · 3기 → Data</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section><div class="wrap"><div class="cta-band">
+    <h2>AI와 함께, 다음 기수의 주인공은 당신입니다</h2>
+    <p class="lead">6기 얼리버드 모집이 곧 시작됩니다. 가장 먼저 소식을 받아보세요.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn primary" onclick="go('recruit')">6기 얼리버드 신청</button>
+      <button class="btn ghost" onclick="go('about')">커뮤니티 소개</button>
+    </div>
+  </div></div></section>
+</main>
+
+<!-- ================= ABOUT ================= -->
+<main id="about" class="page">
+  <section class="phero"><div class="wrap">
+    <span class="eyebrow">About us</span>
+    <h1>AI와 함께 성장하는<br>개발 커뮤니티, Growth Log</h1>
+    <p class="lead">우리는 더 이상 '방통대 교내 개발자 모임'에 머무르지 않습니다. AI 시대에 맞게, 배움의 방식을 다시 씁니다.</p>
+  </div></section>
+
+  <section><div class="wrap split">
+    <div>
+      <span class="eyebrow g">Our Shift</span>
+      <h2>교내 커뮤니티에서<br>AI-Native 커뮤니티로</h2>
+      <p class="lead" style="margin-top:16px">Growth Log는 KNOU 컴퓨터과학과에서 시작했습니다. 그 뿌리는 그대로 KNOU CS 트랙으로 이어가되, 이제는 전공과 소속을 넘어 <b>'AI와 함께 성장하려는 모든 개발자'</b>에게 문을 엽니다.</p>
+    </div>
+    <div class="panel">
+      <div class="stack">
+        <div class="rowcard"><div class="no">AS-IS</div><div><h3 style="font-size:16px">KNOU CS 교내 개발자 커뮤니티</h3><p class="muted" style="font-size:14px">방송대 전공생 중심의 스터디 모임</p></div></div>
+        <div class="center muted" style="font-size:22px">↓</div>
+        <div class="rowcard" style="border-color:var(--brand)"><div class="no">TO-BE</div><div><h3 style="font-size:16px">AI와 함께 성장하는 개발 커뮤니티</h3><p class="muted" style="font-size:14px">전공·직군 무관, AI를 동료로 삼는 성장 커뮤니티</p></div></div>
+      </div>
+    </div>
+  </div></section>
+
+  <section style="background:var(--bg-soft)"><div class="wrap">
+    <div class="center"><span class="eyebrow">Values</span><h2>우리가 믿는 세 가지</h2></div>
+    <div class="grid g3" style="margin-top:40px">
+      <div class="card"><div class="ic">🤝</div><h3>Together</h3><p class="muted" style="margin-top:8px">혼자 빠르게보다 함께 멀리. 서로의 성장을 기록하고 응원합니다.</p></div>
+      <div class="card"><div class="ic">⚡</div><h3>AI-Native</h3><p class="muted" style="margin-top:8px">AI를 두려워하지 않고 능숙하게. 도구가 아닌 페어로 씁니다.</p></div>
+      <div class="card"><div class="ic">📈</div><h3>Real Growth</h3><p class="muted" style="margin-top:8px">인증샷용 활동이 아니라, 실제 결과물과 커리어로 이어지는 성장.</p></div>
+    </div>
+  </div></section>
+
+  <section><div class="wrap">
+    <div class="center"><span class="eyebrow g">How we grow</span><h2>Growth Log에서 이렇게 성장합니다</h2></div>
+    <div class="grid g4" style="margin-top:40px">
+      <div class="card soft"><h3>🤖 Dev×AI</h3><p class="muted" style="font-size:14px;margin-top:8px">AI 개발 특강 · 커리어 세미나</p></div>
+      <div class="card soft"><h3>🎓 KNOU CS</h3><p class="muted" style="font-size:14px;margin-top:8px">전공 스터디 · 기출 CBT</p></div>
+      <div class="card soft"><h3>🛠️ Project</h3><p class="muted" style="font-size:14px;margin-top:8px">월간 · 수익화 프로젝트</p></div>
+      <div class="card soft"><h3>🎏 Club</h3><p class="muted" style="font-size:14px;margin-top:8px">성장일지 · 오프라인 네트워킹</p></div>
+    </div>
+    <div class="center" style="margin-top:36px"><button class="btn primary" onclick="go('recruit')">6기 멤버로 함께하기 →</button></div>
+  </div></section>
+</main>
+
+<!-- ================= ACTIVITY ================= -->
+<main id="activity" class="page">
+  <section class="phero"><div class="wrap">
+    <span class="eyebrow">Activity</span>
+    <h1>기록하고, 모이고, 성장합니다</h1>
+    <p class="lead">스터디·특강·세미나는 각 전문 트랙으로 이동했어요. Activity에는 커뮤니티의 심장인 <b>성장일지</b>와 <b>클럽 활동</b>이 남습니다.</p>
+    <div style="margin-top:18px">
+      <span class="badge-move">학사·전공 스터디 → KNOU CS</span>
+      <span class="badge-move">AI·개발 특강/세미나 → Dev×AI</span>
+    </div>
+  </div></section>
+
+  <!-- 성장일지 -->
+  <section><div class="wrap split">
+    <div>
+      <span class="eyebrow g">성장일지</span>
+      <h2>5기까지 이어온<br>성장의 큐레이션</h2>
+      <p class="lead" style="margin-top:16px">매주 자신의 배움과 삽질을 기록하는 성장일지. 1기부터 5기까지 쌓인 기록을 큐레이션해 새 멤버의 길잡이로 업데이트했습니다.</p>
+      <div style="margin-top:16px">
+        <span class="pill">주간 회고</span><span class="pill">AI 활용 로그</span><span class="pill">TIL</span><span class="pill">멤버 피드백</span>
+      </div>
+    </div>
+    <div class="panel"><div class="stack">
+      <div class="rowcard"><div class="no">5기</div><div><h3 style="font-size:16px">AI 페어코딩 큐레이션</h3><p class="muted" style="font-size:14px">Claude Code·Cursor 실전 기록 모음</p></div></div>
+      <div class="rowcard"><div class="no">4기</div><div><h3 style="font-size:16px">전공 완주 로그</h3><p class="muted" style="font-size:14px">KNOU 한 학기 스터디 회고 베스트</p></div></div>
+      <div class="rowcard"><div class="no">1–3기</div><div><h3 style="font-size:16px">아카이브</h3><p class="muted" style="font-size:14px">초기 멤버들의 성장 스토리</p></div></div>
+    </div></div>
+  </div></section>
+
+  <!-- 클럽 활동 -->
+  <section style="background:var(--bg-soft)"><div class="wrap">
+    <div class="center"><span class="eyebrow">클럽 활동</span><h2>일만 하지 않습니다</h2><p class="lead">코드 밖에서 더 끈끈해지는 오프라인·취미 모임.</p></div>
+    <div class="grid g3" style="margin-top:40px">
+      <div class="card"><div class="ic">☕</div><h3>오프라인 밋업</h3><p class="muted" style="margin-top:8px">분기별 정기 모임과 네트워킹 데이.</p></div>
+      <div class="card"><div class="ic">🎮</div><h3>취미 소모임</h3><p class="muted" style="margin-top:8px">러닝·보드게임·독서 등 관심사 기반 클럽.</p></div>
+      <div class="card"><div class="ic">🎉</div><h3>기수 이벤트</h3><p class="muted" style="margin-top:8px">해커톤 뒤풀이, 수료식, 연말 어워드.</p></div>
+    </div>
+  </div></section>
+
+  <section><div class="wrap"><div class="cta-band">
+    <h2>스터디·특강을 찾으시나요?</h2>
+    <p class="lead">활동이 더 전문화됐어요. 트랙별로 살펴보세요.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn primary" onclick="go('devai')">Dev×AI 보기</button>
+      <button class="btn ghost" onclick="go('knou')">KNOU CS 보기</button>
+    </div>
+  </div></div></section>
+</main>
+
+<!-- ================= DEV×AI ================= -->
+<main id="devai" class="page">
+  <section class="phero" style="background:linear-gradient(120deg,#eef0ff,#f3f0ff)"><div class="wrap">
+    <span class="eyebrow">Dev × AI · 신규 트랙</span>
+    <h1>AI를 무기로 쓰는<br>개발자가 되는 곳</h1>
+    <p class="lead">기존 Activity의 <b>AI·개발 전문가 특강</b>과 <b>개발/커리어 세미나</b>를 한 트랙으로 모았습니다.</p>
+  </div></section>
+
+  <section><div class="wrap">
+    <div class="center"><span class="eyebrow">Curriculum</span><h2>무엇을 배우나요</h2></div>
+    <div class="grid g2" style="margin-top:40px">
+      <div class="card"><div class="ic">🤖</div><h3>AI 개발 특강</h3><p class="muted" style="margin-top:8px">Claude Code·Cursor·Copilot로 실무처럼 개발하기. AI 에이전트, RAG, 바이브코딩 실습.</p><div style="margin-top:12px"><span class="pill">Claude Code</span><span class="pill">에이전트</span><span class="pill">MCP</span></div></div>
+      <div class="card"><div class="ic" style="background:#e7faf1">💼</div><h3>개발/커리어 세미나</h3><p class="muted" style="margin-top:8px">현직자 초청 특강, 이직·포트폴리오·연봉협상까지. 그로스톡에서 이어온 커리어 콘텐츠.</p><div style="margin-top:12px"><span class="pill">현직자 특강</span><span class="pill">포트폴리오</span><span class="pill">이직</span></div></div>
+    </div>
+  </div></section>
+
+  <section style="background:var(--bg-soft)"><div class="wrap">
+    <div class="center"><span class="eyebrow g">Sessions</span><h2>지난 세션 미리보기</h2></div>
+    <div class="stack" style="margin-top:36px">
+      <div class="rowcard"><div class="no">01</div><div><h3 style="font-size:17px">Claude Code로 1인 개발 파이프라인 만들기 <span class="tag">특강</span></h3><p class="muted" style="font-size:14px">기획→개발→배포를 AI와 페어로. 실습 중심 3시간.</p></div></div>
+      <div class="rowcard"><div class="no">02</div><div><h3 style="font-size:17px">비전공 출신 개발자의 첫 이직기 <span class="tag g">세미나</span></h3><p class="muted" style="font-size:14px">현직 백엔드 개발자 초청 · 포트폴리오 클리닉 포함.</p></div></div>
+      <div class="rowcard"><div class="no">03</div><div><h3 style="font-size:17px">AI 시대, 주니어 개발자 생존 전략 <span class="tag g">세미나</span></h3><p class="muted" style="font-size:14px">그로스톡 인기 세션 · 커리어 Q&A 라이브.</p></div></div>
+    </div>
+  </div></section>
+
+  <section><div class="wrap"><div class="cta-band">
+    <h2>AI 개발, 어디서부터 시작할지 막막하다면</h2>
+    <p class="lead">Dev×AI 트랙에서 함께 시작하세요.</p>
+    <button class="btn primary" onclick="go('recruit')">6기 신청하기</button>
+  </div></div></section>
+</main>
+
+<!-- ================= PROJECT ================= -->
+<main id="project" class="page">
+  <section class="phero" style="background:linear-gradient(120deg,#fff4e8,#eef0ff)"><div class="wrap">
+    <span class="eyebrow" style="color:#d97706;background:#fff2e6">Project</span>
+    <h1>배움을 결과물로,<br>결과물을 기회로</h1>
+    <p class="lead">SW 경진대회를 넘어 — 월간 단위 프로젝트와 <b>수익화 가능한 프로덕트</b>까지, 프로젝트의 범위를 확장합니다.</p>
+  </div></section>
+
+  <section><div class="wrap split">
+    <div class="panel"><div class="stack">
+      <div class="rowcard"><div class="no">AS-IS</div><div><h3 style="font-size:16px">SW 경진대회 출전 중심</h3><p class="muted" style="font-size:14px">대회 참가에 포커싱된 단발성 프로젝트</p></div></div>
+      <div class="center muted" style="font-size:22px">↓ 범위 확장</div>
+      <div class="rowcard" style="border-color:#d97706"><div class="no" style="background:linear-gradient(120deg,#f59e0b,#f97316)">TO-BE</div><div><h3 style="font-size:16px">월간 · 수익화 · 대회, 다양한 트랙</h3><p class="muted" style="font-size:14px">규모와 목적에 맞게 골라 도전</p></div></div>
+    </div></div>
+    <div>
+      <span class="eyebrow" style="color:#d97706;background:#fff2e6">Expansion</span>
+      <h2>이제 프로젝트는<br>더 넓어집니다</h2>
+      <p class="lead" style="margin-top:16px">"대회를 위한 프로젝트"에서 "성장과 수익을 위한 프로젝트"로. 짧게는 한 달, 길게는 한 기수 동안 실제 사용자에게 닿는 프로덕트를 만듭니다.</p>
+    </div>
+  </div></section>
+
+  <section style="background:var(--bg-soft)"><div class="wrap">
+    <div class="center"><span class="eyebrow">Tracks</span><h2>세 갈래의 프로젝트</h2></div>
+    <div class="grid g3" style="margin-top:40px">
+      <div class="card"><div class="ic" style="background:#fff2e6">📅</div><h3>월간 프로젝트</h3><p class="muted" style="margin-top:8px">한 달 단위로 빠르게 만들고 배포하는 미니 프로덕트. AI 활용 필수.</p></div>
+      <div class="card"><div class="ic" style="background:#fff2e6">💰</div><h3>수익화 프로젝트</h3><p class="muted" style="margin-top:8px">실제 매출을 목표로 하는 사이드 프로젝트. 결제·마케팅까지 실험.</p></div>
+      <div class="card"><div class="ic" style="background:#fff2e6">🏆</div><h3>SW 경진대회</h3><p class="muted" style="margin-top:8px">기존처럼 대회 출전 팀도 지원. KNOU CS 트랙과 연계.</p></div>
+    </div>
+  </div></section>
+
+  <section><div class="wrap"><div class="cta-band">
+    <h2>아이디어만 있고 팀이 없다면</h2>
+    <p class="lead">Growth Log에서 팀을 만나고, AI와 함께 완성하세요.</p>
+    <button class="btn primary" onclick="go('recruit')">프로젝트 멤버 되기</button>
+  </div></div></section>
+</main>
+
+<!-- ================= KNOU CS ================= -->
+<main id="knou" class="page">
+  <section class="phero" style="background:linear-gradient(120deg,#eafaf3,#eef0ff)"><div class="wrap">
+    <span class="eyebrow g">KNOU CS</span>
+    <h1>방송대 컴퓨터과학과,<br>혼자 걷지 않게</h1>
+    <p class="lead">학사 공지부터 전공 스터디, 기출 CBT, SW 경진대회까지. KNOU CS 전공생을 위한 모든 것을 한 페이지에 모았습니다.</p>
+  </div></section>
+
+  <!-- 학사공지 크롤링 -->
+  <section><div class="wrap">
+    <div class="center"><span class="eyebrow">01 · 학사 공지</span><h2>놓치면 안 되는 학사 일정, 자동으로</h2><p class="lead">KNOU 학사 공지를 크롤링해 실시간으로 모아 보여드립니다.</p></div>
+    <div class="stack" style="margin-top:36px">
+      <div class="notice"><span class="dt">2026.07.20</span><span class="tag g">수강신청</span><div><b>2학기 수강신청 안내</b> — 기간 및 유의사항</div></div>
+      <div class="notice"><span class="dt">2026.07.15</span><span class="tag o">시험</span><div><b>1학기 기말시험 성적 확인</b> 및 이의신청 안내</div></div>
+      <div class="notice"><span class="dt">2026.07.08</span><span class="tag">출석수업</span><div><b>여름 계절 출석수업</b> 시간표 공지</div></div>
+      <div class="muted center" style="font-size:13px;margin-top:6px">※ 프로토타입 — 실제 배포 시 KNOU 학사 공지 크롤링 자동 연동</div>
+    </div>
+  </div></section>
+
+  <!-- 전공 스터디 -->
+  <section style="background:var(--bg-soft)"><div class="wrap">
+    <div class="center"><span class="eyebrow g">02 · 전공 스터디</span><h2>1학기 수업, 과목별 스터디</h2><p class="lead">Activity에서 이동 · 이번 학기 전공 과목별로 스터디를 새로 편성했습니다.</p></div>
+    <div class="grid g4" style="margin-top:40px">
+      <div class="card"><h3 style="font-size:17px">자료구조</h3><p class="muted" style="font-size:14px;margin-top:6px">주 1회 · 코드 구현 중심</p><span class="tag g" style="margin-top:10px">모집중</span></div>
+      <div class="card"><h3 style="font-size:17px">운영체제</h3><p class="muted" style="font-size:14px;margin-top:6px">개념 정리 + 기출 풀이</p><span class="tag g" style="margin-top:10px">모집중</span></div>
+      <div class="card"><h3 style="font-size:17px">알고리즘</h3><p class="muted" style="font-size:14px;margin-top:6px">백준·문제풀이 트랙</p><span class="tag g" style="margin-top:10px">모집중</span></div>
+      <div class="card"><h3 style="font-size:17px">데이터베이스</h3><p class="muted" style="font-size:14px;margin-top:6px">SQL 실습 + 이론</p><span class="tag" style="margin-top:10px">개설예정</span></div>
+    </div>
+    <div class="center muted" style="font-size:13px;margin-top:16px">※ 전공 특강(CS)·그로스톡 학사 세미나도 이 트랙으로 통합됩니다.</div>
+  </div></section>
+
+  <!-- 기출 CBT -->
+  <section><div class="wrap split">
+    <div>
+      <span class="eyebrow">03 · 기출문제 · CBT</span>
+      <h2>기출을 CBT로,<br>시험처럼 연습</h2>
+      <p class="lead" style="margin-top:16px">과목별 기출문제 풀이와 실전 CBT(컴퓨터 기반 모의시험)를 안내합니다. 스터디원과 함께 오답을 나누며 합격에 다가가세요.</p>
+      <div style="margin-top:16px"><span class="pill">과목별 기출</span><span class="pill">모의 CBT</span><span class="pill">오답 노트</span></div>
+    </div>
+    <div class="panel"><div class="stack">
+      <div class="rowcard"><div class="no" style="background:var(--grad)">Q</div><div><h3 style="font-size:16px">운영체제 기출 CBT</h3><p class="muted" style="font-size:14px">300+ 문항 · 실전 타이머 모드</p></div></div>
+      <div class="rowcard"><div class="no" style="background:var(--grad)">Q</div><div><h3 style="font-size:16px">자료구조 기출 CBT</h3><p class="muted" style="font-size:14px">단원별 풀이 + 해설</p></div></div>
+    </div></div>
+  </div></section>
+
+  <!-- SW 경진대회 -->
+  <section style="background:var(--bg-soft)"><div class="wrap">
+    <div class="center"><span class="eyebrow g">04 · Project</span><h2>SW 경진대회 도전</h2><p class="lead">KNOU CS 전공생 팀의 SW 경진대회 출전을 지원합니다. (Project 트랙과 연계)</p></div>
+    <div class="center" style="margin-top:28px"><button class="btn ghost" onclick="go('project')">전체 프로젝트 트랙 보기 →</button></div>
+  </div></section>
+</main>
+
+<!-- ================= RECRUIT ================= -->
+<main id="recruit" class="page">
+  <section class="phero"><div class="wrap center">
+    <span class="eyebrow">🚀 6기 모집</span>
+    <h1>AI와 함께 성장할<br>6기 멤버를 찾습니다</h1>
+    <p class="lead" style="margin-left:auto;margin-right:auto">얼리버드 먼저, 정규 모집이 이어집니다.</p>
+  </div></section>
+
+  <!-- earlybird highlight -->
+  <section><div class="wrap">
+    <div class="grid g2" style="align-items:stretch">
+      <div class="plan hi">
+        <span class="ribbon">⚡ EARLY BIRD · 먼저 열림</span>
+        <h3 style="font-size:22px;margin-bottom:6px">6기 얼리버드</h3>
+        <p class="muted" style="margin-bottom:18px">가장 먼저 신청하는 멤버를 위한 혜택</p>
+        <div class="check"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>선착순 우선 배정 & 얼리버드 전용 혜택</div>
+        <div class="check"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>원하는 트랙(Dev×AI / KNOU CS / Project) 우선 선택</div>
+        <div class="check"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>오리엔테이션 & 웰컴 키트</div>
+        <button class="btn primary" style="width:100%;justify-content:center;margin-top:18px" onclick="alert('프로토타입: 얼리버드 신청 폼 연결 예정')">얼리버드 신청하기</button>
+      </div>
+      <div class="plan">
+        <h3 style="font-size:22px;margin-bottom:6px">6기 정규 모집</h3>
+        <p class="muted" style="margin-bottom:18px">얼리버드 마감 후 진행되는 신입회원 모집</p>
+        <div class="check"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>전공·직군 무관, 성장 의지가 있는 누구나</div>
+        <div class="check"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>6개 활동 트랙 자유 참여</div>
+        <div class="check"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>성장일지 · 커뮤니티 전체 활동</div>
+        <button class="btn ghost" style="width:100%;justify-content:center;margin-top:18px" onclick="alert('프로토타입: 정규 모집 알림 신청 예정')">모집 알림 받기</button>
+      </div>
+    </div>
+  </div></section>
+
+  <section style="background:var(--bg-soft)"><div class="wrap">
+    <div class="center"><span class="eyebrow g">Process</span><h2>이렇게 함께하게 됩니다</h2></div>
+    <div class="grid g4" style="margin-top:40px">
+      <div class="card center"><div class="ic" style="margin:0 auto 14px">1</div><h3 style="font-size:17px">얼리버드 신청</h3><p class="muted" style="font-size:14px;margin-top:6px">먼저 열리는 얼리버드로 신청</p></div>
+      <div class="card center"><div class="ic" style="margin:0 auto 14px">2</div><h3 style="font-size:17px">간단 인터뷰</h3><p class="muted" style="font-size:14px;margin-top:6px">지원 동기 & 관심 트랙 확인</p></div>
+      <div class="card center"><div class="ic" style="margin:0 auto 14px">3</div><h3 style="font-size:17px">오리엔테이션</h3><p class="muted" style="font-size:14px;margin-top:6px">트랙 배정 & 활동 시작</p></div>
+      <div class="card center"><div class="ic" style="margin:0 auto 14px">4</div><h3 style="font-size:17px">함께 성장 🚀</h3><p class="muted" style="font-size:14px;margin-top:6px">한 기수 동안 진짜 성장</p></div>
+    </div>
+  </div></section>
+
+  <section><div class="wrap"><div class="cta-band">
+    <h2>6기, 얼리버드로 먼저 시작하세요</h2>
+    <p class="lead">자리는 한정되어 있습니다.</p>
+    <button class="btn primary" onclick="alert('프로토타입: 얼리버드 신청 폼 연결 예정')">지금 얼리버드 신청</button>
+  </div></div></section>
+</main>
+
+<!-- ================= SUPPORT ================= -->
+<main id="support" class="page">
+  <section class="phero"><div class="wrap">
+    <span class="eyebrow">Support</span>
+    <h1>궁금한 건 여기서</h1>
+    <p class="lead">공지사항과 자주 묻는 질문, 그리고 운영진 문의까지.</p>
+  </div></section>
+
+  <section><div class="wrap">
+    <span class="eyebrow g">Notice · 업데이트</span>
+    <h2 style="margin-bottom:28px">공지사항</h2>
+    <div class="stack">
+      <div class="notice"><span class="dt">2026.07.25</span><span class="tag">개편</span><div><b>Growth Log가 'AI와 함께 성장하는 개발 커뮤니티'로 새단장했습니다</b></div></div>
+      <div class="notice"><span class="dt">2026.07.20</span><span class="tag g">모집</span><div><b>6기 얼리버드 모집 사전 안내</b> — 곧 오픈됩니다</div></div>
+      <div class="notice"><span class="dt">2026.07.10</span><span class="tag o">트랙</span><div><b>Dev×AI · KNOU CS 트랙 신설</b> 안내</div></div>
+      <div class="notice"><span class="dt">2026.06.30</span><span class="tag">활동</span><div><b>5기 성장일지 큐레이션</b> 업데이트 완료</div></div>
+    </div>
+  </div></section>
+
+  <section style="background:var(--bg-soft)"><div class="wrap">
+    <span class="eyebrow">FAQ</span>
+    <h2 style="margin-bottom:28px">자주 묻는 질문</h2>
+    <div class="faq">
+      <details open><summary>방송대(KNOU) 학생이 아니어도 가입할 수 있나요?</summary><div class="ans">네. 이제 Growth Log는 전공·소속과 무관하게 'AI와 함께 성장하려는 개발자' 누구에게나 열려 있습니다. KNOU CS 트랙은 전공생을 위해 그대로 운영됩니다.</div></details>
+      <details><summary>개발 초보자도 참여할 수 있나요?</summary><div class="ans">물론입니다. AI 도구를 활용하면 진입장벽이 크게 낮아집니다. Dev×AI 트랙에서 기초부터 함께 시작할 수 있어요.</div></details>
+      <details><summary>활동 트랙은 여러 개 참여할 수 있나요?</summary><div class="ans">네, 6개 트랙(Dev×AI / KNOU CS / Project / 성장일지 / 클럽 / Support)을 관심사에 맞게 자유롭게 참여할 수 있습니다.</div></details>
+      <details><summary>6기 얼리버드와 정규 모집은 무엇이 다른가요?</summary><div class="ans">얼리버드는 정규 모집보다 먼저 열리며, 우선 배정과 트랙 우선 선택 등의 혜택이 있습니다. 자세한 내용은 Recruit 페이지를 확인하세요.</div></details>
+    </div>
+    <div class="center" style="margin-top:32px"><button class="btn primary" onclick="location.href='mailto:contact@growthlog.org'">운영진에게 문의하기</button></div>
+  </div></section>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <div class="logo"><span class="mark">G</span><span>Growth<b>Log</b></span></div>
+        <p style="color:#9aa0af;font-size:14px;margin-top:14px;max-width:280px">AI와 함께 성장하는 개발 커뮤니티. 전공과 소속을 넘어, 함께 배우고 만듭니다.</p>
+        <div class="soc"><span>📷</span><span>✍️</span><span>💬</span></div>
+      </div>
+      <div>
+        <h4>커뮤니티</h4>
+        <a onclick="go('about')">About us</a>
+        <a onclick="go('activity')">Activity</a>
+        <a onclick="go('devai')">Dev×AI</a>
+        <a onclick="go('project')">Project</a>
+      </div>
+      <div>
+        <h4>학습</h4>
+        <a onclick="go('knou')">KNOU CS</a>
+        <a onclick="go('recruit')">Recruit</a>
+        <a onclick="go('support')">Support</a>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <a>서울 강남구</a>
+        <a href="mailto:contact@growthlog.org">contact@growthlog.org</a>
+        <a>Instagram · Tistory · KakaoTalk</a>
+      </div>
+    </div>
+    <div class="fbot">
+      <span>© 2026 Growth Log. All rights reserved.</span>
+      <span>AI-Native Developer Community</span>
+    </div>
+  </div>
+</footer>
+
+<div class="proto">🧪 <span>프로토타입 <b>v1</b> · 개편안</span></div>
+
+<script>
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav.menu a').forEach(a=>a.classList.toggle('active',a.dataset.nav===id));
+  document.getElementById('menu').classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+</script>
+</body>
+</html>
