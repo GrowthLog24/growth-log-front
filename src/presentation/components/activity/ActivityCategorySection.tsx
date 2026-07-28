@@ -1,12 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TrackedLink } from "@/presentation/components/common/TrackedLink";
-import { trackEvent } from "@/shared/utils/analytics";
-import { useInfiniteScroll } from "@/shared/hooks";
+import { CollapsibleCardGrid } from "@/presentation/components/common/CollapsibleCardGrid";
 import type {
   Activity,
   ActivityCategory,
@@ -26,14 +24,12 @@ interface ActivityCategorySectionProps {
   isOdd: boolean;
 }
 
-const ITEMS_PER_LOAD = 8;
-
 /**
  * 날짜를 포맷하는 헬퍼 함수
  */
-function formatDate(timestamp: any): string {
+function formatDate(timestamp: number | string | null | undefined): string {
   if (!timestamp) return "";
-  
+
   // serializeFirestoreData 유틸리티를 통해 숫자(ms)나 ISO 문자열로 넘어옴
   const date = new Date(timestamp);
   
@@ -47,23 +43,6 @@ export function ActivityCategorySection({
   activities: allActivities,
   isOdd,
 }: ActivityCategorySectionProps) {
-  const { visibleItems, hasMore, isLoading, observerRef } = useInfiniteScroll({
-    items: allActivities,
-    itemsPerLoad: ITEMS_PER_LOAD,
-  });
-
-  const prevVisibleCountRef = useRef(visibleItems.length);
-  useEffect(() => {
-    if (visibleItems.length > prevVisibleCountRef.current) {
-      trackEvent("list_expand", {
-        list_type: `activity_${category}`,
-        items_loaded: visibleItems.length - prevVisibleCountRef.current,
-        visible_items: visibleItems.length,
-      });
-    }
-    prevVisibleCountRef.current = visibleItems.length;
-  }, [visibleItems.length, category]);
-
   const title = ACTIVITY_CATEGORY_LABELS[category];
   const subtitle = ACTIVITY_CATEGORY_SUBTITLES[category];
   const isEmpty = allActivities.length === 0;
@@ -90,25 +69,14 @@ export function ActivityCategorySection({
           </div>
         )}
 
-        {/* Activity Cards */}
+        {/* Activity Cards - 기본 2줄, 나머지는 "더 보기"로 */}
         {!isEmpty && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {visibleItems.map((activity) => (
-              <ActivityCard key={activity.id} activity={activity} />
-            ))}
-          </div>
-        )}
-
-        {/* Infinite Scroll Observer */}
-        {hasMore && (
-          <div
-            ref={observerRef}
-            className="flex justify-center items-center py-8"
-          >
-            {isLoading && (
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            )}
-          </div>
+          <CollapsibleCardGrid
+            items={allActivities}
+            getKey={(activity) => activity.id}
+            renderItem={(activity) => <ActivityCard activity={activity} />}
+            listType={`activity_${category}`}
+          />
         )}
       </div>
     </section>

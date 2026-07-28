@@ -1,17 +1,7 @@
 /**
- * 활동 카테고리 (영문 slug)
- * Note: project는 /projects 페이지로 분리됨
- */
-export const ACTIVITY_CATEGORIES = [
-  "study",
-  "growth-log",
-  "lecture",
-  "growth-talk",
-  "club",
-] as const;
-
-/**
  * 활동 카테고리 영문 서브타이틀
+ *
+ * Note: 카테고리를 어느 페이지에 노출할지는 app/(site)/_shared/activityTracks.ts 가 결정합니다.
  */
 export const ACTIVITY_CATEGORY_SUBTITLES: Record<string, string> = {
   study: "COMPUTER SCIENCE STUDY",
@@ -38,7 +28,9 @@ export const FAQ_CATEGORIES = [
 export const NAV_ITEMS = [
   { label: "About us", href: "/about-us" },
   { label: "Activity", href: "/activity" },
+  { label: "Dev×AI", href: "/dev-ai" },
   { label: "Projects", href: "/projects" },
+  { label: "KNOU CS", href: "/knou-cs" },
   { label: "Recruit", href: "/recruit" },
   { label: "Support", href: "/support" },
 ] as const;
@@ -57,7 +49,7 @@ export const SOCIAL_LINKS = {
  */
 export const SITE_METADATA = {
   title: "Growth Log",
-  description: "함께 성장하는 개발자 커뮤니티, 그로스로그",
+  description: "AI와 함께 성장하는 개발 커뮤니티, 그로스로그",
   url: "https://www.growthlog.org",
   slogan: "{LEARN} {CONNECT} {BUILD}",
 } as const;
