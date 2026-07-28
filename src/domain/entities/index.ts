@@ -640,6 +640,60 @@ export interface Award {
 }
 
 /**
+ * 방송대 홍보 게시판 확인 상태
+ */
+export type PromotionBoardStatus = "준비됨" | "확인 필요" | "게시판 없음";
+
+/**
+ * 방송대 홍보 게시 대상 구분
+ */
+export type PromotionBoardType = "학과" | "지역대학";
+
+/**
+ * 방송대 홍보 게시판 데이터 출처
+ */
+export type PromotionBoardSourceKind = "excel-snapshot" | "google-sheets";
+
+/**
+ * 방송대 홍보 게시 회차 결과
+ */
+export interface PromotionPostingRound {
+  round: 1 | 2 | 3;
+  postedAt: string;
+  postUrl: string;
+  count: number | null;
+}
+
+/**
+ * 방송대 홍보 게시 대상(학과·지역대학 게시판)
+ * 출처: Google Sheets 운영 시트 (자체 저장소 없음)
+ */
+export interface PromotionBoard {
+  id: string;
+  group: string;
+  name: string;
+  type: PromotionBoardType;
+  boardName: string;
+  status: PromotionBoardStatus;
+  homepageUrl: string;
+  boardUrl: string;
+  lastChecked: string;
+  note: string;
+  totalPosts: number | null;
+  postings: PromotionPostingRound[];
+}
+
+/**
+ * 방송대 홍보 게시 대상 스냅샷 (Google Sheets 동기화 결과)
+ */
+export interface PromotionBoardSnapshot {
+  source: PromotionBoardSourceKind;
+  sourceLabel: string;
+  syncedAt: string;
+  boards: PromotionBoard[];
+}
+
+/**
  * 정기모임 (회차)
  * Collection: meetings/{meetingId}
  *
