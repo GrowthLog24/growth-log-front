@@ -2,7 +2,7 @@
  * Firebase Storage URL 생성 유틸리티
  */
 
-const STORAGE_BUCKET = process.env.NEXT_PUBLIC_STORAGE_BUCKET;
+const STORAGE_BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
 
 /**
  * Firebase Storage 경로를 다운로드 URL로 변환
@@ -16,7 +16,7 @@ const STORAGE_BUCKET = process.env.NEXT_PUBLIC_STORAGE_BUCKET;
  */
 export function getStorageUrl(path: string): string {
   if (!STORAGE_BUCKET) {
-    console.warn("NEXT_PUBLIC_STORAGE_BUCKET is not defined");
+    console.warn("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is not defined");
     return `/images/${path.split("/").pop()}`; // fallback to public folder
   }
 

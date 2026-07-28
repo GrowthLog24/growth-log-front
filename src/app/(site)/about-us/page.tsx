@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Handshake,
-  Zap,
-  TrendingUp,
   Bot,
   GraduationCap,
   Wrench,
@@ -16,7 +13,7 @@ import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
 import { monthlyScheduleRepository } from "@/infrastructure/repositories/monthlyScheduleRepository";
 import { statsRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
-import { StatsSection } from "@/presentation/components/about";
+import { InteractiveValues, StatsSection } from "@/presentation/components/about";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -37,25 +34,6 @@ const SHIFT = {
     description: "전공·직군 무관, AI를 동료로 삼는 성장 커뮤니티",
   },
 } as const;
-
-/** 우리가 믿는 세 가지 */
-const VALUES = [
-  {
-    icon: Handshake,
-    title: "Together",
-    description: "혼자 빠르게보다 함께 멀리. 서로의 성장을 기록하고 응원합니다.",
-  },
-  {
-    icon: Zap,
-    title: "AI-Native",
-    description: "AI를 두려워하지 않고 능숙하게. 도구가 아닌 페어로 씁니다.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Real Growth",
-    description: "인증샷용 활동이 아니라, 실제 결과물과 커리어로 이어지는 성장.",
-  },
-] as const;
 
 /** Growth Log에서 성장하는 네 갈래 */
 const GROWTH_TRACKS = [
@@ -122,42 +100,58 @@ export default async function AboutUsPage() {
       </section>
 
       {/* Our Shift - AS-IS → TO-BE */}
-      <section className="section-padding bg-gray-6">
-        <div className="container-custom grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+      <section className="relative min-h-[720px] overflow-hidden bg-gray-black text-white md:min-h-[820px]">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 h-full w-full object-cover"
+          aria-hidden="true"
+        >
+          <source src="/videos/our-shift-loop.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gray-black/45" />
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-black/85 via-gray-black/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-black/80 via-transparent to-gray-black/20" />
+
+        <div className="container-custom relative z-10 flex min-h-[720px] flex-col justify-between py-14 md:min-h-[820px] md:py-20 lg:py-24">
           <div>
-            <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
+            <span className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] text-green-8">
+              <span className="h-2 w-2 rounded-full bg-green-6" />
               OUR SHIFT
             </span>
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-snug">
+            <h2 className="mt-7 max-w-5xl text-4xl font-bold leading-[1.08] tracking-tight md:text-6xl lg:text-7xl">
               교내 커뮤니티에서
               <br />
               AI-Native 커뮤니티로
             </h2>
-            <p className="mt-5 text-muted-foreground">
-              Growth Log는 KNOU 컴퓨터과학과에서 시작했습니다. 그 뿌리는 그대로 KNOU CS 트랙으로
-              이어가되, 이제는 전공과 소속을 넘어{" "}
-              <strong className="font-semibold text-foreground">
+            <p className="mt-8 max-w-2xl text-sm leading-7 text-white/75 md:text-lg md:leading-8">
+              Growth Log는 KNOU 컴퓨터과학과에서 시작했습니다. 그 뿌리는 그대로 KNOU CS
+              트랙으로 이어가되, 이제는 전공과 소속을 넘어{" "}
+              <strong className="font-semibold text-white">
                 &lsquo;AI와 함께 성장하려는 모든 개발자&rsquo;
               </strong>
               에게 문을 엽니다.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-6 md:p-8">
-            <div className="rounded-xl border border-border p-5">
-              <span className="text-xs font-bold tracking-wider text-muted-foreground">AS-IS</span>
-              <h3 className="mt-2 font-semibold text-foreground">{SHIFT.asIs.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{SHIFT.asIs.description}</p>
+          <div className="grid gap-6 border-t border-white/25 pt-6 sm:grid-cols-[1fr_auto_1fr] sm:items-center md:gap-10">
+            <div>
+              <span className="text-[10px] font-bold tracking-[0.18em] text-white/50">
+                AS-IS
+              </span>
+              <h3 className="mt-2 text-base font-bold md:text-lg">{SHIFT.asIs.title}</h3>
+              <p className="mt-1 text-sm text-white/60">{SHIFT.asIs.description}</p>
             </div>
-
-            <div className="py-3 text-center text-xl text-muted-foreground" aria-hidden="true">
-              ↓
-            </div>
-
-            <div className="rounded-xl border-2 border-primary bg-primary/5 p-5">
-              <span className="text-xs font-bold tracking-wider text-primary">TO-BE</span>
-              <h3 className="mt-2 font-semibold text-foreground">{SHIFT.toBe.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{SHIFT.toBe.description}</p>
+            <ArrowRight className="hidden h-5 w-5 text-green-6 sm:block" aria-hidden="true" />
+            <div>
+              <span className="text-[10px] font-bold tracking-[0.18em] text-green-7">
+                TO-BE
+              </span>
+              <h3 className="mt-2 text-base font-bold md:text-lg">{SHIFT.toBe.title}</h3>
+              <p className="mt-1 text-sm text-white/60">{SHIFT.toBe.description}</p>
             </div>
           </div>
         </div>
@@ -173,46 +167,113 @@ export default async function AboutUsPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">우리가 믿는 세 가지</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {VALUES.map((value) => (
-              <div
-                key={value.title}
-                className="rounded-2xl border border-border bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              >
-                <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                  <value.icon className="h-6 w-6 text-primary" />
-                </span>
-                <h3 className="text-lg font-bold text-foreground">{value.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{value.description}</p>
-              </div>
-            ))}
-          </div>
+          <InteractiveValues />
         </div>
       </section>
 
       {/* How we grow */}
-      <section className="section-padding bg-gray-6">
+      <section className="bg-gray-6 px-4 py-16 md:px-6 md:py-24 lg:px-8">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
+          <div className="mb-8 max-w-3xl md:mb-14">
+            <span className="text-xs font-bold tracking-[0.18em] text-primary">
               HOW WE GROW
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+            <h2 className="mt-5 text-3xl font-bold tracking-tight text-foreground md:text-5xl">
               Growth Log에서 이렇게 성장합니다
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {GROWTH_TRACKS.map((track) => (
-              <Link
+          <div>
+            {GROWTH_TRACKS.map((track, index) => (
+              <article
                 key={track.title}
-                href={track.href}
-                className="group rounded-2xl border border-border bg-white p-6 transition-colors hover:border-primary"
+                className="grid items-center gap-10 border-t border-gray-4 py-16 first:border-t-0 md:grid-cols-2 md:gap-16 md:py-24 lg:gap-24"
               >
-                <track.icon className="h-6 w-6 text-primary" />
-                <h3 className="mt-4 font-bold text-foreground">{track.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{track.description}</p>
-              </Link>
+                <div
+                  className={[
+                    "group relative min-h-[360px] md:min-h-[500px]",
+                    index % 2 === 0 ? "md:order-1" : "md:order-2",
+                  ].join(" ")}
+                >
+                  <div
+                    className={[
+                      "absolute inset-x-0 top-0 h-[88%] overflow-hidden rounded-[2rem]",
+                      index === 0
+                        ? "bg-gray-black"
+                        : index === 1
+                          ? "bg-green-9"
+                          : index === 2
+                            ? "bg-primary"
+                            : "bg-white",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "absolute -right-3 -top-10 text-[10rem] font-black leading-none tracking-tighter md:text-[14rem]",
+                        index === 0
+                          ? "text-white/5"
+                          : index === 2
+                            ? "text-white/10"
+                            : "text-gray-black/5",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    >
+                      0{index + 1}
+                    </span>
+                    <div
+                      className={[
+                        "absolute inset-0 opacity-40",
+                        index === 0 || index === 2
+                          ? "bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.25),transparent_35%)]"
+                          : "bg-[radial-gradient(circle_at_70%_30%,rgba(0,150,43,0.22),transparent_35%)]",
+                      ].join(" ")}
+                    />
+                    <span
+                      className={[
+                        "absolute left-7 top-7 text-xs font-semibold tracking-[0.16em]",
+                        index === 0 || index === 2 ? "text-white/65" : "text-foreground/55",
+                      ].join(" ")}
+                    >
+                      GROWTH TRACK / 0{index + 1}
+                    </span>
+                  </div>
+
+                  <div
+                    className={[
+                      "absolute bottom-0 flex h-48 w-48 items-center justify-center rounded-full border-[14px] shadow-[0_24px_70px_rgba(34,34,34,0.18)] transition-transform duration-500 group-hover:-translate-y-3 group-hover:rotate-3 motion-reduce:transition-none md:h-64 md:w-64",
+                      index % 2 === 0 ? "right-5 md:right-8" : "left-5 md:left-8",
+                      index === 0
+                        ? "border-green-7 bg-primary text-white"
+                        : index === 1
+                          ? "border-white bg-gray-black text-white"
+                          : index === 2
+                            ? "border-green-9 bg-white text-primary"
+                            : "border-green-8 bg-green-2 text-white",
+                    ].join(" ")}
+                  >
+                    <track.icon className="h-16 w-16 md:h-24 md:w-24" strokeWidth={1.25} />
+                  </div>
+                </div>
+
+                <div className={index % 2 === 0 ? "md:order-2" : "md:order-1"}>
+                  <span className="text-xs font-bold tracking-[0.18em] text-primary">
+                    0{index + 1}
+                  </span>
+                  <h3 className="mt-5 text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+                    {track.title}
+                  </h3>
+                  <p className="mt-6 max-w-md text-base leading-8 text-muted-foreground">
+                    {track.description}
+                  </p>
+                  <Link
+                    href={track.href}
+                    className="group/link mt-10 inline-flex items-center gap-3 border-b border-foreground pb-2 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    트랙 살펴보기
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover/link:translate-x-1" />
+                  </Link>
+                </div>
+              </article>
             ))}
           </div>
 
