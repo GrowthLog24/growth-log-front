@@ -260,6 +260,8 @@ export interface ProjectActivity extends ActivityBase {
   description: string;
   /** 발표 자료 PDF URL */
   pdfUrl: string;
+  /** 프로젝트 블로그 링크 URL */
+  blogUrl?: string;
 }
 
 /**

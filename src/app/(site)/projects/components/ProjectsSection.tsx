@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { FileText, Trophy } from "lucide-react";
+import { ExternalLink, FileText, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CollapsibleCardGrid } from "@/presentation/components/common/CollapsibleCardGrid";
+import { TrackedLink } from "@/presentation/components/common/TrackedLink";
 import type { ProjectActivity } from "@/domain/entities";
 import type { SerializedFirestoreData } from "@/shared/utils/serialize";
 
@@ -131,6 +132,19 @@ function ProjectCard({
           <span>·</span>
           <span>PM {project.leaderName}</span>
         </div>
+        {project.blogUrl && (
+          <TrackedLink
+            href={project.blogUrl}
+            target="_blank"
+            rel="noreferrer"
+            eventName="select_content"
+            eventParams={{ content_type: "project_blog", item_id: project.id }}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-primary rounded-sm"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            블로그 보기
+          </TrackedLink>
+        )}
       </div>
     </article>
   );
