@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { RefreshCw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,12 @@ type PromotionBoardTableProps = {
   onSelectionChange: (boards: PromotionBoard[]) => void;
 };
 
-type SortKey = "type" | "name" | "status" | "lastChecked" | "firstPostDate" | "firstPostCount" | "totalPosts";
+const POST_ROUNDS = [1, 2, 3] as const;
+type PostRound = (typeof POST_ROUNDS)[number];
+
+type SortKey =
+  | "type" | "name" | "status" | "lastChecked" | "totalPosts"
+  | `postDate${PostRound}` | `postCount${PostRound}`;
 type SortState = { key: SortKey; direction: "asc" | "desc" } | null;
 
 const statusBadgeClass: Record<PromotionBoardStatus, string> = {
@@ -37,7 +42,7 @@ const countFormatter = new Intl.NumberFormat("ko-KR");
 
 function CountCell({ value }: { value: number | null }) {
   return value === null
-    ? <span className="text-muted-foreground">—</span>
+    ? <span className="text-muted-foreground">-</span>
     : <span className="font-mono text-xs font-medium">{countFormatter.format(value)}</span>;
 }
 
@@ -56,10 +61,13 @@ function sortValue(board: PromotionBoard, key: SortKey): string | number {
     case "name": return board.name;
     case "status": return board.status;
     case "lastChecked": return board.lastChecked;
-    case "firstPostDate": return board.postings[0]?.postedAt ?? "";
-    case "firstPostCount": return board.postings[0]?.count ?? -1;
     case "totalPosts": return board.totalPosts ?? -1;
-    default: return "";
+    default: {
+      // `postDate2`·`postCount3` 등 회차별 키에서 회차를 뽑아 해당 게시 정보로 정렬합니다.
+      const round = Number(key.slice(-1));
+      const posting = board.postings.find((item) => item.round === round);
+      return key.startsWith("postDate") ? posting?.postedAt ?? "" : posting?.count ?? -1;
+    }
   }
 }
 
@@ -205,10 +213,10 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10 p-0 text-center">
+      <Table className="min-w-[1680px]">
+        <TableHeader className="bg-muted/30">
+          <TableRow className="hover:bg-transparent">
+            <TableHead rowSpan={2} className="w-12 p-0 text-center">
               <label
                 className="flex cursor-pointer items-center justify-center px-2 py-2"
                 title="검색된 게시판 전체 선택/해제"
@@ -225,15 +233,26 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
                 />
               </label>
             </TableHead>
-            <SortableHead label="구분" sortKey="type" sort={sort} onSort={toggleSort} />
-            <SortableHead label="게시 대상" sortKey="name" sort={sort} onSort={toggleSort} />
-            <SortableHead label="상태" sortKey="status" sort={sort} onSort={toggleSort} />
-            <SortableHead label="마지막 확인" sortKey="lastChecked" sort={sort} onSort={toggleSort} />
-            <SortableHead label="1차 게시 날짜" sortKey="firstPostDate" sort={sort} onSort={toggleSort} />
-            <TableHead>1차 게시 링크</TableHead>
-            <SortableHead label="1차 소계" sortKey="firstPostCount" sort={sort} onSort={toggleSort} className="text-right" />
-            <SortableHead label="총계" sortKey="totalPosts" sort={sort} onSort={toggleSort} className="text-right" />
-            <TableHead>게시판</TableHead>
+            <SortableHead label="구분" sortKey="type" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[88px]" />
+            <SortableHead label="게시 대상" sortKey="name" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[224px]" />
+            <SortableHead label="상태" sortKey="status" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[96px]" />
+            <SortableHead label="마지막 확인" sortKey="lastChecked" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[112px]" />
+            {POST_ROUNDS.map((round) => (
+              <TableHead key={round} colSpan={3} className="border-l text-center font-semibold">
+                {round}차 게시
+              </TableHead>
+            ))}
+            <SortableHead label="총계" sortKey="totalPosts" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[80px] text-right" />
+            <TableHead rowSpan={2} className="min-w-[96px]">게시판</TableHead>
+          </TableRow>
+          <TableRow className="hover:bg-transparent">
+            {POST_ROUNDS.map((round) => (
+              <Fragment key={round}>
+                <SortableHead label="날짜" sortKey={`postDate${round}`} sort={sort} onSort={toggleSort} className="min-w-[112px] border-l" />
+                <TableHead className="min-w-[96px]">링크</TableHead>
+                <SortableHead label="소계" sortKey={`postCount${round}`} sort={sort} onSort={toggleSort} className="min-w-[80px] text-right" />
+              </Fragment>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -252,23 +271,28 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
                 </label>
               </TableCell>
               <TableCell><Badge variant="outline">{board.type}</Badge></TableCell>
-              <TableCell className="whitespace-normal">
-                <strong className="block text-xs">{board.name}</strong>
-                <span className="mt-0.5 block text-[11px] text-muted-foreground">{board.group} · {board.boardName}</span>
+              <TableCell>
+                <strong className="block whitespace-nowrap text-xs">{board.name}</strong>
+                <span className="mt-0.5 block whitespace-nowrap text-[11px] text-muted-foreground">{board.group} · {board.boardName}</span>
               </TableCell>
               <TableCell><Badge className={statusBadgeClass[board.status]}>{board.status}</Badge></TableCell>
-              <TableCell className="font-mono text-xs">{board.lastChecked || "—"}</TableCell>
-              <TableCell className="font-mono text-xs">
-                {board.postings[0]?.postedAt || <span className="text-muted-foreground">미게시</span>}
-              </TableCell>
-              <TableCell>
-                {board.postings[0]?.postUrl ? (
-                  <a className="text-xs font-medium text-primary hover:underline" href={board.postings[0].postUrl} target="_blank" rel="noreferrer">글 URL 열기</a>
-                ) : (
-                  <span className="text-xs text-muted-foreground">URL 없음</span>
-                )}
-              </TableCell>
-              <TableCell className="text-right"><CountCell value={board.postings[0]?.count ?? null} /></TableCell>
+              <TableCell className="font-mono text-xs">{board.lastChecked || "-"}</TableCell>
+              {POST_ROUNDS.map((round) => {
+                const posting = board.postings.find((item) => item.round === round);
+                return (
+                  <Fragment key={round}>
+                    <TableCell className="border-l font-mono text-xs">{posting?.postedAt || "-"}</TableCell>
+                    <TableCell>
+                      {posting?.postUrl ? (
+                        <a className="text-xs font-medium text-primary hover:underline" href={posting.postUrl} target="_blank" rel="noreferrer">글 URL 열기</a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right"><CountCell value={posting?.count ?? null} /></TableCell>
+                  </Fragment>
+                );
+              })}
               <TableCell className="text-right"><CountCell value={board.totalPosts} /></TableCell>
               <TableCell>
                 <a className="text-xs font-medium text-primary hover:underline" href={board.boardUrl} target="_blank" rel="noreferrer" title={board.note || `${board.name} 게시판 열기`}>
@@ -278,7 +302,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
             </TableRow>
           )) : (
             <TableRow>
-              <TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">검색 조건에 맞는 게시판이 없습니다.</TableCell>
+              <TableCell colSpan={16} className="py-10 text-center text-sm text-muted-foreground">검색 조건에 맞는 게시판이 없습니다.</TableCell>
             </TableRow>
           )}
         </TableBody>
@@ -311,16 +335,18 @@ function SortableHead({
   sort,
   onSort,
   className,
+  rowSpan,
 }: {
   label: string;
   sortKey: SortKey;
   sort: SortState;
   onSort: (key: SortKey) => void;
   className?: string;
+  rowSpan?: number;
 }) {
   const isSorted = sort?.key === sortKey;
   return (
-    <TableHead className={className} aria-sort={isSorted ? (sort?.direction === "asc" ? "ascending" : "descending") : "none"}>
+    <TableHead rowSpan={rowSpan} className={className} aria-sort={isSorted ? (sort?.direction === "asc" ? "ascending" : "descending") : "none"}>
       <button
         type="button"
         className="inline-flex items-center gap-1 font-medium hover:text-foreground"
