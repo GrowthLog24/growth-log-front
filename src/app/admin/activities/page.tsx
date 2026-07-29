@@ -442,6 +442,7 @@ function ActivityFormDialog({
               leaderName: p.leaderName,
               description: p.description,
               pdfUrl: p.pdfUrl,
+              blogUrl: p.blogUrl || "",
             });
             // 기존 PDF가 있으면 파일명 추출해서 표시
             if (p.pdfUrl) {
@@ -584,6 +585,7 @@ function ActivityFormDialog({
               leaderName: String(formData.leaderName || ""),
               description: String(formData.description || ""),
               pdfUrl: pdfUrl || String(formData.pdfUrl || ""),
+              blogUrl: String(formData.blogUrl || ""),
             });
             break;
           case "study":
@@ -645,6 +647,7 @@ function ActivityFormDialog({
               leaderName: String(formData.leaderName || ""),
               description: String(formData.description || ""),
               pdfUrl: pdfUrl,
+              blogUrl: String(formData.blogUrl || ""),
             });
             break;
           case "study":
@@ -822,6 +825,16 @@ function ActivityFormDialog({
                   onChange={(e) => updateField("description", e.target.value)}
                   placeholder="프로젝트를 한 문장으로 소개해주세요"
                   rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="blogUrl">블로그 링크</Label>
+                <Input
+                  id="blogUrl"
+                  type="url"
+                  value={String(formData.blogUrl || "")}
+                  onChange={(e) => updateField("blogUrl", e.target.value)}
+                  placeholder="https://blog.example.com/project-post"
                 />
               </div>
               <div className="space-y-2">
