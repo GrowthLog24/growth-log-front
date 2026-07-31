@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import QRCode from "qrcode";
-import * as XLSX from "xlsx";
 import {
   Plus,
   Loader2,
@@ -19,6 +18,7 @@ import {
   X,
   Upload,
   FileSpreadsheet,
+  FileDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,11 +38,49 @@ import {
   memberAdminRepository,
   calculateMemberType,
 } from "@/infrastructure/repositories/admin/memberAdminRepository";
+import { activityAdminRepository } from "@/infrastructure/repositories/admin/activityAdminRepository";
+import { meetingAdminRepository } from "@/infrastructure/repositories/admin/meetingAdminRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
-import type { Member } from "@/domain/entities";
+import {
+  downloadMemberExport,
+  downloadMemberTemplate,
+  parseMemberWorkbook,
+  type GrowthLogSheetRow,
+  type MemberSheetRow,
+} from "@/shared/utils/memberBulkExcel";
+import type { GrowthLogActivity, Meeting, Member } from "@/domain/entities";
 
 const getSiteUrl = () =>
   typeof window !== "undefined" ? window.location.origin : "";
+
+/**
+ * 멤버 식별 키 (기수 + 이름)
+ *
+ * 엑셀에는 문서 ID가 없으므로, 이 조합으로 기존 멤버를 찾아 덮어씁니다.
+ */
+const getMemberKey = (generation: number, memberName: string) =>
+  `${generation}::${memberName.trim()}`;
+
+/** 성장일지가 특정 회원의 것인지 판정합니다. */
+const isLogOfMember = (log: GrowthLogActivity, member: Member) =>
+  log.memberId
+    ? log.memberId === member.id
+    : log.authorName === member.memberName &&
+      log.generation === member.generation;
+
+/** 업로드 미리보기에 표시할 멤버 행 */
+interface BulkMemberPreview extends MemberSheetRow {
+  /** 기존 멤버 문서 ID (없으면 신규 등록) */
+  existingId: string | null;
+}
+
+/** 업로드 미리보기에 표시할 성장일지 행 */
+interface BulkLogPreview extends GrowthLogSheetRow {
+  /** 기존 성장일지 문서 ID (없으면 신규 등록) */
+  existingLogId: string | null;
+  /** 회차 번호로 찾은 정기모임 문서 ID (없으면 미지정) */
+  meetingId: string;
+}
 
 /**
  * 멤버 관리 페이지
@@ -74,9 +112,12 @@ export default function MembersPage() {
   // 엑셀 일괄 등록 상태
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkUploading, setBulkUploading] = useState(false);
-  const [bulkPreview, setBulkPreview] = useState<
-    { memberName: string; generation: number; isActive: boolean }[]
-  >([]);
+  const [bulkParsing, setBulkParsing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [bulkMembers, setBulkMembers] = useState<BulkMemberPreview[]>([]);
+  const [bulkLogs, setBulkLogs] = useState<BulkLogPreview[]>([]);
+  /** 멤버 시트에도 없고 기존 멤버에도 없어 연결할 수 없는 성장일지 */
+  const [orphanLogs, setOrphanLogs] = useState<GrowthLogSheetRow[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = async () => {
@@ -192,89 +233,300 @@ export default function MembersPage() {
     }
   };
 
-  // ===== 엑셀 일괄 등록 =====
-  const downloadSampleExcel = () => {
-    const sampleData = [
-      { "멤버 이름": "홍길동", "가입 기수": 5, "가입 여부": "O" },
-      { "멤버 이름": "김철수", "가입 기수": 5, "가입 여부": "O" },
-      { "멤버 이름": "이영희", "가입 기수": 4, "가입 여부": "X" },
-    ];
-    const ws = XLSX.utils.json_to_sheet(sampleData);
-    ws["!cols"] = [{ wch: 15 }, { wch: 10 }, { wch: 10 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "멤버 목록");
-    XLSX.writeFile(wb, "멤버_일괄등록_양식.xlsx");
+  // ===== 엑셀 =====
+
+  /**
+   * 성장일지 활동과 정기모임 목록을 불러옵니다.
+   *
+   * 내보내기와 업로드 미리보기가 같은 데이터를 필요로 합니다.
+   */
+  const fetchGrowthLogContext = async (): Promise<{
+    growthLogs: GrowthLogActivity[];
+    meetings: Meeting[];
+  }> => {
+    const [activities, meetings] = await Promise.all([
+      activityAdminRepository.getAllActivities(),
+      meetingAdminRepository.getAll(),
+    ]);
+    const growthLogs = activities.filter(
+      (activity): activity is GrowthLogActivity =>
+        activity.category === "growth-log"
+    );
+    return { growthLogs, meetings };
   };
 
-  const handleExcelFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * 현재 등록된 멤버와 성장일지를 채운 엑셀을 내려받습니다.
+   *
+   * 내려받아 수정한 뒤 그대로 다시 업로드하면 기존 정보가 갱신됩니다.
+   */
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const { growthLogs } = await fetchGrowthLogContext();
+
+      const memberRows: MemberSheetRow[] = items.map((item) => ({
+        memberName: item.memberName,
+        generation: item.generation,
+        isActive: item.isActive,
+        field: item.field ?? "",
+        bio: item.bio ?? "",
+        profileImageUrl: item.profileImageUrl ?? "",
+      }));
+
+      const logRows: GrowthLogSheetRow[] = [];
+      for (const member of items) {
+        for (const log of growthLogs) {
+          if (!isLogOfMember(log, member)) continue;
+          logRows.push({
+            memberName: member.memberName,
+            generation: member.generation,
+            blogUrl: log.blogUrl ?? "",
+            title: log.title ?? "",
+            field: log.field ?? "",
+            excerpt: log.excerpt ?? "",
+            round: log.round ?? 0,
+            thumbnailUrl: log.thumbnailUrl ?? "",
+            showOnHome: log.showOnHome === true,
+          });
+        }
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      downloadMemberExport(memberRows, logRows, `멤버_현황_${today}.xlsx`);
+      toast.success(
+        `멤버 ${memberRows.length}명, 성장일지 ${logRows.length}편을 내보냈습니다.`
+      );
+    } catch (error) {
+      console.error("Failed to export members:", error);
+      toast.error("내보내기에 실패했습니다.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExcelFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // 같은 파일을 다시 선택할 수 있도록 즉시 초기화합니다.
+    e.target.value = "";
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-      const wb = XLSX.read(data, { type: "array" });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
+    setBulkParsing(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const parsed = parseMemberWorkbook(new Uint8Array(buffer));
 
-      const parsed = rows
-        .map((row) => {
-          const memberName = String(row["멤버 이름"] ?? "").trim();
-          const generation = Number(row["가입 기수"]);
-          const isActiveRaw = String(row["가입 여부"] ?? "O").trim().toUpperCase();
-          const isActive = isActiveRaw !== "X";
-
-          if (!memberName || isNaN(generation) || generation < 1) return null;
-          return { memberName, generation, isActive };
-        })
-        .filter((r): r is NonNullable<typeof r> => r !== null);
-
-      if (parsed.length === 0) {
-        toast.error("유효한 멤버 데이터가 없습니다. 엑셀 양식을 확인해주세요.");
+      if (parsed.members.length === 0 && parsed.growthLogs.length === 0) {
+        toast.error("유효한 데이터가 없습니다. 엑셀 양식을 확인해주세요.");
         return;
       }
 
-      setBulkPreview(parsed);
-      setBulkDialogOpen(true);
-    };
-    reader.readAsArrayBuffer(file);
+      const { growthLogs, meetings } = await fetchGrowthLogContext();
+      const memberByKey = new Map(
+        items.map((item) => [
+          getMemberKey(item.generation, item.memberName),
+          item,
+        ])
+      );
 
-    // 같은 파일 재선택 가능하도록 초기화
-    e.target.value = "";
+      const memberPreviews: BulkMemberPreview[] = parsed.members.map((row) => ({
+        ...row,
+        existingId:
+          memberByKey.get(getMemberKey(row.generation, row.memberName))?.id ??
+          null,
+      }));
+
+      // 이번 업로드로 새로 생기는 멤버도 성장일지 연결 대상으로 인정합니다.
+      const sheetMemberKeys = new Set(
+        memberPreviews.map((row) => getMemberKey(row.generation, row.memberName))
+      );
+
+      const logPreviews: BulkLogPreview[] = [];
+      const unmatchedLogs: GrowthLogSheetRow[] = [];
+
+      for (const row of parsed.growthLogs) {
+        const key = getMemberKey(row.generation, row.memberName);
+        const existingMember = memberByKey.get(key) ?? null;
+
+        if (!existingMember && !sheetMemberKeys.has(key)) {
+          unmatchedLogs.push(row);
+          continue;
+        }
+
+        const meeting = meetings.find(
+          (item) => item.generation === row.generation && item.round === row.round
+        );
+        // 신규 멤버의 일지는 아직 문서가 없으므로 항상 새로 등록됩니다.
+        const existingLog = existingMember
+          ? growthLogs.find(
+              (log) =>
+                isLogOfMember(log, existingMember) && log.blogUrl === row.blogUrl
+            )
+          : undefined;
+
+        logPreviews.push({
+          ...row,
+          existingLogId: existingLog?.id ?? null,
+          meetingId: meeting?.id ?? "",
+        });
+      }
+
+      setBulkMembers(memberPreviews);
+      setBulkLogs(logPreviews);
+      setOrphanLogs(unmatchedLogs);
+      setBulkDialogOpen(true);
+
+      const skipped = parsed.skippedMemberRows + parsed.skippedGrowthLogRows;
+      if (skipped > 0) {
+        toast.warning(`필수값이 비어 ${skipped}개 행을 건너뛰었습니다.`);
+      }
+    } catch (error) {
+      console.error("Failed to parse excel:", error);
+      toast.error("엑셀 파일을 읽지 못했습니다.");
+    } finally {
+      setBulkParsing(false);
+    }
+  };
+
+  const closeBulkDialog = () => {
+    setBulkDialogOpen(false);
+    setBulkMembers([]);
+    setBulkLogs([]);
+    setOrphanLogs([]);
   };
 
   const handleBulkUpload = async () => {
-    if (bulkPreview.length === 0) return;
+    if (bulkMembers.length === 0 && bulkLogs.length === 0) return;
 
     setBulkUploading(true);
-    let successCount = 0;
-    let failCount = 0;
 
-    for (const row of bulkPreview) {
+    // 성장일지를 연결하려면 멤버 문서 ID가 필요하므로 멤버부터 처리합니다.
+    const memberIdByKey = new Map(
+      items.map((item) => [getMemberKey(item.generation, item.memberName), item.id])
+    );
+
+    let memberCreated = 0;
+    let memberUpdated = 0;
+    let memberFailed = 0;
+
+    for (const row of bulkMembers) {
+      const key = getMemberKey(row.generation, row.memberName);
+      const memberType = calculateMemberType(currentGeneration, row.generation);
+
       try {
-        const memberType = calculateMemberType(currentGeneration, row.generation);
-        await memberAdminRepository.create({
-          memberName: row.memberName,
-          generation: row.generation,
-          memberType,
-          isActive: row.isActive,
-        });
-        successCount++;
+        if (row.existingId) {
+          await memberAdminRepository.update(row.existingId, {
+            memberName: row.memberName,
+            generation: row.generation,
+            memberType,
+            isActive: row.isActive,
+            bio: row.bio,
+            field: row.field,
+            // 이미지 주소는 엑셀에서 다루기 번거로우므로, 빈 칸은
+            // "지우기"가 아니라 "그대로 두기"로 해석합니다.
+            // (텍스트 필드는 엑셀에서 바로 지울 수 있어 빈 값을 그대로 반영합니다)
+            ...(row.profileImageUrl
+              ? { profileImageUrl: row.profileImageUrl }
+              : {}),
+          });
+          memberIdByKey.set(key, row.existingId);
+          memberUpdated++;
+        } else {
+          const createdId = await memberAdminRepository.create({
+            memberName: row.memberName,
+            generation: row.generation,
+            memberType,
+            isActive: row.isActive,
+            bio: row.bio,
+            field: row.field,
+            profileImageUrl: row.profileImageUrl,
+          });
+          memberIdByKey.set(key, createdId);
+          memberCreated++;
+        }
       } catch (error) {
-        console.error(`Failed to create member ${row.memberName}:`, error);
-        failCount++;
+        console.error(`Failed to save member ${row.memberName}:`, error);
+        memberFailed++;
+      }
+    }
+
+    let logCreated = 0;
+    let logUpdated = 0;
+    let logFailed = 0;
+
+    for (const row of bulkLogs) {
+      const memberId = memberIdByKey.get(
+        getMemberKey(row.generation, row.memberName)
+      );
+      if (!memberId) {
+        // 멤버 저장이 실패한 경우입니다.
+        logFailed++;
+        continue;
+      }
+
+      // 회차를 못 찾으면 미지정으로 저장해, 존재하지 않는 회차가 남지 않게 합니다.
+      const round = row.meetingId ? row.round : 0;
+
+      try {
+        if (row.existingLogId) {
+          await activityAdminRepository.updateGrowthLog(row.existingLogId, {
+            generation: row.generation,
+            showOnHome: row.showOnHome,
+            title: row.title,
+            field: row.field,
+            authorName: row.memberName,
+            memberId,
+            meetingId: row.meetingId,
+            round,
+            excerpt: row.excerpt,
+            blogUrl: row.blogUrl,
+            // 프로필 이미지와 같은 이유로 빈 썸네일은 기존 값을 유지합니다.
+            ...(row.thumbnailUrl ? { thumbnailUrl: row.thumbnailUrl } : {}),
+          });
+          logUpdated++;
+        } else {
+          await activityAdminRepository.addGrowthLog({
+            thumbnailUrl: row.thumbnailUrl,
+            generation: row.generation,
+            order: 0,
+            isActive: true,
+            showOnHome: row.showOnHome,
+            title: row.title,
+            field: row.field,
+            authorName: row.memberName,
+            memberId,
+            meetingId: row.meetingId,
+            round,
+            excerpt: row.excerpt,
+            blogUrl: row.blogUrl,
+          });
+          logCreated++;
+        }
+      } catch (error) {
+        console.error(`Failed to save growth log ${row.blogUrl}:`, error);
+        logFailed++;
       }
     }
 
     setBulkUploading(false);
-    setBulkDialogOpen(false);
-    setBulkPreview([]);
+    closeBulkDialog();
 
-    if (failCount === 0) {
-      toast.success(`${successCount}명의 멤버가 등록되었습니다.`);
+    const summary = [
+      memberCreated > 0 ? `멤버 ${memberCreated}명 등록` : "",
+      memberUpdated > 0 ? `멤버 ${memberUpdated}명 수정` : "",
+      logCreated > 0 ? `성장일지 ${logCreated}편 등록` : "",
+      logUpdated > 0 ? `성장일지 ${logUpdated}편 수정` : "",
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    const failed = memberFailed + logFailed;
+    if (failed > 0) {
+      toast.warning(`${summary || "처리된 항목 없음"} · ${failed}건 실패`);
     } else {
-      toast.warning(`${successCount}명 등록 성공, ${failCount}명 등록 실패`);
+      toast.success(`${summary || "변경된 항목이 없습니다."}`);
     }
+
     fetchData();
   };
 
@@ -286,6 +538,12 @@ export default function MembersPage() {
           item.memberType.includes(searchQuery)
       )
     : items;
+
+  // 미리보기 요약 (신규/수정 건수)
+  const updatedMemberCount = bulkMembers.filter((row) => row.existingId).length;
+  const newMemberCount = bulkMembers.length - updatedMemberCount;
+  const updatedLogCount = bulkLogs.filter((row) => row.existingLogId).length;
+  const newLogCount = bulkLogs.length - updatedLogCount;
 
   const previewMemberType =
     form.generation && currentGeneration
@@ -308,16 +566,35 @@ export default function MembersPage() {
           총 {items.length}명의 멤버 (현재 {currentGeneration}기)
         </p>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={downloadSampleExcel}>
+          <Button variant="outline" size="sm" onClick={downloadMemberTemplate}>
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             양식 다운로드
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleExport}
+            disabled={exporting || items.length === 0}
+            title="현재 등록된 멤버 정보와 성장일지를 엑셀로 내려받습니다"
           >
-            <Upload className="mr-2 h-4 w-4" />
+            {exporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileDown className="mr-2 h-4 w-4" />
+            )}
+            현황 내보내기
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={bulkParsing}
+          >
+            {bulkParsing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
             엑셀 일괄 등록
           </Button>
           <input
@@ -515,64 +792,196 @@ export default function MembersPage() {
       </Dialog>
 
       {/* 엑셀 일괄 등록 미리보기 다이얼로그 */}
-      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      <Dialog
+        open={bulkDialogOpen}
+        onOpenChange={(open) => !open && closeBulkDialog()}
+      >
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>엑셀 일괄 등록 미리보기</DialogTitle>
             <DialogDescription>
-              총 {bulkPreview.length}명의 멤버를 등록합니다. 내용을 확인 후 등록해주세요.
+              {[
+                newMemberCount > 0 ? `멤버 ${newMemberCount}명 신규` : "",
+                updatedMemberCount > 0 ? `멤버 ${updatedMemberCount}명 수정` : "",
+                newLogCount > 0 ? `성장일지 ${newLogCount}편 신규` : "",
+                updatedLogCount > 0 ? `성장일지 ${updatedLogCount}편 수정` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ") || "반영할 항목이 없습니다."}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[400px] overflow-y-auto border rounded-lg">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-6 sticky top-0">
-                <tr>
-                  <th className="text-left p-2 font-medium">#</th>
-                  <th className="text-left p-2 font-medium">이름</th>
-                  <th className="text-left p-2 font-medium">기수</th>
-                  <th className="text-left p-2 font-medium">회원 구분</th>
-                  <th className="text-left p-2 font-medium">가입</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {bulkPreview.map((row, i) => (
-                  <tr key={i} className="hover:bg-gray-6/50">
-                    <td className="p-2 text-muted-foreground">{i + 1}</td>
-                    <td className="p-2 font-medium">{row.memberName}</td>
-                    <td className="p-2">{row.generation}기</td>
-                    <td className="p-2">
-                      <Badge
-                        variant={
-                          calculateMemberType(currentGeneration, row.generation) === "신입회원"
-                            ? "default"
-                            : "outline"
-                        }
-                        className="text-xs"
-                      >
-                        {calculateMemberType(currentGeneration, row.generation)}
-                      </Badge>
-                    </td>
-                    <td className="p-2">
-                      {row.isActive ? (
-                        <Check className="h-4 w-4 text-green-1" />
-                      ) : (
-                        <X className="h-4 w-4 text-destructive" />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+          <div className="max-h-[52vh] space-y-4 overflow-y-auto">
+            {/* 멤버 */}
+            {bulkMembers.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">멤버 {bulkMembers.length}명</p>
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-6">
+                      <tr>
+                        <th className="p-2 text-left font-medium">#</th>
+                        <th className="p-2 text-left font-medium">구분</th>
+                        <th className="p-2 text-left font-medium">이름</th>
+                        <th className="p-2 text-left font-medium">기수</th>
+                        <th className="p-2 text-left font-medium">회원 구분</th>
+                        <th className="p-2 text-left font-medium">기술 분야</th>
+                        <th className="p-2 text-left font-medium">한 줄 소개</th>
+                        <th className="p-2 text-left font-medium">프로필</th>
+                        <th className="p-2 text-left font-medium">가입</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {bulkMembers.map((row, i) => {
+                        const memberType = calculateMemberType(
+                          currentGeneration,
+                          row.generation
+                        );
+                        return (
+                          <tr key={i} className="hover:bg-gray-6/50">
+                            <td className="p-2 text-muted-foreground">{i + 1}</td>
+                            <td className="p-2">
+                              <Badge
+                                variant={row.existingId ? "outline" : "default"}
+                                className="text-xs"
+                              >
+                                {row.existingId ? "수정" : "신규"}
+                              </Badge>
+                            </td>
+                            <td className="p-2 font-medium">{row.memberName}</td>
+                            <td className="p-2">{row.generation}기</td>
+                            <td className="p-2">
+                              <Badge
+                                variant={
+                                  memberType === "신입회원" ? "default" : "outline"
+                                }
+                                className="text-xs"
+                              >
+                                {memberType}
+                              </Badge>
+                            </td>
+                            <td className="p-2 text-muted-foreground">
+                              {row.field || "-"}
+                            </td>
+                            <td className="max-w-[220px] truncate p-2 text-muted-foreground">
+                              {row.bio || "-"}
+                            </td>
+                            <td className="p-2 text-muted-foreground">
+                              {row.profileImageUrl ? "있음" : "-"}
+                            </td>
+                            <td className="p-2">
+                              {row.isActive ? (
+                                <Check className="h-4 w-4 text-green-1" />
+                              ) : (
+                                <X className="h-4 w-4 text-destructive" />
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 성장일지 */}
+            {bulkLogs.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">
+                  성장일지 {bulkLogs.length}편
+                </p>
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-6">
+                      <tr>
+                        <th className="p-2 text-left font-medium">#</th>
+                        <th className="p-2 text-left font-medium">구분</th>
+                        <th className="p-2 text-left font-medium">멤버</th>
+                        <th className="p-2 text-left font-medium">제목</th>
+                        <th className="p-2 text-left font-medium">분야</th>
+                        <th className="p-2 text-left font-medium">회차</th>
+                        <th className="p-2 text-left font-medium">홈 노출</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {bulkLogs.map((row, i) => (
+                        <tr key={i} className="hover:bg-gray-6/50">
+                          <td className="p-2 text-muted-foreground">{i + 1}</td>
+                          <td className="p-2">
+                            <Badge
+                              variant={row.existingLogId ? "outline" : "default"}
+                              className="text-xs"
+                            >
+                              {row.existingLogId ? "수정" : "신규"}
+                            </Badge>
+                          </td>
+                          <td className="p-2 whitespace-nowrap">
+                            {row.generation}기 {row.memberName}
+                          </td>
+                          <td className="max-w-[260px] truncate p-2 font-medium">
+                            {row.title}
+                          </td>
+                          <td className="p-2 text-muted-foreground">
+                            {row.field || "-"}
+                          </td>
+                          <td className="p-2 whitespace-nowrap text-muted-foreground">
+                            {row.meetingId ? (
+                              `${row.round}회차`
+                            ) : (
+                              <span title="해당 기수에 그 회차가 없어 미지정으로 저장됩니다">
+                                미지정
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-2">
+                            {row.showOnHome ? (
+                              <Check className="h-4 w-4 text-green-1" />
+                            ) : (
+                              <X className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 연결할 멤버를 찾지 못한 성장일지 */}
+            {orphanLogs.length > 0 && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                <p className="text-sm font-medium text-destructive">
+                  연결할 멤버를 찾지 못해 제외된 성장일지 {orphanLogs.length}편
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  멤버 목록 시트나 기존 멤버 중에 같은 이름·기수가 없습니다.
+                </p>
+                <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                  {orphanLogs.map((row, i) => (
+                    <li key={i} className="truncate">
+                      {row.generation}기 {row.memberName} · {row.title}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkDialogOpen(false)}>
+            <Button variant="outline" onClick={closeBulkDialog}>
               취소
             </Button>
-            <Button onClick={handleBulkUpload} disabled={bulkUploading}>
+            <Button
+              onClick={handleBulkUpload}
+              disabled={
+                bulkUploading ||
+                (bulkMembers.length === 0 && bulkLogs.length === 0)
+              }
+            >
               {bulkUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {bulkUploading
-                ? "등록 중..."
-                : `${bulkPreview.length}명 일괄 등록`}
+              {bulkUploading ? "반영 중..." : "일괄 반영"}
             </Button>
           </DialogFooter>
         </DialogContent>
