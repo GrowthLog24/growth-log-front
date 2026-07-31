@@ -250,6 +250,15 @@ interface ActivityBase {
   generation: number;
   order: number;
   isActive: boolean;
+  /**
+   * 홈페이지(활동 기록 트랙 페이지) 노출 여부
+   *
+   * 회원 개인 업적 페이지와 노출 대상을 분리하기 위한 값입니다.
+   * `false`일 때만 홈에서 숨기며, 값이 없는 기존 문서는 계속 노출됩니다.
+   * (Firestore는 존재하지 않는 필드를 동등 비교에서 제외하므로,
+   *  쿼리 조건이 아닌 결과 필터로 판정합니다)
+   */
+  showOnHome?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
