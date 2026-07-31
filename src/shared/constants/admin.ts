@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   Trophy,
   MousePointerClick,
+  FileUp,
   type LucideIcon,
 } from "lucide-react";
 
@@ -66,6 +67,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: "/admin/notices",
     icon: Megaphone,
   },
+
+  {
+    title: "블로그 자동 게시",
+    href: "/admin/blog-publisher",
+    icon: FileUp,
+  },
   {
     title: "FAQ",
     href: "/admin/faqs",
@@ -114,6 +121,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/awards": "수상 내역",
   "/admin/testimonials": "멤버 후기",
   "/admin/notices": "공지사항",
+  "/admin/blog-publisher": "블로그 자동 게시",
   "/admin/faqs": "FAQ",
   "/admin/schedules": "월별 일정",
   "/admin/members": "멤버 관리",
