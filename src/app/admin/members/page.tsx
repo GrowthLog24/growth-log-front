@@ -40,15 +40,28 @@ import {
 } from "@/infrastructure/repositories/admin/memberAdminRepository";
 import { activityAdminRepository } from "@/infrastructure/repositories/admin/activityAdminRepository";
 import { meetingAdminRepository } from "@/infrastructure/repositories/admin/meetingAdminRepository";
+import {
+  attendanceAdminRepository,
+  type MemberAttendanceInput,
+} from "@/infrastructure/repositories/admin/attendanceAdminRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import {
   downloadMemberExport,
   downloadMemberTemplate,
   parseMemberWorkbook,
+  type AttendanceSheetRow,
   type GrowthLogSheetRow,
+  type MeetingColumn,
   type MemberSheetRow,
 } from "@/shared/utils/memberBulkExcel";
-import type { GrowthLogActivity, Meeting, Member } from "@/domain/entities";
+import {
+  ATTENDANCE_STATUS_LABELS,
+  type Attendance,
+  type AttendanceStatus,
+  type GrowthLogActivity,
+  type Meeting,
+  type Member,
+} from "@/domain/entities";
 
 const getSiteUrl = () =>
   typeof window !== "undefined" ? window.location.origin : "";
@@ -82,6 +95,32 @@ interface BulkLogPreview extends GrowthLogSheetRow {
   meetingId: string;
 }
 
+/** 업로드 미리보기에 표시할 출결 행 (한 멤버) */
+interface BulkAttendancePreview {
+  memberName: string;
+  generation: number;
+  /** 실제로 반영할 회차별 출결 (회차 문서를 찾은 것만) */
+  inputs: MemberAttendanceInput[];
+  /** 상태별 건수 (요약 표시용) */
+  counts: Record<AttendanceStatus, number>;
+  /** 등록된 회차를 찾지 못해 제외한 셀 수 */
+  unmatchedCells: number;
+}
+
+/** 출결 상태별 건수를 셉니다. */
+const countByStatus = (
+  inputs: readonly MemberAttendanceInput[]
+): Record<AttendanceStatus, number> => {
+  const counts: Record<AttendanceStatus, number> = {
+    present: 0,
+    late: 0,
+    excused: 0,
+    absent: 0,
+  };
+  for (const input of inputs) counts[input.status]++;
+  return counts;
+};
+
 /**
  * 멤버 관리 페이지
  */
@@ -114,10 +153,16 @@ export default function MembersPage() {
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkParsing, setBulkParsing] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [templateDownloading, setTemplateDownloading] = useState(false);
   const [bulkMembers, setBulkMembers] = useState<BulkMemberPreview[]>([]);
   const [bulkLogs, setBulkLogs] = useState<BulkLogPreview[]>([]);
+  const [bulkAttendance, setBulkAttendance] = useState<BulkAttendancePreview[]>([]);
   /** 멤버 시트에도 없고 기존 멤버에도 없어 연결할 수 없는 성장일지 */
   const [orphanLogs, setOrphanLogs] = useState<GrowthLogSheetRow[]>([]);
+  /** 연결할 멤버를 찾지 못한 출결 행 */
+  const [orphanAttendance, setOrphanAttendance] = useState<AttendanceSheetRow[]>(
+    []
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = async () => {
@@ -236,34 +281,62 @@ export default function MembersPage() {
   // ===== 엑셀 =====
 
   /**
-   * 성장일지 활동과 정기모임 목록을 불러옵니다.
+   * 엑셀 작업에 필요한 부수 데이터를 한 번에 불러옵니다.
    *
    * 내보내기와 업로드 미리보기가 같은 데이터를 필요로 합니다.
    */
-  const fetchGrowthLogContext = async (): Promise<{
+  const fetchExcelContext = async (): Promise<{
     growthLogs: GrowthLogActivity[];
     meetings: Meeting[];
+    attendances: Attendance[];
   }> => {
-    const [activities, meetings] = await Promise.all([
+    const [activities, meetings, attendances] = await Promise.all([
       activityAdminRepository.getAllActivities(),
       meetingAdminRepository.getAll(),
+      attendanceAdminRepository.getAll(),
     ]);
     const growthLogs = activities.filter(
       (activity): activity is GrowthLogActivity =>
         activity.category === "growth-log"
     );
-    return { growthLogs, meetings };
+    return { growthLogs, meetings, attendances };
+  };
+
+  /** 등록된 정기모임을 출결 시트의 회차 컬럼으로 변환합니다. */
+  const toMeetingColumns = (meetings: readonly Meeting[]): MeetingColumn[] =>
+    meetings.map((meeting) => ({
+      generation: meeting.generation,
+      round: meeting.round,
+    }));
+
+  /**
+   * 예시가 채워진 빈 양식을 내려받습니다.
+   *
+   * 출결 시트의 회차 컬럼은 등록된 정기모임에서 만들어야 하므로
+   * 회차 목록을 먼저 조회합니다.
+   */
+  const handleTemplateDownload = async () => {
+    setTemplateDownloading(true);
+    try {
+      const meetings = await meetingAdminRepository.getAll();
+      downloadMemberTemplate(toMeetingColumns(meetings));
+    } catch (error) {
+      console.error("Failed to download template:", error);
+      toast.error("양식을 내려받지 못했습니다.");
+    } finally {
+      setTemplateDownloading(false);
+    }
   };
 
   /**
-   * 현재 등록된 멤버와 성장일지를 채운 엑셀을 내려받습니다.
+   * 현재 등록된 멤버·성장일지·출결을 채운 엑셀을 내려받습니다.
    *
    * 내려받아 수정한 뒤 그대로 다시 업로드하면 기존 정보가 갱신됩니다.
    */
   const handleExport = async () => {
     setExporting(true);
     try {
-      const { growthLogs } = await fetchGrowthLogContext();
+      const { growthLogs, meetings, attendances } = await fetchExcelContext();
 
       const memberRows: MemberSheetRow[] = items.map((item) => ({
         memberName: item.memberName,
@@ -292,10 +365,43 @@ export default function MembersPage() {
         }
       }
 
+      // 출결은 회원 문서 ID로 연결되므로 ID 기준으로 모아둡니다.
+      const statusByMemberAndMeeting = new Map<string, AttendanceStatus>();
+      for (const attendance of attendances) {
+        statusByMemberAndMeeting.set(
+          `${attendance.memberId}::${attendance.meetingId}`,
+          attendance.status
+        );
+      }
+
+      const attendanceRows: AttendanceSheetRow[] = items.map((member) => ({
+        memberName: member.memberName,
+        generation: member.generation,
+        cells: meetings
+          .filter((meeting) => meeting.generation === member.generation)
+          .map((meeting) => ({
+            meetingGeneration: meeting.generation,
+            round: meeting.round,
+            // 기록이 없으면 결석입니다. 빈 칸으로 두면 "미입력"과 구분되지
+            // 않으므로 결석을 명시해 내보냅니다.
+            status:
+              statusByMemberAndMeeting.get(`${member.id}::${meeting.id}`) ??
+              "absent",
+          })),
+      }));
+
       const today = new Date().toISOString().slice(0, 10);
-      downloadMemberExport(memberRows, logRows, `멤버_현황_${today}.xlsx`);
+      downloadMemberExport(
+        {
+          members: memberRows,
+          growthLogs: logRows,
+          attendance: attendanceRows,
+          meetingColumns: toMeetingColumns(meetings),
+        },
+        `멤버_현황_${today}.xlsx`
+      );
       toast.success(
-        `멤버 ${memberRows.length}명, 성장일지 ${logRows.length}편을 내보냈습니다.`
+        `멤버 ${memberRows.length}명, 성장일지 ${logRows.length}편, 회차 ${meetings.length}개를 내보냈습니다.`
       );
     } catch (error) {
       console.error("Failed to export members:", error);
@@ -316,12 +422,16 @@ export default function MembersPage() {
       const buffer = await file.arrayBuffer();
       const parsed = parseMemberWorkbook(new Uint8Array(buffer));
 
-      if (parsed.members.length === 0 && parsed.growthLogs.length === 0) {
+      if (
+        parsed.members.length === 0 &&
+        parsed.growthLogs.length === 0 &&
+        parsed.attendance.length === 0
+      ) {
         toast.error("유효한 데이터가 없습니다. 엑셀 양식을 확인해주세요.");
         return;
       }
 
-      const { growthLogs, meetings } = await fetchGrowthLogContext();
+      const { growthLogs, meetings } = await fetchExcelContext();
       const memberByKey = new Map(
         items.map((item) => [
           getMemberKey(item.generation, item.memberName),
@@ -371,14 +481,70 @@ export default function MembersPage() {
         });
       }
 
+      const attendancePreviews: BulkAttendancePreview[] = [];
+      const unmatchedAttendance: AttendanceSheetRow[] = [];
+
+      for (const row of parsed.attendance) {
+        const key = getMemberKey(row.generation, row.memberName);
+        if (!memberByKey.has(key) && !sheetMemberKeys.has(key)) {
+          unmatchedAttendance.push(row);
+          continue;
+        }
+
+        const inputs: MemberAttendanceInput[] = [];
+        let unmatchedCells = 0;
+
+        for (const cell of row.cells) {
+          // 자기 기수가 아닌 회차 칸은 입력 실수로 보고 반영하지 않습니다.
+          if (cell.meetingGeneration !== row.generation) {
+            unmatchedCells++;
+            continue;
+          }
+
+          const meeting = meetings.find(
+            (item) =>
+              item.generation === cell.meetingGeneration &&
+              item.round === cell.round
+          );
+          if (!meeting) {
+            unmatchedCells++;
+            continue;
+          }
+
+          inputs.push({
+            meetingId: meeting.id,
+            generation: meeting.generation,
+            round: meeting.round,
+            status: cell.status,
+          });
+        }
+
+        if (inputs.length === 0 && unmatchedCells === 0) continue;
+
+        attendancePreviews.push({
+          memberName: row.memberName,
+          generation: row.generation,
+          inputs,
+          counts: countByStatus(inputs),
+          unmatchedCells,
+        });
+      }
+
       setBulkMembers(memberPreviews);
       setBulkLogs(logPreviews);
+      setBulkAttendance(attendancePreviews);
       setOrphanLogs(unmatchedLogs);
+      setOrphanAttendance(unmatchedAttendance);
       setBulkDialogOpen(true);
 
       const skipped = parsed.skippedMemberRows + parsed.skippedGrowthLogRows;
       if (skipped > 0) {
         toast.warning(`필수값이 비어 ${skipped}개 행을 건너뛰었습니다.`);
+      }
+      if (parsed.invalidAttendanceCells > 0) {
+        toast.warning(
+          `출결 값으로 인식할 수 없는 칸 ${parsed.invalidAttendanceCells}개를 건너뛰었습니다.`
+        );
       }
     } catch (error) {
       console.error("Failed to parse excel:", error);
@@ -392,11 +558,19 @@ export default function MembersPage() {
     setBulkDialogOpen(false);
     setBulkMembers([]);
     setBulkLogs([]);
+    setBulkAttendance([]);
     setOrphanLogs([]);
+    setOrphanAttendance([]);
   };
 
   const handleBulkUpload = async () => {
-    if (bulkMembers.length === 0 && bulkLogs.length === 0) return;
+    if (
+      bulkMembers.length === 0 &&
+      bulkLogs.length === 0 &&
+      bulkAttendance.length === 0
+    ) {
+      return;
+    }
 
     setBulkUploading(true);
 
@@ -508,6 +682,33 @@ export default function MembersPage() {
       }
     }
 
+    let attendanceSaved = 0;
+    let attendanceMembers = 0;
+    let attendanceFailed = 0;
+
+    for (const row of bulkAttendance) {
+      if (row.inputs.length === 0) continue;
+
+      const memberId = memberIdByKey.get(
+        getMemberKey(row.generation, row.memberName)
+      );
+      if (!memberId) {
+        attendanceFailed += row.inputs.length;
+        continue;
+      }
+
+      try {
+        // 한 회원의 여러 회차를 배치 한 번으로 저장합니다.
+        // ("결석"은 리포지토리가 문서 삭제로 처리합니다)
+        await attendanceAdminRepository.saveManyForMember(memberId, row.inputs);
+        attendanceSaved += row.inputs.length;
+        attendanceMembers++;
+      } catch (error) {
+        console.error(`Failed to save attendance for ${row.memberName}:`, error);
+        attendanceFailed += row.inputs.length;
+      }
+    }
+
     setBulkUploading(false);
     closeBulkDialog();
 
@@ -516,11 +717,14 @@ export default function MembersPage() {
       memberUpdated > 0 ? `멤버 ${memberUpdated}명 수정` : "",
       logCreated > 0 ? `성장일지 ${logCreated}편 등록` : "",
       logUpdated > 0 ? `성장일지 ${logUpdated}편 수정` : "",
+      attendanceSaved > 0
+        ? `출결 ${attendanceMembers}명 ${attendanceSaved}건 반영`
+        : "",
     ]
       .filter(Boolean)
       .join(", ");
 
-    const failed = memberFailed + logFailed;
+    const failed = memberFailed + logFailed + attendanceFailed;
     if (failed > 0) {
       toast.warning(`${summary || "처리된 항목 없음"} · ${failed}건 실패`);
     } else {
@@ -544,6 +748,14 @@ export default function MembersPage() {
   const newMemberCount = bulkMembers.length - updatedMemberCount;
   const updatedLogCount = bulkLogs.filter((row) => row.existingLogId).length;
   const newLogCount = bulkLogs.length - updatedLogCount;
+  const attendanceCellCount = bulkAttendance.reduce(
+    (sum, row) => sum + row.inputs.length,
+    0
+  );
+  const attendanceUnmatchedCount = bulkAttendance.reduce(
+    (sum, row) => sum + row.unmatchedCells,
+    0
+  );
 
   const previewMemberType =
     form.generation && currentGeneration
@@ -566,8 +778,17 @@ export default function MembersPage() {
           총 {items.length}명의 멤버 (현재 {currentGeneration}기)
         </p>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={downloadMemberTemplate}>
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTemplateDownload}
+            disabled={templateDownloading}
+          >
+            {templateDownloading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+            )}
             양식 다운로드
           </Button>
           <Button
@@ -575,7 +796,7 @@ export default function MembersPage() {
             size="sm"
             onClick={handleExport}
             disabled={exporting || items.length === 0}
-            title="현재 등록된 멤버 정보와 성장일지를 엑셀로 내려받습니다"
+            title="현재 등록된 멤버 정보와 성장일지, 출결을 엑셀로 내려받습니다"
           >
             {exporting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -805,6 +1026,9 @@ export default function MembersPage() {
                 updatedMemberCount > 0 ? `멤버 ${updatedMemberCount}명 수정` : "",
                 newLogCount > 0 ? `성장일지 ${newLogCount}편 신규` : "",
                 updatedLogCount > 0 ? `성장일지 ${updatedLogCount}편 수정` : "",
+                attendanceCellCount > 0
+                  ? `출결 ${bulkAttendance.length}명 ${attendanceCellCount}건`
+                  : "",
               ]
                 .filter(Boolean)
                 .join(" · ") || "반영할 항목이 없습니다."}
@@ -949,6 +1173,71 @@ export default function MembersPage() {
               </div>
             )}
 
+            {/* 출결 */}
+            {bulkAttendance.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">
+                  출결 {bulkAttendance.length}명 · {attendanceCellCount}건
+                  {attendanceUnmatchedCount > 0 && (
+                    <span
+                      className="ml-2 text-xs font-normal text-destructive"
+                      title="등록된 회차가 없거나 자기 기수가 아닌 칸입니다"
+                    >
+                      제외 {attendanceUnmatchedCount}칸
+                    </span>
+                  )}
+                </p>
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-gray-6">
+                      <tr>
+                        <th className="p-2 text-left font-medium">#</th>
+                        <th className="p-2 text-left font-medium">멤버</th>
+                        <th className="p-2 text-left font-medium">반영 건수</th>
+                        <th className="p-2 text-left font-medium">내역</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {bulkAttendance.map((row, i) => (
+                        <tr key={i} className="hover:bg-gray-6/50">
+                          <td className="p-2 text-muted-foreground">{i + 1}</td>
+                          <td className="p-2 whitespace-nowrap font-medium">
+                            {row.generation}기 {row.memberName}
+                          </td>
+                          <td className="p-2 whitespace-nowrap">
+                            {row.inputs.length}건
+                            {row.unmatchedCells > 0 && (
+                              <span className="ml-1 text-xs text-destructive">
+                                (제외 {row.unmatchedCells})
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-2 text-muted-foreground">
+                            {(
+                              Object.entries(row.counts) as [
+                                AttendanceStatus,
+                                number,
+                              ][]
+                            )
+                              .filter(([, count]) => count > 0)
+                              .map(
+                                ([status, count]) =>
+                                  `${ATTENDANCE_STATUS_LABELS[status]} ${count}`
+                              )
+                              .join(" · ") || "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  결석은 기록을 남기지 않는 설계라, &quot;결석&quot;으로 반영하면 기존
+                  출석 기록이 삭제됩니다. 빈 칸은 그대로 둡니다.
+                </p>
+              </div>
+            )}
+
             {/* 연결할 멤버를 찾지 못한 성장일지 */}
             {orphanLogs.length > 0 && (
               <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
@@ -967,6 +1256,25 @@ export default function MembersPage() {
                 </ul>
               </div>
             )}
+
+            {/* 연결할 멤버를 찾지 못한 출결 */}
+            {orphanAttendance.length > 0 && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                <p className="text-sm font-medium text-destructive">
+                  연결할 멤버를 찾지 못해 제외된 출결 {orphanAttendance.length}명
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  멤버 목록 시트나 기존 멤버 중에 같은 이름·기수가 없습니다.
+                </p>
+                <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                  {orphanAttendance.map((row, i) => (
+                    <li key={i} className="truncate">
+                      {row.generation}기 {row.memberName} · {row.cells.length}건
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -977,7 +1285,9 @@ export default function MembersPage() {
               onClick={handleBulkUpload}
               disabled={
                 bulkUploading ||
-                (bulkMembers.length === 0 && bulkLogs.length === 0)
+                (bulkMembers.length === 0 &&
+                  bulkLogs.length === 0 &&
+                  attendanceCellCount === 0)
               }
             >
               {bulkUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
