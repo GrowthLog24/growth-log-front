@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { Sprout } from "lucide-react";
 import type { LevelProgressDto, MemberProfileDto } from "@/application/dtos/memberAchievement";
+import { GrowthTree } from "./GrowthTree";
 
 interface AchievementHeroProps {
   member: MemberProfileDto;
@@ -12,100 +12,52 @@ interface AchievementHeroProps {
  */
 export function AchievementHero({ member, level }: AchievementHeroProps) {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary to-[#4BBE38] text-primary-foreground">
-      {/* 배경 장식 */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-2xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-24 -left-10 h-72 w-72 rounded-full bg-white/10 blur-3xl"
-      />
+    <section className="member-hero-surface relative overflow-hidden border-b border-primary/15 text-foreground">
+      <div className="container-custom relative py-5 md:py-7">
+        <div className="grid items-center gap-5 md:grid-cols-[1fr_260px] lg:grid-cols-[1fr_300px] lg:gap-8">
+          <div className="relative z-10">
+            <div className="mb-5 flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">{member.generation}기</span>
+              <span className="rounded-full bg-gray-6 px-3 py-1 text-muted-foreground">{member.memberType}</span>
+              {member.field && <span className="rounded-full bg-gray-6 px-3 py-1 text-muted-foreground">{member.field}</span>}
+            </div>
+            <h1 className="member-hero-title text-4xl font-bold leading-tight tracking-[-0.04em] md:text-6xl">
+              {member.memberName}
+            </h1>
+            {member.bio && <p className="mt-4 max-w-xl text-sm leading-7 text-muted-foreground">{member.bio}</p>}
 
-      <div className="container-custom relative py-14 md:py-20">
-        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <div className="flex gap-5">
-            {/* 프로필 이미지 */}
-            {member.profileImageUrl && (
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-white/40 md:h-24 md:w-24">
-                <Image
-                  src={member.profileImageUrl}
-                  alt=""
-                  fill
-                  sizes="96px"
-                  className="object-cover"
+            <div className="mt-5 max-w-xl">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <p className="flex items-center gap-2 text-base font-semibold md:text-lg">
+                  <Sprout className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                  Lv.{level.level} · {level.title}
+                </p>
+                <span className="text-xs text-muted-foreground">{level.totalXp.toLocaleString()} XP</span>
+              </div>
+              <div
+                className="mt-2.5 h-2 overflow-hidden rounded-full bg-primary/10"
+                role="progressbar"
+                aria-valuenow={level.progressRate}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`레벨 ${level.level} 진행률`}
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-1000"
+                  style={{ width: `${level.progressRate}%` }}
                 />
               </div>
-            )}
-
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur">
-                  {member.generation}기
-                </span>
-                <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur">
-                  {member.memberType}
-                </span>
-                {member.field && (
-                  <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur">
-                    {member.field}
-                  </span>
-                )}
-                {!member.isActive && (
-                  <span className="rounded-full bg-black/20 px-3 py-1 text-sm font-medium backdrop-blur">
-                    활동 종료
-                  </span>
-                )}
-              </div>
-
-              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-                {member.memberName}
-              </h1>
-
-              {member.bio && (
-                <p className="max-w-md text-sm leading-relaxed text-white/85">
-                  {member.bio}
-                </p>
-              )}
-
-              <p className="flex items-center gap-2 text-lg text-white/90">
-                <Sprout className="h-5 w-5" aria-hidden />
-                <span>
-                  Lv.{level.level} · {level.title}
-                </span>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {level.xpToNextLevel > 0
+                  ? `다음 레벨까지 ${level.xpToNextLevel.toLocaleString()} XP`
+                  : "최고 레벨 달성"}
               </p>
             </div>
           </div>
 
-          {/* 경험치 진행 바 */}
-          <div className="w-full max-w-sm space-y-2">
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="font-medium text-white/90">경험치</span>
-              <span className="font-semibold">
-                {level.totalXp.toLocaleString()} XP
-              </span>
-            </div>
-
-            <div
-              className="h-3 w-full overflow-hidden rounded-full bg-white/25"
-              role="progressbar"
-              aria-valuenow={level.progressRate}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`레벨 ${level.level} 진행률`}
-            >
-              <div
-                className="h-full rounded-full bg-white transition-[width] duration-700 ease-out"
-                style={{ width: `${level.progressRate}%` }}
-              />
-            </div>
-
-            <p className="text-right text-xs text-white/80">
-              {level.xpToNextLevel > 0
-                ? `다음 레벨까지 ${level.xpToNextLevel.toLocaleString()} XP`
-                : "최고 레벨 구간에 도달했습니다"}
-            </p>
+          <div className="relative mx-auto w-full max-w-[280px] md:mx-0 md:max-w-[320px]">
+            <GrowthTree level={level} />
+            {!member.isActive && <span className="absolute right-1 top-4 rounded-full bg-gray-6 px-2.5 py-1 text-[10px] text-muted-foreground">활동 종료</span>}
           </div>
         </div>
       </div>

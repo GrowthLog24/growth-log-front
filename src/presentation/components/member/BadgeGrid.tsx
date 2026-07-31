@@ -46,10 +46,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
  * 획득 배지의 등급별 색상
  */
 const TIER_STYLES: Record<BadgeTier, string> = {
-  bronze: "border-amber-300 bg-amber-50 text-amber-700",
-  silver: "border-slate-300 bg-slate-50 text-slate-600",
-  gold: "border-yellow-300 bg-yellow-50 text-yellow-700",
-  platinum: "border-primary/40 bg-primary/10 text-primary",
+  bronze: "border-amber-500/45 text-amber-800",
+  silver: "border-slate-500/35 text-slate-700",
+  gold: "border-yellow-600/45 text-yellow-800",
+  platinum: "border-primary/45 text-primary",
 };
 
 /**
@@ -59,7 +59,7 @@ export function BadgeGrid({ badges }: BadgeGridProps) {
   const earnedCount = badges.filter((badge) => badge.earned).length;
 
   return (
-    <section className="bg-muted/40 py-12">
+    <section className="relative bg-gray-6 py-10 md:py-16">
       <div className="container-custom">
         <SectionHeading
           eyebrow="BADGES"
@@ -67,7 +67,7 @@ export function BadgeGrid({ badges }: BadgeGridProps) {
           description={`전체 ${badges.length}개 중 ${earnedCount}개를 획득했습니다.`}
         />
 
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="relative grid grid-cols-2 gap-x-5 gap-y-7 sm:grid-cols-3 lg:grid-cols-4" data-member-reveal>
           {badges.map((badge) => (
             <BadgeCard key={badge.id} badge={badge} />
           ))}
@@ -82,17 +82,15 @@ function BadgeCard({ badge }: { badge: BadgeDto }) {
 
   return (
     <li
-      className={`relative rounded-xl border-2 p-5 transition-shadow ${
+      className={`relative border-t pt-5 transition-transform duration-300 hover:-translate-y-1 ${
         badge.earned
-          ? `${TIER_STYLES[badge.tier]} shadow-sm`
-          : "border-dashed border-border bg-card"
+          ? TIER_STYLES[badge.tier]
+          : "border-black/15 opacity-45"
       }`}
     >
       <div className="mb-3 flex items-center justify-between">
         <span
-          className={`flex h-11 w-11 items-center justify-center rounded-full ${
-            badge.earned ? "bg-white/70" : "bg-muted"
-          }`}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/65"
         >
           {badge.earned ? (
             <Icon className="h-6 w-6" aria-hidden />
@@ -110,7 +108,7 @@ function BadgeCard({ badge }: { badge: BadgeDto }) {
       </div>
 
       <p
-        className={`font-bold ${badge.earned ? "text-foreground" : "text-muted-foreground"}`}
+        className={`font-semibold ${badge.earned ? "text-foreground" : "text-muted-foreground"}`}
       >
         {badge.name}
       </p>

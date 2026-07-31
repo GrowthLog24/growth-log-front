@@ -10,6 +10,7 @@ import {
   AttendanceTimeline,
   BadgeGrid,
   GrowthLogList,
+  MemberMotion,
   ProjectList,
 } from "@/presentation/components/member";
 
@@ -86,17 +87,19 @@ export default async function MemberPage({ params }: MemberPageProps) {
   }
 
   return (
-    <main className="pb-16">
-      <AchievementHero member={achievement.member} level={achievement.level} />
-      <AchievementStats
-        attendance={achievement.attendance}
-        growthLogCount={achievement.growthLogs.length}
-        projectCount={achievement.projects.length}
-      />
-      <AttendanceTimeline attendance={achievement.attendance} />
-      <BadgeGrid badges={achievement.badges} />
-      <GrowthLogList logs={achievement.growthLogs} />
-      <ProjectList projects={achievement.projects} />
+    <main className="overflow-hidden bg-white pb-12">
+      <MemberMotion>
+        <AchievementHero member={achievement.member} level={achievement.level} />
+        <AchievementStats
+          attendance={achievement.attendance}
+          growthLogCount={achievement.growthLogs.length}
+          projectCount={achievement.projects.length}
+        />
+        <BadgeGrid badges={achievement.badges} />
+        <AttendanceTimeline attendance={achievement.attendance} />
+        <GrowthLogList logs={achievement.growthLogs} />
+        <ProjectList projects={achievement.projects} />
+      </MemberMotion>
     </main>
   );
 }

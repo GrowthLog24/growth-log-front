@@ -13,7 +13,7 @@ interface ProjectListProps {
  */
 export function ProjectList({ projects }: ProjectListProps) {
   return (
-    <section className="bg-muted/40 py-12">
+    <section className="py-10 md:py-16">
       <div className="container-custom">
         <SectionHeading
           eyebrow="PROJECTS"
@@ -26,7 +26,7 @@ export function ProjectList({ projects }: ProjectListProps) {
         />
 
         {projects.length > 0 && (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3" data-member-reveal>
             {projects.map((project) => (
               <li key={project.id}>
                 <ProjectCard project={project} />
@@ -42,14 +42,14 @@ export function ProjectList({ projects }: ProjectListProps) {
 function ProjectCard({ project }: { project: ProjectSummaryDto }) {
   const content = (
     <>
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
         {project.thumbnailUrl ? (
           <Image
             src={project.thumbnailUrl}
             alt=""
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           />
         ) : (
           <span className="flex h-full items-center justify-center">
@@ -57,24 +57,24 @@ function ProjectCard({ project }: { project: ProjectSummaryDto }) {
           </span>
         )}
 
-        <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur">
+        <span className="absolute left-3 top-3 bg-black/70 px-2.5 py-1 text-[10px] font-medium tracking-wider text-white backdrop-blur">
           {project.role}
         </span>
       </div>
 
-      <div className="p-4">
+      <div className="pt-4">
         <div className="mb-1.5 flex flex-wrap items-center gap-2">
-          <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+          <span className="font-mono text-[10px] font-semibold text-primary">
             {project.generation}기
           </span>
           {project.platform && (
-            <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground">
               {project.platform}
             </span>
           )}
         </div>
 
-        <p className="flex items-center gap-1 font-semibold text-foreground group-hover:text-primary">
+        <p className="flex items-center gap-1 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
           {project.projectName}
           {project.blogUrl && (
             <ArrowUpRight
@@ -94,7 +94,7 @@ function ProjectCard({ project }: { project: ProjectSummaryDto }) {
   );
 
   const className =
-    "group block h-full overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/50";
+    "group block h-full";
 
   if (!project.blogUrl) {
     return <div className={className}>{content}</div>;
