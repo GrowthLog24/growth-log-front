@@ -3,15 +3,10 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import type { LevelProgressDto } from "@/application/dtos/memberAchievement";
+import { getGrowthStage } from "./growthStage";
 
 interface GrowthTreeProps {
   level: LevelProgressDto;
-}
-
-export function getGrowthStage(level: number) {
-  if (level <= 3) return { label: "새싹", stage: 1 };
-  if (level <= 5) return { label: "어린 나무", stage: 2 };
-  return { label: "성장한 나무", stage: 3 };
 }
 
 /** 레벨에 따라 새싹에서 나무로 성장하는 인터랙티브 3D 오브젝트입니다. */
