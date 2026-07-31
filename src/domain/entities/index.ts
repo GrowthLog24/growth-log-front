@@ -201,7 +201,17 @@ export interface Member {
   memberType: MemberType;
   /** 가입 여부 */
   isActive: boolean;
-  /** 리디렉트 URL (선택) */
+  /** 프로필 이미지 URL (선택) */
+  profileImageUrl?: string;
+  /** 한 줄 소개 (선택, 최대 100자) */
+  bio?: string;
+  /** 기술 분야 (예: Frontend, Backend) */
+  field?: string;
+  /**
+   * @deprecated 리디렉트 기능이 제거되었습니다.
+   * QR 코드는 회원 업적 페이지(/member/{기수}/{이름})로 직접 연결됩니다.
+   * 기존 문서에 남아 있는 값을 읽을 수 있도록 타입만 유지합니다.
+   */
   redirectUrl?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;

@@ -114,7 +114,9 @@ export async function getMemberAchievement(
       generation: member.generation,
       memberType: member.memberType,
       isActive: member.isActive,
-      externalUrl: member.redirectUrl?.trim() ? member.redirectUrl : null,
+      profileImageUrl: member.profileImageUrl?.trim() || null,
+      bio: member.bio?.trim() || null,
+      field: member.field?.trim() || null,
     },
     level: {
       level: level.level,

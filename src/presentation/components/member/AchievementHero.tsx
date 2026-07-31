@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { ExternalLink, Sprout } from "lucide-react";
+import Image from "next/image";
+import { Sprout } from "lucide-react";
 import type { LevelProgressDto, MemberProfileDto } from "@/application/dtos/memberAchievement";
 
 interface AchievementHeroProps {
@@ -25,43 +25,57 @@ export function AchievementHero({ member, level }: AchievementHeroProps) {
 
       <div className="container-custom relative py-14 md:py-20">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur">
-                {member.generation}기
-              </span>
-              <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur">
-                {member.memberType}
-              </span>
-              {!member.isActive && (
-                <span className="rounded-full bg-black/20 px-3 py-1 text-sm font-medium backdrop-blur">
-                  활동 종료
-                </span>
-              )}
-            </div>
-
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-              {member.memberName}
-            </h1>
-
-            <p className="flex items-center gap-2 text-lg text-white/90">
-              <Sprout className="h-5 w-5" aria-hidden />
-              <span>
-                Lv.{level.level} · {level.title}
-              </span>
-            </p>
-
-            {member.externalUrl && (
-              <Link
-                href={member.externalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-sm font-medium backdrop-blur transition-colors hover:bg-white/25"
-              >
-                <ExternalLink className="h-4 w-4" aria-hidden />
-                개인 페이지 방문
-              </Link>
+          <div className="flex gap-5">
+            {/* 프로필 이미지 */}
+            {member.profileImageUrl && (
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-white/40 md:h-24 md:w-24">
+                <Image
+                  src={member.profileImageUrl}
+                  alt=""
+                  fill
+                  sizes="96px"
+                  className="object-cover"
+                />
+              </div>
             )}
+
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur">
+                  {member.generation}기
+                </span>
+                <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur">
+                  {member.memberType}
+                </span>
+                {member.field && (
+                  <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur">
+                    {member.field}
+                  </span>
+                )}
+                {!member.isActive && (
+                  <span className="rounded-full bg-black/20 px-3 py-1 text-sm font-medium backdrop-blur">
+                    활동 종료
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+                {member.memberName}
+              </h1>
+
+              {member.bio && (
+                <p className="max-w-md text-sm leading-relaxed text-white/85">
+                  {member.bio}
+                </p>
+              )}
+
+              <p className="flex items-center gap-2 text-lg text-white/90">
+                <Sprout className="h-5 w-5" aria-hidden />
+                <span>
+                  Lv.{level.level} · {level.title}
+                </span>
+              </p>
+            </div>
           </div>
 
           {/* 경험치 진행 바 */}
