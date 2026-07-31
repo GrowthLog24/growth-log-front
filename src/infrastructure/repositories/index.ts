@@ -8,3 +8,6 @@ export { faqRepository } from "./faqRepository";
 export { recruitmentRepository } from "./recruitmentRepository";
 export { testimonialRepository } from "./testimonialRepository";
 export { preRegistrationRepository } from "./preRegistrationRepository";
+export { memberRepository } from "./memberRepository";
+export { meetingRepository } from "./meetingRepository";
+export { attendanceRepository } from "./attendanceRepository";

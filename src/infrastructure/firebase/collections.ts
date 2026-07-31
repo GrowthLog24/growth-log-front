@@ -56,6 +56,12 @@ export const COLLECTIONS = {
 
   /** 수상 내역 */
   AWARDS: "awards",
+
+  /** 정기모임 회차 */
+  MEETINGS: "meetings",
+
+  /** 정기모임 출결 기록 */
+  ATTENDANCES: "attendances",
 } as const;
 
 /**

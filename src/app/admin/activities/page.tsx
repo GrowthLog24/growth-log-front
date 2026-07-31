@@ -12,6 +12,7 @@ import {
   ExternalLink,
   FileText,
   Upload,
+  Download,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,18 @@ import {
   type LectureActivity,
   type GrowthTalkActivity,
   type ClubActivity,
+  type Member,
+  type Meeting,
 } from "@/domain/entities";
+import { memberAdminRepository } from "@/infrastructure/repositories/admin/memberAdminRepository";
+import { meetingAdminRepository } from "@/infrastructure/repositories/admin/meetingAdminRepository";
+
+/**
+ * 활동 폼 필드 값 타입
+ *
+ * 프로젝트 참여자처럼 다중 선택 값을 담기 위해 문자열 배열을 포함합니다.
+ */
+type FormValue = string | number | boolean | Date | string[] | undefined;
 
 const CATEGORIES: ActivityCategory[] = [
   "project",
@@ -408,11 +420,113 @@ function ActivityFormDialog({
   onSaved: () => void;
 }) {
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<Record<string, string | number | boolean | Date | undefined>>({});
+  const [formData, setFormData] = useState<Record<string, FormValue>>({});
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string>("");
+
+  // 회원·회차 연결용 데이터
+  const [members, setMembers] = useState<Member[]>([]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [fetchingOg, setFetchingOg] = useState(false);
+
+  const formGeneration = Number(formData.generation) || currentGeneration;
+
+  /** 선택된 기수의 활성 회원 (가나다순) */
+  const generationMembers = members
+    .filter((member) => member.generation === formGeneration && member.isActive)
+    .sort((a, b) => a.memberName.localeCompare(b.memberName, "ko"));
+
+  /** 선택된 기수의 정기모임 회차 (최신 회차 우선) */
+  const generationMeetings = meetings
+    .filter((meeting) => meeting.generation === formGeneration)
+    .sort((a, b) => b.round - a.round);
+
+  // 회원·회차 목록은 다이얼로그를 열 때 한 번만 불러옵니다.
+  useEffect(() => {
+    if (!open) return;
+    if (category !== "growth-log" && category !== "project") return;
+
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const [memberList, meetingList] = await Promise.all([
+          memberAdminRepository.getAll(),
+          meetingAdminRepository.getAll(),
+        ]);
+        if (cancelled) return;
+        setMembers(memberList);
+        setMeetings(meetingList);
+      } catch (error) {
+        console.error("Failed to load members/meetings:", error);
+      }
+    };
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, category]);
+
+  /**
+   * 블로그 URL의 OG 메타데이터를 불러와 제목·요약·썸네일을 채웁니다.
+   *
+   * 썸네일은 외부 URL을 그대로 쓰지 않고 이미지 데이터를 받아
+   * 프로젝트의 Storage 업로드 흐름에 태웁니다.
+   * (next/image 허용 도메인 제한 및 원본 링크 소실에 대비)
+   */
+  const handleFetchOgPreview = async () => {
+    const blogUrl = String(formData.blogUrl || "").trim();
+    if (!blogUrl) {
+      toast.error("블로그 링크를 먼저 입력해주세요.");
+      return;
+    }
+
+    setFetchingOg(true);
+    try {
+      const response = await fetch("/api/og-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: blogUrl }),
+      });
+
+      if (!response.ok) {
+        const { error } = await response.json().catch(() => ({ error: "" }));
+        toast.error(error || "글 정보를 불러오지 못했습니다.");
+        return;
+      }
+
+      const preview: {
+        title: string;
+        description: string;
+        image: string | null;
+      } = await response.json();
+
+      setFormData((prev) => ({
+        ...prev,
+        title: preview.title || prev.title || "",
+        excerpt: preview.description || prev.excerpt || "",
+      }));
+
+      if (preview.image) {
+        const blob = await (await fetch(preview.image)).blob();
+        const extension = blob.type.split("/")[1]?.split("+")[0] || "jpg";
+        const file = new File([blob], `og-thumbnail.${extension}`, {
+          type: blob.type,
+        });
+        setThumbnailFile(file);
+        setThumbnailPreview(preview.image);
+      }
+
+      toast.success("글 정보를 불러왔습니다.");
+    } catch (error) {
+      console.error("Failed to fetch OG preview:", error);
+      toast.error("글 정보를 불러오지 못했습니다.");
+    } finally {
+      setFetchingOg(false);
+    }
+  };
 
   // 폼 초기화
   useEffect(() => {
@@ -424,7 +538,7 @@ function ActivityFormDialog({
 
       if (editingActivity) {
         // 수정 모드: 기존 데이터로 초기화
-        const data: Record<string, string | number | boolean> = {
+        const data: Record<string, FormValue> = {
           thumbnailUrl: editingActivity.thumbnailUrl || "",
           generation: editingActivity.generation,
           isActive: editingActivity.isActive,
@@ -443,6 +557,7 @@ function ActivityFormDialog({
               description: p.description,
               pdfUrl: p.pdfUrl,
               blogUrl: p.blogUrl || "",
+              participantMemberIds: p.participantMemberIds ?? [],
             });
             // 기존 PDF가 있으면 파일명 추출해서 표시
             if (p.pdfUrl) {
@@ -472,6 +587,8 @@ function ActivityFormDialog({
               title: g.title,
               field: g.field,
               authorName: g.authorName,
+              memberId: g.memberId ?? "",
+              meetingId: g.meetingId ?? "",
               excerpt: g.excerpt,
               blogUrl: g.blogUrl,
             });
@@ -546,8 +663,21 @@ function ActivityFormDialog({
     }
   };
 
-  const updateField = (key: string, value: string | number | boolean | Date | undefined) => {
+  const updateField = (key: string, value: FormValue) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  /** 프로젝트 참여자 선택을 토글합니다. */
+  const toggleParticipant = (memberId: string) => {
+    setFormData((prev) => {
+      const current = Array.isArray(prev.participantMemberIds)
+        ? prev.participantMemberIds
+        : [];
+      const next = current.includes(memberId)
+        ? current.filter((id) => id !== memberId)
+        : [...current, memberId];
+      return { ...prev, participantMemberIds: next };
+    });
   };
 
   const handleSave = async () => {
@@ -574,12 +704,39 @@ function ActivityFormDialog({
         isActive: formData.isActive !== false,
       };
 
+      // 프로젝트 참여자: ID와 표시용 이름을 함께 저장합니다.
+      const participantMemberIds = Array.isArray(formData.participantMemberIds)
+        ? formData.participantMemberIds
+        : [];
+      const projectMemberData = {
+        participantMemberIds,
+        participantNames: participantMemberIds
+          .map((id) => members.find((member) => member.id === id)?.memberName)
+          .filter((name): name is string => Boolean(name)),
+      };
+
+      // 성장일지: 선택한 회원·회차 정보를 반영합니다.
+      // Firestore가 undefined를 거부하므로 미선택 값은 빈 문자열/0으로 저장합니다.
+      const selectedMember = members.find(
+        (member) => member.id === String(formData.memberId || "")
+      );
+      const selectedMeeting = meetings.find(
+        (meeting) => meeting.id === String(formData.meetingId || "")
+      );
+      const growthLogMemberData = {
+        memberId: selectedMember?.id ?? "",
+        authorName: selectedMember?.memberName ?? String(formData.authorName || ""),
+        meetingId: selectedMeeting?.id ?? "",
+        round: selectedMeeting?.round ?? 0,
+      };
+
       if (editingActivity) {
         // 수정
         switch (category) {
           case "project":
             await activityAdminRepository.updateProject(editingActivity.id, {
               ...baseData,
+              ...projectMemberData,
               projectName: String(formData.projectName || ""),
               platform: String(formData.platform || ""),
               leaderName: String(formData.leaderName || ""),
@@ -599,9 +756,9 @@ function ActivityFormDialog({
           case "growth-log":
             await activityAdminRepository.updateGrowthLog(editingActivity.id, {
               ...baseData,
+              ...growthLogMemberData,
               title: String(formData.title || ""),
               field: String(formData.field || ""),
-              authorName: String(formData.authorName || ""),
               excerpt: String(formData.excerpt || ""),
               blogUrl: String(formData.blogUrl || ""),
             });
@@ -642,6 +799,7 @@ function ActivityFormDialog({
           case "project":
             await activityAdminRepository.addProject({
               ...baseData,
+              ...projectMemberData,
               projectName: String(formData.projectName || ""),
               platform: String(formData.platform || ""),
               leaderName: String(formData.leaderName || ""),
@@ -661,9 +819,9 @@ function ActivityFormDialog({
           case "growth-log":
             await activityAdminRepository.addGrowthLog({
               ...baseData,
+              ...growthLogMemberData,
               title: String(formData.title || ""),
               field: String(formData.field || ""),
-              authorName: String(formData.authorName || ""),
               excerpt: String(formData.excerpt || ""),
               blogUrl: String(formData.blogUrl || ""),
             });
@@ -817,6 +975,40 @@ function ActivityFormDialog({
                   placeholder="예: 홍길동"
                 />
               </div>
+              {/* 참여자는 각 회원의 업적 페이지에 이 프로젝트를 노출하는 근거가 됩니다. */}
+              <div className="space-y-2">
+                <Label>참여 회원</Label>
+                {generationMembers.length === 0 ? (
+                  <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+                    {formGeneration}기에 등록된 활동 회원이 없습니다.
+                  </p>
+                ) : (
+                  <div className="flex max-h-44 flex-wrap gap-2 overflow-y-auto rounded-md border border-border p-3">
+                    {generationMembers.map((member) => {
+                      const selected =
+                        Array.isArray(formData.participantMemberIds) &&
+                        formData.participantMemberIds.includes(member.id);
+                      return (
+                        <button
+                          key={member.id}
+                          type="button"
+                          onClick={() => toggleParticipant(member.id)}
+                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            selected
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background text-muted-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {member.memberName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  선택한 회원의 업적 페이지 &quot;참여 프로젝트&quot;에 표시됩니다.
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="description">한 줄 소개</Label>
                 <Textarea
@@ -917,6 +1109,77 @@ function ActivityFormDialog({
 
           {category === "growth-log" && (
             <>
+              {/* 블로그 링크를 먼저 입력하면 제목·요약·썸네일을 자동으로 채웁니다. */}
+              <div className="space-y-2">
+                <Label htmlFor="blogUrl">블로그 링크 *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="blogUrl"
+                    value={String(formData.blogUrl || "")}
+                    onChange={(e) => updateField("blogUrl", e.target.value)}
+                    placeholder="블로그 글 URL"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleFetchOgPreview}
+                    disabled={fetchingOg}
+                    className="shrink-0"
+                  >
+                    {fetchingOg ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                    글 정보 불러오기
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  링크를 입력하고 불러오면 제목·요약·썸네일이 자동으로 채워집니다.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="memberId">작성 회원 *</Label>
+                <select
+                  id="memberId"
+                  value={String(formData.memberId || "")}
+                  onChange={(e) => updateField("memberId", e.target.value)}
+                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  <option value="">회원 선택 (미선택 시 기존 작성자명 유지)</option>
+                  {generationMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.memberName}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  {formGeneration}기 활동 회원 목록입니다. 선택한 회원의 업적
+                  페이지에 이 일지가 표시됩니다.
+                  {String(formData.authorName || "") && !formData.memberId && (
+                    <> 현재 작성자명: {String(formData.authorName)}</>
+                  )}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="meetingId">제출 회차</Label>
+                <select
+                  id="meetingId"
+                  value={String(formData.meetingId || "")}
+                  onChange={(e) => updateField("meetingId", e.target.value)}
+                  className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  <option value="">회차 미지정</option>
+                  {generationMeetings.map((meeting) => (
+                    <option key={meeting.id} value={meeting.id}>
+                      {meeting.round}회차 · {meeting.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">블로그 글 제목 *</Label>
                 <Input
@@ -936,15 +1199,6 @@ function ActivityFormDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="authorName">작성자</Label>
-                <Input
-                  id="authorName"
-                  value={String(formData.authorName || "")}
-                  onChange={(e) => updateField("authorName", e.target.value)}
-                  placeholder="예: 홍길동"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="excerpt">미리보기 텍스트</Label>
                 <Textarea
                   id="excerpt"
@@ -957,16 +1211,6 @@ function ActivityFormDialog({
                 <p className="text-xs text-muted-foreground text-right">
                   {String(formData.excerpt || "").length}/200
                 </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="blogUrl">블로그 링크 *</Label>
-                <Input
-                  id="blogUrl"
-                  value={String(formData.blogUrl || "")}
-                  onChange={(e) => updateField("blogUrl", e.target.value)}
-                  placeholder="블로그 글 URL"
-                />
-                <p className="text-xs text-muted-foreground">클릭 시 이 링크로 이동합니다.</p>
               </div>
             </>
           )}

@@ -1,5 +1,7 @@
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
   query,
   where,
@@ -27,8 +29,17 @@ export class MemberRepository {
     );
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
-    const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as Member;
+    const found = snapshot.docs[0];
+    return { id: found.id, ...found.data() } as Member;
+  }
+
+  /**
+   * 문서 ID로 멤버 조회
+   */
+  async findById(id: string): Promise<Member | null> {
+    const snapshot = await getDoc(doc(this.collectionRef, id));
+    if (!snapshot.exists()) return null;
+    return { id: snapshot.id, ...snapshot.data() } as Member;
   }
 }
 
