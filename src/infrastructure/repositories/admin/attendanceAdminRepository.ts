@@ -57,6 +57,20 @@ export class AttendanceAdminRepository {
   }
 
   /**
+   * 전체 출결 기록 조회
+   *
+   * 엑셀 내보내기처럼 모든 회차·회원을 한 번에 다뤄야 할 때 사용합니다.
+   * 회차별로 나눠 조회하면 회차 수만큼 쿼리가 발생합니다.
+   */
+  async getAll(): Promise<Attendance[]> {
+    const snapshot = await getDocs(this.collectionRef);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Attendance[];
+  }
+
+  /**
    * 특정 회원의 전체 출결 기록 조회
    */
   async getByMemberId(memberId: string): Promise<Attendance[]> {

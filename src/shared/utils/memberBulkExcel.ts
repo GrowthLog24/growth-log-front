@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import type { AttendanceStatus } from "@/domain/entities";
 
 /**
  * 멤버 일괄 등록/내보내기 엑셀 변환 유틸
@@ -18,6 +19,9 @@ export const MEMBER_SHEET_NAME = "멤버 목록";
 
 /** 성장일지 시트 이름 */
 export const GROWTH_LOG_SHEET_NAME = "성장일지";
+
+/** 출결 시트 이름 */
+export const ATTENDANCE_SHEET_NAME = "출결";
 
 /** 작성 안내 시트 이름 */
 const GUIDE_SHEET_NAME = "작성 안내";
@@ -49,6 +53,9 @@ const GROWTH_LOG_COLUMNS = [
   "홈 노출",
 ] as const;
 
+/** 출결 시트의 고정 컬럼 (뒤에 회차 컬럼이 동적으로 붙습니다) */
+const ATTENDANCE_FIXED_COLUMNS = ["멤버 이름", "가입 기수"] as const;
+
 /** 멤버 시트 한 행 */
 export interface MemberSheetRow {
   memberName: string;
@@ -73,18 +80,96 @@ export interface GrowthLogSheetRow {
   showOnHome: boolean;
 }
 
+/**
+ * 출결 시트의 회차 컬럼
+ *
+ * 회차 번호는 기수마다 따로 매겨지므로 기수와 함께 다뤄야 합니다.
+ */
+export interface MeetingColumn {
+  /** 회차가 속한 기수 */
+  generation: number;
+  /** 회차 번호 */
+  round: number;
+}
+
+/** 출결 셀 하나 */
+export interface AttendanceCell {
+  /** 회차가 속한 기수 */
+  meetingGeneration: number;
+  round: number;
+  status: AttendanceStatus;
+}
+
+/** 출결 시트 한 행 (한 멤버) */
+export interface AttendanceSheetRow {
+  memberName: string;
+  generation: number;
+  /** 값이 입력된 셀만 담습니다. 빈 칸은 "변경 없음"이라 여기에 없습니다. */
+  cells: AttendanceCell[];
+}
+
+/** 워크북에 담을 데이터 */
+export interface MemberWorkbookData {
+  members: readonly MemberSheetRow[];
+  growthLogs: readonly GrowthLogSheetRow[];
+  attendance: readonly AttendanceSheetRow[];
+  /** 출결 시트에 만들 회차 컬럼 (등록된 정기모임에서 만듭니다) */
+  meetingColumns: readonly MeetingColumn[];
+}
+
 /** 업로드한 워크북 파싱 결과 */
 export interface ParsedMemberWorkbook {
   members: MemberSheetRow[];
   growthLogs: GrowthLogSheetRow[];
+  attendance: AttendanceSheetRow[];
   /** 필수값이 비어 건너뛴 멤버 행 수 */
   skippedMemberRows: number;
   /** 필수값이 비어 건너뛴 성장일지 행 수 */
   skippedGrowthLogRows: number;
+  /** 출결 상태로 해석할 수 없어 건너뛴 셀 수 */
+  invalidAttendanceCells: number;
 }
 
 /** O/X 표기를 불리언으로 해석할 때 거짓으로 볼 값들 */
 const FALSY_FLAGS = ["X", "N", "NO", "FALSE", "0", "미노출", "비활성"];
+
+/**
+ * 출결 상태로 인정하는 표기들
+ *
+ * 운영진이 손으로 채우는 칸이라 약자와 기호도 함께 받습니다.
+ * 키는 공백을 제거하고 대문자로 바꾼 형태입니다.
+ */
+const ATTENDANCE_ALIASES: Record<string, AttendanceStatus> = {
+  출석: "present",
+  참석: "present",
+  출: "present",
+  O: "present",
+  "○": "present",
+  "◯": "present",
+  ㅇ: "present",
+  지각: "late",
+  지: "late",
+  "△": "late",
+  "▲": "late",
+  사유결석: "excused",
+  사유: "excused",
+  공결: "excused",
+  "◇": "excused",
+  결석: "absent",
+  불참: "absent",
+  결: "absent",
+  X: "absent",
+  "✕": "absent",
+  "✗": "absent",
+};
+
+/** 출결 상태를 엑셀에 쓸 라벨로 변환합니다. */
+const ATTENDANCE_LABELS: Record<AttendanceStatus, string> = {
+  present: "출석",
+  late: "지각",
+  excused: "사유 결석",
+  absent: "결석",
+};
 
 /**
  * O/X 형태의 셀 값을 불리언으로 변환합니다.
@@ -112,6 +197,47 @@ function toText(value: unknown): string {
 function toNumber(value: unknown): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/**
+ * 출결 셀 값을 상태로 변환합니다.
+ *
+ * @param value - 셀 원본 값
+ * @returns 빈 칸이면 null(변경 없음), 해석할 수 없으면 undefined
+ */
+function parseAttendanceStatus(
+  value: unknown
+): AttendanceStatus | null | undefined {
+  const normalized = String(value ?? "").replace(/\s+/g, "").toUpperCase();
+  if (normalized === "") return null;
+  return ATTENDANCE_ALIASES[normalized];
+}
+
+/** 회차 컬럼의 헤더 문자열을 만듭니다. */
+function formatMeetingColumn(column: MeetingColumn): string {
+  return `${column.generation}기 ${column.round}회차`;
+}
+
+/**
+ * 회차 컬럼 헤더를 기수·회차로 되돌립니다.
+ *
+ * @param header - 시트 헤더 문자열
+ * @returns 회차 컬럼이 아니면 null
+ */
+function parseMeetingColumn(header: string): MeetingColumn | null {
+  const matched = header.trim().match(/^(\d+)\s*기\s*(\d+)\s*회차$/);
+  if (!matched) return null;
+  return {
+    generation: Number(matched[1]),
+    round: Number(matched[2]),
+  };
+}
+
+/** 회차 컬럼을 기수·회차 오름차순으로 정렬합니다. */
+function sortMeetingColumns(columns: readonly MeetingColumn[]): MeetingColumn[] {
+  return [...columns].sort(
+    (a, b) => a.generation - b.generation || a.round - b.round
+  );
 }
 
 /**
@@ -163,6 +289,43 @@ function createGrowthLogSheet(rows: readonly GrowthLogSheetRow[]): XLSX.WorkShee
     ]),
     [14, 10, 44, 32, 14, 50, 14, 44, 10]
   );
+}
+
+/**
+ * 출결 시트를 만듭니다.
+ *
+ * 멤버가 속하지 않은 기수의 회차 칸은 해당 사항이 없으므로 비워둡니다.
+ */
+function createAttendanceSheet(
+  rows: readonly AttendanceSheetRow[],
+  meetingColumns: readonly MeetingColumn[]
+): XLSX.WorkSheet {
+  const columns = sortMeetingColumns(meetingColumns);
+  const header = [
+    ...ATTENDANCE_FIXED_COLUMNS,
+    ...columns.map(formatMeetingColumn),
+  ];
+
+  const body = rows.map((row) => {
+    const statusByKey = new Map(
+      row.cells.map((cell) => [
+        `${cell.meetingGeneration}-${cell.round}`,
+        cell.status,
+      ])
+    );
+
+    return [
+      row.memberName,
+      row.generation,
+      ...columns.map((column) => {
+        if (column.generation !== row.generation) return "";
+        const status = statusByKey.get(`${column.generation}-${column.round}`);
+        return status ? ATTENDANCE_LABELS[status] : "";
+      }),
+    ];
+  });
+
+  return createSheet(header, body, [14, 10, ...columns.map(() => 12)]);
 }
 
 /** 작성 안내 시트를 만듭니다. */
@@ -223,26 +386,47 @@ function createGuideSheet(): XLSX.WorkSheet {
       "선택",
       "O면 홈 활동 기록에도 표시됩니다. 비우면 X(개인 업적 페이지에만 표시)입니다.",
     ],
+    [
+      ATTENDANCE_SHEET_NAME,
+      "멤버 이름 / 가입 기수",
+      "필수",
+      "멤버 목록 시트의 값과 정확히 같아야 연결됩니다.",
+    ],
+    [
+      ATTENDANCE_SHEET_NAME,
+      "N기 M회차",
+      "선택",
+      "출석 / 지각 / 사유 결석 / 결석 중 하나를 입력하세요. 참석·O(출석), △(지각), X·불참(결석) 같은 표기도 인식합니다.",
+    ],
     [],
     ["※ 이름과 기수가 같은 멤버가 이미 있으면 새로 만들지 않고 기존 정보를 덮어씁니다."],
     ["※ 회원 구분(신입회원/정회원)은 현재 기수를 기준으로 자동 계산되므로 입력하지 않습니다."],
-    ["※ 출결과 참여 프로젝트는 이 양식으로 등록할 수 없습니다. 회원 상세 관리에서 입력해주세요."],
+    ["※ 출결의 빈 칸은 '변경 없음'입니다. 기록을 지우려면 '결석'이라고 명시해주세요."],
+    ["※ 출결의 회차 컬럼은 등록된 정기모임에서 자동으로 만들어집니다. 컬럼 이름을 바꾸지 마세요."],
+    ["※ 자기 기수가 아닌 회차 칸에 입력한 값은 반영되지 않습니다."],
+    ["※ 참여 프로젝트는 이 양식으로 등록할 수 없습니다. 회원 상세 관리에서 입력해주세요."],
   ];
 
   return createSheet(rows[0], rows.slice(1), [14, 22, 8, 70]);
 }
 
-/** 멤버 시트와 성장일지 시트, 안내 시트를 담은 워크북을 만듭니다. */
-function createWorkbook(
-  members: readonly MemberSheetRow[],
-  growthLogs: readonly GrowthLogSheetRow[]
-): XLSX.WorkBook {
+/** 시트 4개를 담은 워크북을 만듭니다. */
+function createWorkbook(data: MemberWorkbookData): XLSX.WorkBook {
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, createMemberSheet(members), MEMBER_SHEET_NAME);
   XLSX.utils.book_append_sheet(
     workbook,
-    createGrowthLogSheet(growthLogs),
+    createMemberSheet(data.members),
+    MEMBER_SHEET_NAME
+  );
+  XLSX.utils.book_append_sheet(
+    workbook,
+    createGrowthLogSheet(data.growthLogs),
     GROWTH_LOG_SHEET_NAME
+  );
+  XLSX.utils.book_append_sheet(
+    workbook,
+    createAttendanceSheet(data.attendance, data.meetingColumns),
+    ATTENDANCE_SHEET_NAME
   );
   XLSX.utils.book_append_sheet(workbook, createGuideSheet(), GUIDE_SHEET_NAME);
   return workbook;
@@ -250,8 +434,13 @@ function createWorkbook(
 
 /**
  * 예시가 채워진 빈 양식을 내려받습니다.
+ *
+ * @param meetingColumns - 출결 시트에 만들 회차 컬럼.
+ *   등록된 정기모임이 없으면 형식을 보여주기 위한 예시 회차를 넣습니다.
  */
-export function downloadMemberTemplate(): void {
+export function downloadMemberTemplate(
+  meetingColumns: readonly MeetingColumn[]
+): void {
   const sampleMembers: MemberSheetRow[] = [
     {
       memberName: "홍길동",
@@ -293,24 +482,51 @@ export function downloadMemberTemplate(): void {
     },
   ];
 
-  XLSX.writeFile(createWorkbook(sampleMembers, sampleLogs), "멤버_일괄등록_양식.xlsx");
+  const columns: readonly MeetingColumn[] =
+    meetingColumns.length > 0
+      ? meetingColumns
+      : [
+          { generation: 5, round: 1 },
+          { generation: 5, round: 2 },
+        ];
+
+  const sampleAttendance: AttendanceSheetRow[] = sampleMembers.map((member) => ({
+    memberName: member.memberName,
+    generation: member.generation,
+    cells: columns
+      .filter((column) => column.generation === member.generation)
+      .map((column, index) => ({
+        meetingGeneration: column.generation,
+        round: column.round,
+        // 입력값 예시를 보여주기 위해 상태를 번갈아 넣습니다.
+        status: index % 2 === 0 ? "present" : "late",
+      })),
+  }));
+
+  XLSX.writeFile(
+    createWorkbook({
+      members: sampleMembers,
+      growthLogs: sampleLogs,
+      attendance: sampleAttendance,
+      meetingColumns: columns,
+    }),
+    "멤버_일괄등록_양식.xlsx"
+  );
 }
 
 /**
- * 현재 등록된 멤버와 성장일지를 채운 엑셀을 내려받습니다.
+ * 현재 등록된 멤버·성장일지·출결을 채운 엑셀을 내려받습니다.
  *
  * 내려받아 수정한 뒤 그대로 다시 업로드하면 기존 정보가 갱신됩니다.
  *
- * @param members - 내보낼 멤버 행
- * @param growthLogs - 내보낼 성장일지 행
+ * @param data - 내보낼 데이터
  * @param fileName - 저장할 파일명 (확장자 포함)
  */
 export function downloadMemberExport(
-  members: readonly MemberSheetRow[],
-  growthLogs: readonly GrowthLogSheetRow[],
+  data: MemberWorkbookData,
   fileName: string
 ): void {
-  XLSX.writeFile(createWorkbook(members, growthLogs), fileName);
+  XLSX.writeFile(createWorkbook(data), fileName);
 }
 
 /**
@@ -341,7 +557,7 @@ function readRows(sheet: XLSX.WorkSheet | null): Record<string, unknown>[] {
  * 업로드한 엑셀 파일을 파싱합니다.
  *
  * @param data - 파일 바이트
- * @returns 멤버·성장일지 행과 건너뛴 행 수
+ * @returns 시트별 행과 건너뛴 항목 수
  */
 export function parseMemberWorkbook(data: Uint8Array): ParsedMemberWorkbook {
   const workbook = XLSX.read(data, { type: "array" });
@@ -397,5 +613,45 @@ export function parseMemberWorkbook(data: Uint8Array): ParsedMemberWorkbook {
     });
   }
 
-  return { members, growthLogs, skippedMemberRows, skippedGrowthLogRows };
+  const attendance: AttendanceSheetRow[] = [];
+  let invalidAttendanceCells = 0;
+
+  for (const row of readRows(findSheet(workbook, ATTENDANCE_SHEET_NAME, null))) {
+    const memberName = toText(row["멤버 이름"]);
+    const generation = toNumber(row["가입 기수"]);
+    if (!memberName || generation < 1) continue;
+
+    const cells: AttendanceCell[] = [];
+
+    for (const [header, value] of Object.entries(row)) {
+      const column = parseMeetingColumn(header);
+      if (!column) continue;
+
+      const status = parseAttendanceStatus(value);
+      // null은 빈 칸(변경 없음)이므로 오류가 아닙니다.
+      if (status === null) continue;
+      if (status === undefined) {
+        invalidAttendanceCells++;
+        continue;
+      }
+
+      cells.push({
+        meetingGeneration: column.generation,
+        round: column.round,
+        status,
+      });
+    }
+
+    if (cells.length === 0) continue;
+    attendance.push({ memberName, generation, cells });
+  }
+
+  return {
+    members,
+    growthLogs,
+    attendance,
+    skippedMemberRows,
+    skippedGrowthLogRows,
+    invalidAttendanceCells,
+  };
 }
