@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Bot,
-  GraduationCap,
-  Wrench,
-  NotebookPen,
-  ArrowRight,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getStorageUrl, STORAGE_PATHS } from "@/shared/utils";
 import { monthlyScheduleRepository } from "@/infrastructure/repositories/monthlyScheduleRepository";
 import { statsRepository } from "@/infrastructure/repositories/siteConfigRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
-import { InteractiveValues, StatsSection } from "@/presentation/components/about";
+import {
+  AboutMotionHero,
+  AboutViewportMotion,
+  GrowthTracksRail,
+  InteractiveValues,
+  StatsSection,
+} from "@/presentation/components/about";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -34,14 +34,6 @@ const SHIFT = {
     description: "전공·직군 무관, AI를 동료로 삼는 성장 커뮤니티",
   },
 } as const;
-
-/** Growth Log에서 성장하는 네 갈래 */
-const GROWTH_TRACKS = [
-  { icon: Bot, title: "Dev×AI", description: "AI 개발 특강 · 커리어 세미나", href: "/dev-ai" },
-  { icon: GraduationCap, title: "KNOU CS", description: "전공 스터디 · 기출 CBT", href: "/knou-cs" },
-  { icon: Wrench, title: "Project", description: "월간 · 수익화 프로젝트", href: "/projects" },
-  { icon: NotebookPen, title: "Club", description: "성장일지 · 오프라인 네트워킹", href: "/activity" },
-] as const;
 
 /**
  * 월별 일정 라벨
@@ -80,91 +72,75 @@ export default async function AboutUsPage() {
   ];
 
   return (
-    <>
+    <div data-about-motion-page>
       {/* Hero Section */}
-      <section className="section-padding bg-white">
-        <div className="container-custom">
-          <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
-            ABOUT US
-          </span>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
-            AI와 함께 성장하는
-            <br />
-            개발 커뮤니티, Growth Log
-          </h1>
-          <p className="mt-5 text-muted-foreground max-w-2xl">
-            우리는 더 이상 &lsquo;방통대 교내 개발자 모임&rsquo;에 머무르지 않습니다. AI 시대에 맞게,
-            배움의 방식을 다시 씁니다.
-          </p>
-        </div>
-      </section>
+      <AboutMotionHero />
 
+      <div className="about-sam-zone">
       {/* Our Shift - AS-IS → TO-BE */}
-      <section className="relative min-h-[720px] overflow-hidden bg-gray-black text-white md:min-h-[820px]">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          className="absolute inset-0 h-full w-full object-cover"
-          aria-hidden="true"
-        >
-          <source src="/videos/our-shift-loop.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gray-black/45" />
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-black/85 via-gray-black/35 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-black/80 via-transparent to-gray-black/20" />
-
-        <div className="container-custom relative z-10 flex min-h-[720px] flex-col justify-between py-14 md:min-h-[820px] md:py-20 lg:py-24">
-          <div>
-            <span className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] text-green-8">
-              <span className="h-2 w-2 rounded-full bg-green-6" />
+      <section className="relative overflow-hidden bg-[#f3f4f1] text-foreground">
+        <div className="container-custom">
+          <div className="about-six-grid">
+            <span className="text-xs font-bold tracking-[0.2em] text-primary md:col-start-1">
               OUR SHIFT
             </span>
-            <h2 className="mt-7 max-w-5xl text-4xl font-bold leading-[1.08] tracking-tight md:text-6xl lg:text-7xl">
-              교내 커뮤니티에서
-              <br />
-              AI-Native 커뮤니티로
-            </h2>
-            <p className="mt-8 max-w-2xl text-sm leading-7 text-white/75 md:text-lg md:leading-8">
-              Growth Log는 KNOU 컴퓨터과학과에서 시작했습니다. 그 뿌리는 그대로 KNOU CS
-              트랙으로 이어가되, 이제는 전공과 소속을 넘어{" "}
-              <strong className="font-semibold text-white">
-                &lsquo;AI와 함께 성장하려는 모든 개발자&rsquo;
-              </strong>
-              에게 문을 엽니다.
-            </p>
-          </div>
 
-          <div className="grid gap-6 border-t border-white/25 pt-6 sm:grid-cols-[1fr_auto_1fr] sm:items-center md:gap-10">
-            <div>
-              <span className="text-[10px] font-bold tracking-[0.18em] text-white/50">
+            <h2 className="sam-statement-title mt-7 md:col-span-3 md:col-start-1 md:row-start-2">
+              <span className="block text-gray-3">교내 커뮤니티에서</span>
+              <span className="block text-foreground">
+                AI-Native 커뮤니티로
+              </span>
+            </h2>
+
+            <p className="shift-description mt-8 max-w-2xl text-muted-foreground md:col-span-3 md:col-start-4 md:row-start-2 md:mt-7">
+              <span className="block">
+                Growth Log는 KNOU 컴퓨터과학과에서 시작했습니다.
+              </span>
+              <span className="block">
+                그 뿌리는 그대로 KNOU CS 트랙으로 이어가되,
+              </span>
+              <span className="block">
+                이제는 전공과 소속을 넘어{" "}
+                <strong className="font-semibold text-foreground">
+                  &lsquo;AI와 함께 성장하려는 모든 개발자&rsquo;
+                </strong>
+                에게 문을 엽니다.
+              </span>
+            </p>
+
+            <div className="mt-10 md:col-span-3 md:col-start-1 md:row-start-3 md:mt-14 md:pr-8">
+              <span className="font-montserrat text-[10px] font-medium tracking-[0.12em] text-gray-2">
                 AS-IS
               </span>
-              <h3 className="mt-2 text-base font-bold md:text-lg">{SHIFT.asIs.title}</h3>
-              <p className="mt-1 text-sm text-white/60">{SHIFT.asIs.description}</p>
+              <h3 className="mt-4 max-w-md text-xl font-medium leading-[1.35] tracking-[-0.04em] text-gray-1 md:text-2xl">
+                {SHIFT.asIs.title}
+              </h3>
+              <p className="mt-2 max-w-md text-sm font-light leading-[1.6] tracking-[-0.035em] text-gray-2 md:text-base">
+                {SHIFT.asIs.description}
+              </p>
             </div>
-            <ArrowRight className="hidden h-5 w-5 text-green-6 sm:block" aria-hidden="true" />
-            <div>
-              <span className="text-[10px] font-bold tracking-[0.18em] text-green-7">
+            <div className="mt-8 md:col-span-3 md:col-start-4 md:row-start-3 md:mt-14 md:pl-4">
+              <span className="font-montserrat text-[10px] font-medium tracking-[0.12em] text-primary">
                 TO-BE
               </span>
-              <h3 className="mt-2 text-base font-bold md:text-lg">{SHIFT.toBe.title}</h3>
-              <p className="mt-1 text-sm text-white/60">{SHIFT.toBe.description}</p>
+              <h3 className="mt-4 max-w-lg text-xl font-medium leading-[1.35] tracking-[-0.04em] md:text-2xl">
+                {SHIFT.toBe.title}
+              </h3>
+              <p className="mt-2 max-w-lg text-sm font-light leading-[1.6] tracking-[-0.035em] text-muted-foreground md:text-base">
+                {SHIFT.toBe.description}
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Values */}
-      <section className="section-padding bg-white">
+      <section className="values-section bg-white">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
-              VALUES
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">우리가 믿는 세 가지</h2>
+          <div className="grid md:grid-cols-6 md:gap-6 lg:gap-8">
+            <h2 className="sam-statement-title max-w-4xl text-foreground md:col-span-3 md:col-start-1">
+              우리가 믿는 세 가지
+            </h2>
           </div>
 
           <InteractiveValues />
@@ -172,112 +148,22 @@ export default async function AboutUsPage() {
       </section>
 
       {/* How we grow */}
-      <section className="bg-gray-6 px-4 py-16 md:px-6 md:py-24 lg:px-8">
+      <section className="overflow-hidden bg-gray-black text-white">
         <div className="container-custom">
-          <div className="mb-8 max-w-3xl md:mb-14">
-            <span className="text-xs font-bold tracking-[0.18em] text-primary">
+          <div className="about-six-grid mb-9 md:mb-11">
+            <div className="md:col-span-4 md:col-start-1">
+            <span className="font-montserrat text-[11px] font-medium tracking-[0.08em] text-green-7">
               HOW WE GROW
             </span>
-            <h2 className="mt-5 text-3xl font-bold tracking-tight text-foreground md:text-5xl">
+            <h2 className="mt-6 text-[2.5rem] font-medium leading-[1.3] tracking-[-0.045em] text-white md:text-[3.5rem]">
               Growth Log에서 이렇게 성장합니다
             </h2>
+            </div>
           </div>
 
-          <div>
-            {GROWTH_TRACKS.map((track, index) => (
-              <article
-                key={track.title}
-                className="grid items-center gap-10 border-t border-gray-4 py-16 first:border-t-0 md:grid-cols-2 md:gap-16 md:py-24 lg:gap-24"
-              >
-                <div
-                  className={[
-                    "group relative min-h-[360px] md:min-h-[500px]",
-                    index % 2 === 0 ? "md:order-1" : "md:order-2",
-                  ].join(" ")}
-                >
-                  <div
-                    className={[
-                      "absolute inset-x-0 top-0 h-[88%] overflow-hidden rounded-[2rem]",
-                      index === 0
-                        ? "bg-gray-black"
-                        : index === 1
-                          ? "bg-green-9"
-                          : index === 2
-                            ? "bg-primary"
-                            : "bg-white",
-                    ].join(" ")}
-                  >
-                    <span
-                      className={[
-                        "absolute -right-3 -top-10 text-[10rem] font-black leading-none tracking-tighter md:text-[14rem]",
-                        index === 0
-                          ? "text-white/5"
-                          : index === 2
-                            ? "text-white/10"
-                            : "text-gray-black/5",
-                      ].join(" ")}
-                      aria-hidden="true"
-                    >
-                      0{index + 1}
-                    </span>
-                    <div
-                      className={[
-                        "absolute inset-0 opacity-40",
-                        index === 0 || index === 2
-                          ? "bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.25),transparent_35%)]"
-                          : "bg-[radial-gradient(circle_at_70%_30%,rgba(0,150,43,0.22),transparent_35%)]",
-                      ].join(" ")}
-                    />
-                    <span
-                      className={[
-                        "absolute left-7 top-7 text-xs font-semibold tracking-[0.16em]",
-                        index === 0 || index === 2 ? "text-white/65" : "text-foreground/55",
-                      ].join(" ")}
-                    >
-                      GROWTH TRACK / 0{index + 1}
-                    </span>
-                  </div>
+          <GrowthTracksRail />
 
-                  <div
-                    className={[
-                      "absolute bottom-0 flex h-48 w-48 items-center justify-center rounded-full border-[14px] shadow-[0_24px_70px_rgba(34,34,34,0.18)] transition-transform duration-500 group-hover:-translate-y-3 group-hover:rotate-3 motion-reduce:transition-none md:h-64 md:w-64",
-                      index % 2 === 0 ? "right-5 md:right-8" : "left-5 md:left-8",
-                      index === 0
-                        ? "border-green-7 bg-primary text-white"
-                        : index === 1
-                          ? "border-white bg-gray-black text-white"
-                          : index === 2
-                            ? "border-green-9 bg-white text-primary"
-                            : "border-green-8 bg-green-2 text-white",
-                    ].join(" ")}
-                  >
-                    <track.icon className="h-16 w-16 md:h-24 md:w-24" strokeWidth={1.25} />
-                  </div>
-                </div>
-
-                <div className={index % 2 === 0 ? "md:order-2" : "md:order-1"}>
-                  <span className="text-xs font-bold tracking-[0.18em] text-primary">
-                    0{index + 1}
-                  </span>
-                  <h3 className="mt-5 text-4xl font-bold tracking-tight text-foreground md:text-6xl">
-                    {track.title}
-                  </h3>
-                  <p className="mt-6 max-w-md text-base leading-8 text-muted-foreground">
-                    {track.description}
-                  </p>
-                  <Link
-                    href={track.href}
-                    className="group/link mt-10 inline-flex items-center gap-3 border-b border-foreground pb-2 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
-                  >
-                    트랙 살펴보기
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover/link:translate-x-1" />
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-10 text-center">
+          <div className="mt-8 md:mt-10">
             <Button asChild size="lg" className="text-base">
               <Link href="/recruit">
                 {currentGeneration + 1}기 멤버로 함께하기
@@ -291,57 +177,61 @@ export default async function AboutUsPage() {
       {/* Schedule Section */}
       <section className="section-padding bg-gray-6">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
-              {currentGeneration}TH GENERATION ROADMAP
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              {currentGeneration}기 월별 일정 소개
-            </h2>
+          <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 md:mb-10 xl:grid-cols-4">
+            <div className="md:col-span-1 xl:col-span-2">
+              <span className="font-montserrat text-xs font-medium text-primary">
+                {currentGeneration}TH GENERATION ROADMAP
+              </span>
+              <h2 className="mt-4 text-foreground">
+                {currentGeneration}기 월별 일정 소개
+              </h2>
+            </div>
           </div>
 
           {/* Schedule Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             {schedules.map((schedule) => {
               // 월을 개별 배지로 분리 (예: "2월, 8월" → ["2월", "8월"])
               const monthBadges = schedule.months.split(",").map((m) => m.trim());
 
               return (
-                <div
+                <article
                   key={schedule.phase}
-                  className="bg-white rounded-xl p-5"
+                  className="group flex min-h-60 flex-col rounded-[24px] bg-background px-6 py-7 transition-[transform,background-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:bg-white md:px-7 md:py-8"
                 >
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <div className="mb-8 flex flex-wrap items-center gap-x-2 text-primary">
                     {monthBadges.map((month, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded"
+                        className="font-montserrat text-xs font-medium tracking-[-0.01em]"
                       >
                         {month}
                       </span>
                     ))}
                   </div>
-                <h3 className="font-semibold text-foreground mb-2">
-                  {PHASE_LABELS[schedule.phase]}
-                </h3>
-                {schedule.activities.length > 0 ? (
-                  <ul className="space-y-0.5">
-                    {schedule.activities.map((activity, index) => (
-                      <li
-                        key={index}
-                        className="text-sm text-muted-foreground flex items-start gap-2"
-                      >
-                        <span className="text-primary mt-1">•</span>
-                        <span>{activity}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground/50 italic">
-                    활동 내용이 없습니다.
-                  </p>
-                )}
-              </div>
+                  <div className="mt-auto">
+                    <h3 className="mb-3 font-semibold text-foreground">
+                      {PHASE_LABELS[schedule.phase]}
+                    </h3>
+                    {schedule.activities.length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {schedule.activities.map((activity, index) => (
+                          <li
+                            key={index}
+                            className="text-sm leading-relaxed text-muted-foreground transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1"
+                            style={{ transitionDelay: `${index * 35}ms` }}
+                          >
+                            {activity}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground/50">
+                        활동 내용이 없습니다.
+                      </p>
+                    )}
+                  </div>
+                </article>
               );
             })}
           </div>
@@ -352,9 +242,10 @@ export default async function AboutUsPage() {
       <StatsSection stats={statsItems} />
 
       {/* Team Photo Section */}
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-[#f5f8f4]">
         <div className="container-custom">
-          <div className="relative aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden bg-gray-4">
+          <div className="about-six-grid">
+          <div className="relative aspect-[16/9] overflow-hidden md:col-span-5 md:col-start-2 md:aspect-[21/9]">
             <Image
               src={getStorageUrl(STORAGE_PATHS.TEAM_PHOTO)}
               alt="그로스로그 단체사진"
@@ -368,8 +259,11 @@ export default async function AboutUsPage() {
               <h3 className="text-2xl font-bold">함께 성장하는 우리</h3>
             </div>
           </div>
+          </div>
         </div>
       </section>
-    </>
+      </div>
+      <AboutViewportMotion />
+    </div>
   );
 }

@@ -225,6 +225,139 @@
 
 .text-brand-green { color: var(--color-green-1); }
 
+.font-montserrat {
+  font-family: "Montserrat Variable", Montserrat, sans-serif;
+}
+
+.growth-track-rail {
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.growth-track-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.about-six-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .about-six-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+/* About page typography rhythm — calibrated to SAM SEOUL */
+.about-sam-zone > section {
+  padding-top: 56px !important;
+  padding-bottom: 56px !important;
+}
+
+.about-sam-zone .container-custom {
+  max-width: 1800px;
+  padding-left: 120px;
+  padding-right: 120px;
+}
+
+.about-sam-zone h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.about-sam-zone .sam-statement-title {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0 !important;
+}
+
+.about-sam-zone .shift-description {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.7;
+  letter-spacing: -0.02em;
+}
+
+.about-sam-zone > .values-section {
+  padding-top: 52px !important;
+  padding-bottom: 52px !important;
+}
+
+.about-sam-zone > .values-section .container-custom {
+  padding-left: clamp(24px, 7vw, 96px);
+  padding-right: clamp(24px, 7vw, 96px);
+}
+
+.about-sam-zone h3 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.about-sam-zone p,
+.about-sam-zone li,
+.about-sam-zone dd {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+@media (min-width: 810px) and (max-width: 1199px) {
+  .about-sam-zone > section {
+    padding-top: 52px !important;
+    padding-bottom: 52px !important;
+  }
+
+  .about-sam-zone .container-custom {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .about-sam-zone .shift-description {
+    font-size: 18px;
+  }
+
+  .about-sam-zone > .values-section {
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
+  }
+}
+
+@media (max-width: 809px) {
+  .about-sam-zone > section {
+    padding-top: 44px !important;
+    padding-bottom: 44px !important;
+  }
+
+  .about-sam-zone .container-custom {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .about-sam-zone h3 {
+    font-size: 18px;
+  }
+
+  .about-sam-zone .shift-description {
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .about-sam-zone > .values-section {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+}
+
 /* Gradient utilities */
 .bg-gradient-brand {
   background: linear-gradient(135deg, var(--color-green-1) 0%, var(--color-green-4) 100%);
@@ -238,6 +371,83 @@
 /* Container */
 .container-custom {
   @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* About hero — kinetic type */
+.about-hero-line {
+  overflow: hidden;
+  animation: about-line-enter 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.about-hero-line:nth-child(2) { animation-delay: 90ms; }
+.about-hero-line:nth-child(3) { animation-delay: 180ms; }
+
+.about-hero-reveal {
+  animation: about-fade-enter 0.8s 380ms ease-out both;
+}
+
+.about-hero-reveal-delay {
+  animation-delay: 560ms;
+}
+
+@keyframes about-line-enter {
+  from { opacity: 0; transform: translateY(0.85em); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes about-fade-enter {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-hero-line,
+  .about-hero-reveal {
+    animation: none;
+  }
+}
+
+/* About page viewport reveals */
+.viewport-motion-ready [data-reveal] {
+  opacity: 0;
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 920ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
+    filter 760ms ease-in-out var(--reveal-delay, 0ms);
+  will-change: opacity, transform, filter;
+}
+
+.viewport-motion-ready [data-reveal="up"] {
+  transform: translate3d(0, 46px, 0);
+  filter: blur(4px);
+}
+
+.viewport-motion-ready [data-reveal="left"] {
+  transform: translate3d(-58px, 0, 0);
+}
+
+.viewport-motion-ready [data-reveal="right"] {
+  transform: translate3d(58px, 0, 0);
+}
+
+.viewport-motion-ready [data-reveal="scale"] {
+  transform: scale(0.94);
+  filter: blur(3px);
+}
+
+.viewport-motion-ready [data-reveal].is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport-motion-ready [data-reveal] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
 }
 
 /* Marquee Animations */

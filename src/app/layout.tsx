@@ -3,6 +3,7 @@ import { Geist_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@/presentation/components/common/GoogleAnalytics";
 import { SITE_METADATA } from "@/shared/constants";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+import "@fontsource-variable/montserrat";
 import "./globals.css";
 
 const geistMono = Geist_Mono({

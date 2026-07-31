@@ -2,41 +2,34 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Handshake, TrendingUp, Zap } from "lucide-react";
 
 const VALUES = [
   {
-    number: "01",
-    icon: Handshake,
     title: "Together",
     tagline: "서로의 가능성을 연결합니다.",
     description:
       "혼자 빠르게 가는 것보다 함께 멀리 가는 방식을 믿습니다. 서로의 과정을 기록하고, 질문하고, 다음 도전을 응원합니다.",
-    objectSrc: "/images/about/values/together.png",
-    objectAlt: "서로 맞물려 하나를 이루는 세 개의 3D 오브젝트",
-    parallaxStrength: 56,
+    objectSrc: "/images/about/values/together-v2.png",
+    objectAlt: "서로 다른 세 모듈이 하나의 중심에서 연결되는 3D 오브젝트",
+    parallaxStrength: 82,
   },
   {
-    number: "02",
-    icon: Zap,
     title: "AI-Native",
     tagline: "AI를 가장 자연스러운 동료로.",
     description:
       "AI를 단순한 자동화 도구가 아닌 사고를 확장하는 페어로 활용합니다. 더 빠르게 실험하고 더 깊게 배우는 방식을 익힙니다.",
-    objectSrc: "/images/about/values/ai-native.png",
-    objectAlt: "중심에서 여러 방향으로 확장되는 AI 3D 오브젝트",
-    parallaxStrength: -72,
+    objectSrc: "/images/about/values/ai-native-v2.png",
+    objectAlt: "유기적 사고와 정밀한 AI 연산이 녹색 코어로 연결되는 3D 오브젝트",
+    parallaxStrength: -104,
   },
   {
-    number: "03",
-    icon: TrendingUp,
     title: "Real Growth",
     tagline: "배움을 실제 결과로 바꿉니다.",
     description:
       "인증을 위한 활동에 머물지 않습니다. 기록은 포트폴리오로, 프로젝트는 사용자와 매출로, 경험은 다음 커리어로 이어집니다.",
-    objectSrc: "/images/about/values/real-growth.png",
-    objectAlt: "위로 이어지는 성장 경로와 녹색 구체 3D 오브젝트",
-    parallaxStrength: 84,
+    objectSrc: "/images/about/values/real-growth-v2.png",
+    objectAlt: "배움이 기록과 결과물, 커리어로 발전하는 성장 단계를 표현한 3D 오브젝트",
+    parallaxStrength: 118,
   },
 ] as const;
 
@@ -114,14 +107,7 @@ export function InteractiveValues() {
   }, []);
 
   return (
-    <div className="relative mx-auto max-w-6xl">
-      <div className="sticky top-20 z-20 h-px bg-border" aria-hidden="true">
-        <span
-          className="block h-px bg-primary transition-[width] duration-700 ease-out motion-reduce:transition-none"
-          style={{ width: `${((activeIndex + 1) / VALUES.length) * 100}%` }}
-        />
-      </div>
-
+    <div className="relative w-full">
       <div>
         {VALUES.map((value, index) => {
           const isActive = activeIndex === index;
@@ -133,20 +119,24 @@ export function InteractiveValues() {
                 itemRefs.current[index] = element;
               }}
               data-value-index={index}
-              className="flex min-h-[58vh] items-center border-b border-border py-14 last:border-b-0 md:min-h-[68vh] md:py-20"
+              className="flex items-center py-7 md:py-9"
             >
               <div
                 className={[
-                  "grid w-full items-center gap-6 transition-all duration-700 ease-out motion-reduce:transition-none md:grid-cols-2 md:gap-14 lg:gap-20",
+                  "grid w-full items-center gap-5 transition-all duration-700 ease-out motion-reduce:transition-none md:grid-cols-6 md:gap-6 lg:gap-8",
                   isActive
                     ? "translate-y-0 opacity-100"
-                    : "translate-y-8 opacity-25",
+                    : "translate-y-10 opacity-30",
                 ].join(" ")}
               >
                 <div
                   className={[
-                    "relative h-[300px] md:h-[430px] lg:h-[500px]",
-                    index % 2 === 0 ? "md:order-1" : "md:order-2",
+                    "relative mx-auto h-[160px] w-full max-w-[180px] md:col-span-2 md:h-[200px] md:max-w-[220px] lg:h-[220px]",
+                    index === 0
+                      ? "md:col-start-1"
+                      : index === 1
+                        ? "md:col-start-5"
+                        : "md:col-start-1",
                   ].join(" ")}
                 >
                   <div
@@ -159,10 +149,10 @@ export function InteractiveValues() {
                       className={[
                         "absolute inset-0",
                         index === 0
-                          ? "md:-translate-x-6"
+                          ? "md:-translate-x-3"
                           : index === 1
-                            ? "md:translate-x-8 md:scale-90"
-                            : "md:-translate-x-3 md:scale-105",
+                            ? "md:translate-x-5 md:scale-95"
+                            : "md:-translate-x-2 md:scale-105",
                       ].join(" ")}
                     >
                       <Image
@@ -176,36 +166,25 @@ export function InteractiveValues() {
                   </div>
                 </div>
 
-                <div className={index % 2 === 0 ? "md:order-2" : "md:order-1"}>
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={[
-                        "flex h-12 w-12 items-center justify-center rounded-full transition-colors duration-500",
-                        isActive ? "bg-primary text-white" : "bg-primary/10 text-primary",
-                      ].join(" ")}
-                    >
-                      <value.icon className="h-5 w-5" />
-                    </span>
-                    <span className="text-xs font-bold tracking-[0.18em] text-muted-foreground">
-                      {value.number}
-                    </span>
-                  </div>
-                  <h3 className="text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+                <div
+                  className={[
+                    "md:col-span-2",
+                    index === 0
+                      ? "md:col-start-3"
+                      : index === 1
+                        ? "md:col-start-3 md:row-start-1"
+                        : "md:col-start-3",
+                  ].join(" ")}
+                >
+                  <h3 className="font-montserrat text-xl font-semibold leading-[1.5] tracking-normal text-foreground">
                     {value.title}
                   </h3>
-                  <p className="mt-5 text-lg font-semibold text-foreground md:text-xl">
+                  <p className="mt-5 max-w-lg text-sm font-medium leading-[1.5] tracking-normal text-foreground">
                     {value.tagline}
                   </p>
-                  <p className="mt-6 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base md:leading-8">
+                  <p className="mt-4 max-w-xl text-sm font-normal leading-[1.5] tracking-normal text-muted-foreground">
                     {value.description}
                   </p>
-                  <span
-                    className={[
-                      "mt-10 block h-0.5 max-w-24 origin-left bg-primary transition-transform duration-700 motion-reduce:transition-none",
-                      isActive ? "scale-x-100" : "scale-x-0",
-                    ].join(" ")}
-                    aria-hidden="true"
-                  />
                 </div>
               </div>
             </article>
