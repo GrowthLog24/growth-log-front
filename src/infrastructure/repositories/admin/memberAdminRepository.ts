@@ -59,12 +59,19 @@ export class MemberAdminRepository {
     generation: number;
     memberType: MemberType;
     isActive: boolean;
+    profileImageUrl?: string;
+    bio?: string;
+    field?: string;
   }): Promise<string> {
     const docRef = await addDoc(this.collectionRef, {
       memberName: data.memberName,
       generation: data.generation,
       memberType: data.memberType,
       isActive: data.isActive,
+      // Firestore는 undefined 값을 거부하므로 비어 있으면 빈 문자열로 저장합니다.
+      profileImageUrl: data.profileImageUrl ?? "",
+      bio: data.bio ?? "",
+      field: data.field ?? "",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
