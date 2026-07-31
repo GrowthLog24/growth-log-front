@@ -60,10 +60,16 @@ export function GrowthTree({ level }: GrowthTreeProps) {
   }, [stage.stage]);
 
   return (
-    <div ref={sceneRef} className="growth-tree-scene" aria-label={`레벨 ${level.level}, ${stage.label} 단계`}>
+    <div ref={sceneRef} className="growth-tree-scene">
       <div className="growth-tree-glow" aria-hidden />
-      <svg ref={objectRef} viewBox="0 0 320 360" className="growth-tree-object" role="img">
-        <title>{stage.label} 성장 오브젝트</title>
+      {/* SVG <title>은 React가 문서 head의 <title>로 끌어올려 하이드레이션이 어긋나므로 aria-label을 쓴다 */}
+      <svg
+        ref={objectRef}
+        viewBox="0 0 320 360"
+        className="growth-tree-object"
+        role="img"
+        aria-label={`레벨 ${level.level}, ${stage.label} 단계 성장 오브젝트`}
+      >
         <defs>
           <radialGradient id="leafGreen" cx="35%" cy="25%">
             <stop offset="0" stopColor="#caffad" />
