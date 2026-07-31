@@ -59,10 +59,11 @@ export function MemberAttendancePanel({ member }: MemberAttendancePanelProps) {
         attendanceAdminRepository.getByMemberId(member.id),
       ]);
 
-      // 회원이 속한 기수의 회차만, 회차 오름차순으로 표시합니다.
+      // 이전 기수에 가입한 정회원도 현재 기수 정기모임에 참석하므로,
+      // 가입 기수 이상의 회차를 모두 표시합니다.
       const targetMeetings = allMeetings
-        .filter((meeting) => meeting.generation === member.generation)
-        .sort((a, b) => a.round - b.round);
+        .filter((meeting) => meeting.generation >= member.generation)
+        .sort((a, b) => a.generation - b.generation || a.round - b.round);
 
       const next: Record<string, AttendanceStatus> = {};
       for (const record of records) {

@@ -294,7 +294,8 @@ function createGrowthLogSheet(rows: readonly GrowthLogSheetRow[]): XLSX.WorkShee
 /**
  * 출결 시트를 만듭니다.
  *
- * 멤버가 속하지 않은 기수의 회차 칸은 해당 사항이 없으므로 비워둡니다.
+ * 정회원도 이후 기수의 정기모임에 참석하므로, 가입 기수 이상의 회차를
+ * 모두 채웁니다. 가입 이전 기수의 회차는 참석할 수 없었으므로 비워둡니다.
  */
 function createAttendanceSheet(
   rows: readonly AttendanceSheetRow[],
@@ -318,7 +319,8 @@ function createAttendanceSheet(
       row.memberName,
       row.generation,
       ...columns.map((column) => {
-        if (column.generation !== row.generation) return "";
+        // 가입 이전 기수의 회차는 참석 대상이 아니었습니다.
+        if (column.generation < row.generation) return "";
         const status = statusByKey.get(`${column.generation}-${column.round}`);
         return status ? ATTENDANCE_LABELS[status] : "";
       }),
@@ -403,7 +405,8 @@ function createGuideSheet(): XLSX.WorkSheet {
     ["※ 회원 구분(신입회원/정회원)은 현재 기수를 기준으로 자동 계산되므로 입력하지 않습니다."],
     ["※ 출결의 빈 칸은 '변경 없음'입니다. 기록을 지우려면 '결석'이라고 명시해주세요."],
     ["※ 출결의 회차 컬럼은 등록된 정기모임에서 자동으로 만들어집니다. 컬럼 이름을 바꾸지 마세요."],
-    ["※ 자기 기수가 아닌 회차 칸에 입력한 값은 반영되지 않습니다."],
+    ["※ 정회원도 이후 기수의 정기모임에 참석하므로, 가입 기수 이상의 회차는 모두 입력할 수 있습니다."],
+    ["※ 가입 이전 기수의 회차 칸에 입력한 값은 반영되지 않습니다."],
     ["※ 참여 프로젝트는 이 양식으로 등록할 수 없습니다. 회원 상세 관리에서 입력해주세요."],
   ];
 
@@ -494,7 +497,7 @@ export function downloadMemberTemplate(
     memberName: member.memberName,
     generation: member.generation,
     cells: columns
-      .filter((column) => column.generation === member.generation)
+      .filter((column) => column.generation >= member.generation)
       .map((column, index) => ({
         meetingGeneration: column.generation,
         round: column.round,
