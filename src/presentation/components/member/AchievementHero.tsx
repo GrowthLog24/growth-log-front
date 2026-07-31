@@ -1,6 +1,7 @@
 import { Sprout } from "lucide-react";
 import type { LevelProgressDto, MemberProfileDto } from "@/application/dtos/memberAchievement";
-import { getGrowthStage, GrowthTree } from "./GrowthTree";
+import { GrowthTree } from "./GrowthTree";
+import { getGrowthStage } from "./growthStage";
 
 interface AchievementHeroProps {
   member: MemberProfileDto;
