@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   addDoc,
   updateDoc,
@@ -42,6 +43,15 @@ export class MemberAdminRepository {
   }
 
   /**
+   * 문서 ID로 멤버 조회
+   */
+  async getById(id: string): Promise<Member | null> {
+    const snapshot = await getDoc(doc(this.collectionRef, id));
+    if (!snapshot.exists()) return null;
+    return { id: snapshot.id, ...snapshot.data() } as Member;
+  }
+
+  /**
    * 멤버 추가
    */
   async create(data: {
@@ -49,14 +59,12 @@ export class MemberAdminRepository {
     generation: number;
     memberType: MemberType;
     isActive: boolean;
-    redirectUrl?: string;
   }): Promise<string> {
     const docRef = await addDoc(this.collectionRef, {
       memberName: data.memberName,
       generation: data.generation,
       memberType: data.memberType,
       isActive: data.isActive,
-      redirectUrl: data.redirectUrl || "",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -73,7 +81,9 @@ export class MemberAdminRepository {
       generation?: number;
       memberType?: MemberType;
       isActive?: boolean;
-      redirectUrl?: string;
+      profileImageUrl?: string;
+      bio?: string;
+      field?: string;
     }
   ): Promise<void> {
     const docRef = doc(this.collectionRef, id);

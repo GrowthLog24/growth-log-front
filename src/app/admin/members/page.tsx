@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import * as XLSX from "xlsx";
@@ -9,6 +10,7 @@ import {
   Loader2,
   Trash2,
   Pencil,
+  Settings2,
   ExternalLink,
   Search,
   QrCode,
@@ -59,7 +61,6 @@ export default function MembersPage() {
     generation: "",
     memberName: "",
     isActive: true,
-    redirectUrl: "",
   });
 
   // QR코드 상태
@@ -74,7 +75,7 @@ export default function MembersPage() {
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkPreview, setBulkPreview] = useState<
-    { memberName: string; generation: number; isActive: boolean; redirectUrl: string }[]
+    { memberName: string; generation: number; isActive: boolean }[]
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,7 +102,7 @@ export default function MembersPage() {
 
   const openCreateDialog = () => {
     setEditingItem(null);
-    setForm({ generation: "", memberName: "", isActive: true, redirectUrl: "" });
+    setForm({ generation: "", memberName: "", isActive: true });
     setDialogOpen(true);
   };
 
@@ -111,7 +112,6 @@ export default function MembersPage() {
       generation: String(item.generation),
       memberName: item.memberName,
       isActive: item.isActive,
-      redirectUrl: item.redirectUrl || "",
     });
     setDialogOpen(true);
   };
@@ -133,7 +133,6 @@ export default function MembersPage() {
           memberName: form.memberName,
           memberType,
           isActive: form.isActive,
-          redirectUrl: form.redirectUrl || "",
         });
         toast.success("수정되었습니다.");
       } else {
@@ -142,7 +141,6 @@ export default function MembersPage() {
           memberName: form.memberName,
           memberType,
           isActive: form.isActive,
-          redirectUrl: form.redirectUrl || undefined,
         });
         toast.success("추가되었습니다.");
       }
@@ -197,12 +195,12 @@ export default function MembersPage() {
   // ===== 엑셀 일괄 등록 =====
   const downloadSampleExcel = () => {
     const sampleData = [
-      { "멤버 이름": "홍길동", "가입 기수": 5, "가입 여부": "O", "리디렉트 URL": "https://github.com/honggildong" },
-      { "멤버 이름": "김철수", "가입 기수": 5, "가입 여부": "O", "리디렉트 URL": "" },
-      { "멤버 이름": "이영희", "가입 기수": 4, "가입 여부": "X", "리디렉트 URL": "" },
+      { "멤버 이름": "홍길동", "가입 기수": 5, "가입 여부": "O" },
+      { "멤버 이름": "김철수", "가입 기수": 5, "가입 여부": "O" },
+      { "멤버 이름": "이영희", "가입 기수": 4, "가입 여부": "X" },
     ];
     const ws = XLSX.utils.json_to_sheet(sampleData);
-    ws["!cols"] = [{ wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 40 }];
+    ws["!cols"] = [{ wch: 15 }, { wch: 10 }, { wch: 10 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "멤버 목록");
     XLSX.writeFile(wb, "멤버_일괄등록_양식.xlsx");
@@ -225,10 +223,9 @@ export default function MembersPage() {
           const generation = Number(row["가입 기수"]);
           const isActiveRaw = String(row["가입 여부"] ?? "O").trim().toUpperCase();
           const isActive = isActiveRaw !== "X";
-          const redirectUrl = String(row["리디렉트 URL"] ?? "").trim();
 
           if (!memberName || isNaN(generation) || generation < 1) return null;
-          return { memberName, generation, isActive, redirectUrl };
+          return { memberName, generation, isActive };
         })
         .filter((r): r is NonNullable<typeof r> => r !== null);
 
@@ -261,7 +258,6 @@ export default function MembersPage() {
           generation: row.generation,
           memberType,
           isActive: row.isActive,
-          redirectUrl: row.redirectUrl || undefined,
         });
         successCount++;
       } catch (error) {
@@ -377,15 +373,15 @@ export default function MembersPage() {
                       <X className="h-4 w-4 text-destructive" />
                     )}
                   </div>
-                  {item.redirectUrl && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <ExternalLink className="h-3 w-3" />
-                      {item.redirectUrl}
-                    </p>
-                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1">
+                <Button asChild variant="outline" size="sm" title="상세 관리">
+                  <Link href={`/admin/members/${item.id}`}>
+                    <Settings2 className="mr-1 h-4 w-4" />
+                    상세 관리
+                  </Link>
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -461,18 +457,6 @@ export default function MembersPage() {
               />
               <Label htmlFor="isActive">가입 여부</Label>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="redirectUrl">리디렉트 URL</Label>
-              <Input
-                id="redirectUrl"
-                value={form.redirectUrl}
-                onChange={(e) => setForm({ ...form, redirectUrl: e.target.value })}
-                placeholder="https://github.com/username"
-              />
-              <p className="text-xs text-muted-foreground">
-                /member/{form.generation || "기수"}/{form.memberName || "이름"} 접근 시 이 URL로 이동합니다.
-              </p>
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
@@ -502,8 +486,20 @@ export default function MembersPage() {
                 className="w-64 h-64 rounded-lg border"
               />
             )}
-            <p className="text-xs text-muted-foreground text-center break-all">
-              {qrItem && getMemberUrl(qrItem)}
+            {/* QR이 가리키는 업적 페이지를 새 탭에서 바로 확인할 수 있게 합니다. */}
+            {qrItem && (
+              <a
+                href={getMemberUrl(qrItem)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1 text-xs text-muted-foreground text-center break-all underline underline-offset-2 hover:text-primary transition-colors"
+              >
+                {getMemberUrl(qrItem)}
+                <ExternalLink className="h-3 w-3 shrink-0" />
+              </a>
+            )}
+            <p className="text-xs text-muted-foreground">
+              클릭하면 회원 업적 페이지가 열립니다.
             </p>
           </div>
           <DialogFooter>
@@ -536,7 +532,6 @@ export default function MembersPage() {
                   <th className="text-left p-2 font-medium">기수</th>
                   <th className="text-left p-2 font-medium">회원 구분</th>
                   <th className="text-left p-2 font-medium">가입</th>
-                  <th className="text-left p-2 font-medium">리디렉트 URL</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -563,9 +558,6 @@ export default function MembersPage() {
                       ) : (
                         <X className="h-4 w-4 text-destructive" />
                       )}
-                    </td>
-                    <td className="p-2 text-muted-foreground text-xs truncate max-w-[200px]">
-                      {row.redirectUrl || "-"}
                     </td>
                   </tr>
                 ))}

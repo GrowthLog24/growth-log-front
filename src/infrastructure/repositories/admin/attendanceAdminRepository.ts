@@ -29,6 +29,16 @@ export interface AttendanceInput {
 }
 
 /**
+ * 회원 기준 출결 저장 입력값
+ */
+export interface MemberAttendanceInput {
+  meetingId: string;
+  generation: number;
+  round: number;
+  status: AttendanceStatus;
+}
+
+/**
  * 출결 관리자 Repository
  */
 export class AttendanceAdminRepository {
@@ -44,6 +54,65 @@ export class AttendanceAdminRepository {
       id: doc.id,
       ...doc.data(),
     })) as Attendance[];
+  }
+
+  /**
+   * 특정 회원의 전체 출결 기록 조회
+   */
+  async getByMemberId(memberId: string): Promise<Attendance[]> {
+    const q = query(this.collectionRef, where("memberId", "==", memberId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Attendance[];
+  }
+
+  /**
+   * 한 회원의 여러 회차 출결을 일괄 저장합니다.
+   *
+   * 회차 단위(saveMany)와 반대 방향으로, 회원 상세 화면에서
+   * 그 회원의 전체 회차를 한 번에 입력할 때 사용합니다.
+   *
+   * @param {string} memberId - 회원 문서 ID
+   * @param {readonly MemberAttendanceInput[]} inputs - 회차별 출결 상태
+   */
+  async saveManyForMember(
+    memberId: string,
+    inputs: readonly MemberAttendanceInput[]
+  ): Promise<void> {
+    if (inputs.length === 0) return;
+
+    const batch = writeBatch(db);
+
+    for (const input of inputs) {
+      const docRef = doc(
+        this.collectionRef,
+        buildAttendanceId(input.meetingId, memberId)
+      );
+
+      // 결석은 문서를 남기지 않습니다. (기록 없음 = 결석으로 집계)
+      if (input.status === "absent") {
+        batch.delete(docRef);
+        continue;
+      }
+
+      batch.set(
+        docRef,
+        {
+          meetingId: input.meetingId,
+          memberId,
+          generation: input.generation,
+          round: input.round,
+          status: input.status,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
+
+    await batch.commit();
   }
 
   /**
