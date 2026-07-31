@@ -10,6 +10,7 @@ import {
   Rss,
   UserRoundSearch,
   CalendarClock,
+  ClipboardCheck,
   Trophy,
   MousePointerClick,
   type LucideIcon,
@@ -81,6 +82,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: UserRoundSearch,
   },
   {
+    title: "정기모임 출결",
+    href: "/admin/meetings",
+    icon: ClipboardCheck,
+  },
+  {
     title: "행사 타임테이블",
     href: "/admin/events",
     icon: CalendarClock,
@@ -111,6 +117,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/faqs": "FAQ",
   "/admin/schedules": "월별 일정",
   "/admin/members": "멤버 관리",
+  "/admin/meetings": "정기모임 출결",
   "/admin/events": "행사 타임테이블",
   "/admin/cta": "CTA 버튼 설정",
   "/admin/settings": "사이트 정보 설정",

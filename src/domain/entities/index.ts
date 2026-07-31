@@ -262,6 +262,13 @@ export interface ProjectActivity extends ActivityBase {
   pdfUrl: string;
   /** 프로젝트 블로그 링크 URL */
   blogUrl?: string;
+  /**
+   * 참여 회원 ID 목록 (members 컬렉션 문서 ID)
+   * 회원 업적 페이지의 "참여 프로젝트" 집계에 사용합니다.
+   */
+  participantMemberIds?: string[];
+  /** 참여 회원 이름 목록 (표시 전용 비정규화 필드) */
+  participantNames?: string[];
 }
 
 /**
@@ -290,6 +297,17 @@ export interface GrowthLogActivity extends ActivityBase {
   field: string;
   /** 작성자명 */
   authorName: string;
+  /**
+   * 작성자 회원 ID (members 컬렉션 문서 ID)
+   *
+   * 신규 등록 건은 이 필드로 회원과 연결합니다.
+   * 값이 없는 기존 데이터는 authorName + generation 매칭으로 폴백 조회합니다.
+   */
+  memberId?: string;
+  /** 제출한 정기모임 회차 문서 ID */
+  meetingId?: string;
+  /** 제출 회차 번호 (정렬·표시를 위한 비정규화 필드) */
+  round?: number;
   /** 블로그 글 일부 (최대 200자) */
   excerpt: string;
   /** 블로그 글 URL */
@@ -598,6 +616,70 @@ export interface Award {
   order: number;
   /** 활성화 여부 */
   isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
+ * 정기모임 (회차)
+ * Collection: meetings/{meetingId}
+ *
+ * 회원 업적 페이지의 출결 기록은 이 회차를 기준으로 집계됩니다.
+ */
+export interface Meeting {
+  id: string;
+  /** 기수 */
+  generation: number;
+  /** 회차 (기수 내에서 1부터 증가) */
+  round: number;
+  /** 회차 제목 (예: "5기 3회차 정기모임") */
+  title: string;
+  /** 모임 일자 */
+  meetingDate: Timestamp;
+  /** 출결 집계 대상 여부 (false면 출석률 계산에서 제외) */
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/**
+ * 출결 상태
+ * - present: 출석
+ * - late: 지각
+ * - excused: 사유 결석 (출석률 모수에서 제외)
+ * - absent: 결석
+ */
+export type AttendanceStatus = "present" | "late" | "excused" | "absent";
+
+/**
+ * 출결 상태 라벨
+ */
+export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
+  present: "출석",
+  late: "지각",
+  excused: "사유 결석",
+  absent: "결석",
+};
+
+/**
+ * 정기모임 출결 기록
+ * Collection: attendances/{meetingId}_{memberId}
+ *
+ * 문서 ID를 `${meetingId}_${memberId}`로 고정해 같은 회차·회원의
+ * 중복 기록이 생기지 않도록 합니다.
+ */
+export interface Attendance {
+  id: string;
+  /** 정기모임 회차 문서 ID */
+  meetingId: string;
+  /** 회원 문서 ID */
+  memberId: string;
+  /** 기수 (회원별 조회 최적화를 위한 비정규화 필드) */
+  generation: number;
+  /** 회차 번호 (정렬·표시를 위한 비정규화 필드) */
+  round: number;
+  /** 출결 상태 */
+  status: AttendanceStatus;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
