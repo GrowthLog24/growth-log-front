@@ -1,6 +1,6 @@
 import { Sprout } from "lucide-react";
 import type { LevelProgressDto, MemberProfileDto } from "@/application/dtos/memberAchievement";
-import { GrowthTree } from "./GrowthTree";
+import { getGrowthStage, GrowthTree } from "./GrowthTree";
 
 interface AchievementHeroProps {
   member: MemberProfileDto;
@@ -11,6 +11,8 @@ interface AchievementHeroProps {
  * 업적 페이지 헤더 - 회원 정보와 레벨 진행 바
  */
 export function AchievementHero({ member, level }: AchievementHeroProps) {
+  const growthStage = getGrowthStage(level.level);
+
   return (
     <section className="member-hero-surface relative overflow-hidden border-b border-primary/15 text-foreground">
       <div className="container-custom relative py-5 md:py-7">
@@ -30,7 +32,7 @@ export function AchievementHero({ member, level }: AchievementHeroProps) {
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <p className="flex items-center gap-2 text-base font-semibold md:text-lg">
                   <Sprout className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                  Lv.{level.level} · {level.title}
+                  Lv.{level.level} · {growthStage.label}
                 </p>
                 <span className="text-xs text-muted-foreground">{level.totalXp.toLocaleString()} XP</span>
               </div>
