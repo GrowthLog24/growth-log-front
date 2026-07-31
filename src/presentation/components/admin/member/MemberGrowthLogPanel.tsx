@@ -3,11 +3,22 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Download, ExternalLink, FileText, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  FileText,
+  Link2,
+  Loader2,
+  Plus,
+  Save,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/presentation/components/admin/common";
 import { activityAdminRepository } from "@/infrastructure/repositories/admin/activityAdminRepository";
 import { meetingAdminRepository } from "@/infrastructure/repositories/admin/meetingAdminRepository";
@@ -30,6 +41,8 @@ interface LogForm {
   thumbnailUrl: string;
   /** OG에서 받아온 이미지 (data URI). 저장 시 Storage에 업로드됩니다. */
   thumbnailDataUri: string;
+  /** 홈페이지 활동 기록에도 노출할지 여부 */
+  showOnHome: boolean;
 }
 
 const EMPTY_FORM: LogForm = {
@@ -40,6 +53,8 @@ const EMPTY_FORM: LogForm = {
   meetingId: "",
   thumbnailUrl: "",
   thumbnailDataUri: "",
+  // 회원 상세에서 등록하는 일지는 개인 기록이 목적이므로 기본은 홈 비노출입니다.
+  showOnHome: false,
 };
 
 /**
@@ -111,6 +126,7 @@ export function MemberGrowthLogPanel({ member }: MemberGrowthLogPanelProps) {
       meetingId: log.meetingId ?? "",
       thumbnailUrl: log.thumbnailUrl ?? "",
       thumbnailDataUri: "",
+      showOnHome: log.showOnHome === true,
     });
     setFormOpen(true);
   };
@@ -191,6 +207,7 @@ export function MemberGrowthLogPanel({ member }: MemberGrowthLogPanelProps) {
         generation: member.generation,
         order: 0,
         isActive: true,
+        showOnHome: form.showOnHome,
         title: form.title.trim(),
         field: form.field.trim(),
         authorName: member.memberName,
@@ -216,6 +233,29 @@ export function MemberGrowthLogPanel({ member }: MemberGrowthLogPanelProps) {
     } catch (error) {
       console.error("Failed to save growth log:", error);
       toast.error("저장에 실패했습니다.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /**
+   * 이름으로만 매칭된 글을 이 회원에게 명시적으로 연결합니다.
+   *
+   * 공개 업적 페이지는 memberId로만 조회하므로, 이 연결을 거쳐야
+   * 회원 페이지에 표시됩니다.
+   */
+  const handleLink = async (log: GrowthLogActivity) => {
+    setSaving(true);
+    try {
+      await activityAdminRepository.updateGrowthLog(log.id, {
+        memberId: member.id,
+        authorName: member.memberName,
+      });
+      toast.success("이 회원의 성장일지로 연결되었습니다.");
+      await fetchData();
+    } catch (error) {
+      console.error("Failed to link growth log:", error);
+      toast.error("연결에 실패했습니다.");
     } finally {
       setSaving(false);
     }
@@ -385,6 +425,20 @@ export function MemberGrowthLogPanel({ member }: MemberGrowthLogPanelProps) {
             </p>
           </div>
 
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label htmlFor="showOnHome">홈페이지 활동 기록에도 노출</Label>
+              <p className="text-xs text-muted-foreground">
+                기본은 개인 업적 페이지에만 표시됩니다.
+              </p>
+            </div>
+            <Switch
+              id="showOnHome"
+              checked={form.showOnHome}
+              onCheckedChange={(checked) => setForm({ ...form, showOnHome: checked })}
+            />
+          </div>
+
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
               {saving ? (
@@ -438,7 +492,12 @@ export function MemberGrowthLogPanel({ member }: MemberGrowthLogPanelProps) {
                   )}
                   {!log.memberId && (
                     <span className="rounded bg-amber-100 px-2 py-0.5 text-[11px] text-amber-900">
-                      이름으로 연결됨
+                      미연결 · 업적 페이지에 표시되지 않음
+                    </span>
+                  )}
+                  {log.showOnHome === false && (
+                    <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                      홈 비노출
                     </span>
                   )}
                 </div>
@@ -452,6 +511,17 @@ export function MemberGrowthLogPanel({ member }: MemberGrowthLogPanelProps) {
               </div>
 
               <div className="flex shrink-0 flex-col gap-1">
+                {!log.memberId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleLink(log)}
+                    disabled={saving}
+                  >
+                    <Link2 className="mr-1 h-3.5 w-3.5" />
+                    연결
+                  </Button>
+                )}
                 {log.blogUrl && (
                   <Button variant="ghost" size="icon" asChild title="글 열기">
                     <a href={log.blogUrl} target="_blank" rel="noopener noreferrer">
