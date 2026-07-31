@@ -22,7 +22,7 @@ const STATUS_STYLES: Record<AttendanceStatus, string> = {
 export function AttendanceTimeline({ attendance }: AttendanceTimelineProps) {
   if (attendance.totalMeetings === 0) {
     return (
-      <section className="container-custom py-12">
+      <section className="container-custom py-10 md:py-14">
         <SectionHeading
           eyebrow="ATTENDANCE"
           title="정기모임 출결"
@@ -33,7 +33,7 @@ export function AttendanceTimeline({ attendance }: AttendanceTimelineProps) {
   }
 
   return (
-    <section className="container-custom py-12">
+    <section className="container-custom py-10 md:py-14">
       <SectionHeading
         eyebrow="ATTENDANCE"
         title="정기모임 출결"
@@ -41,15 +41,16 @@ export function AttendanceTimeline({ attendance }: AttendanceTimelineProps) {
       />
 
       {/* 회차 그리드 */}
-      <ul className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
+      <ul className="border-t border-black/10" data-member-reveal>
         {attendance.timeline.map((item) => (
-          <li key={item.round}>
+          <li key={item.round} className="group border-b border-black/10">
             <div
-              className={`flex aspect-square flex-col items-center justify-center rounded-xl border-2 transition-transform hover:scale-105 ${STATUS_STYLES[item.status]}`}
+              className="grid grid-cols-[46px_1fr_auto] items-center gap-3 py-3.5 sm:grid-cols-[64px_1fr_100px] sm:py-4"
               title={`${item.meetingTitle} · ${ATTENDANCE_STATUS_LABELS[item.status]}`}
             >
-              <span className="text-lg font-bold">{item.round}</span>
-              <span className="text-[10px] font-medium">
+              <span className="font-mono text-xs text-muted-foreground">{String(item.round).padStart(2, "0")}</span>
+              <span className="truncate text-sm font-medium transition-transform duration-300 group-hover:translate-x-1">{item.meetingTitle}</span>
+              <span className={`justify-self-end rounded-full border px-2.5 py-1 text-[10px] font-medium ${STATUS_STYLES[item.status]}`}>
                 {ATTENDANCE_STATUS_LABELS[item.status]}
               </span>
             </div>
@@ -58,11 +59,11 @@ export function AttendanceTimeline({ attendance }: AttendanceTimelineProps) {
       </ul>
 
       {/* 범례 */}
-      <div className="mt-6 flex flex-wrap gap-4 text-xs text-muted-foreground">
+      <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
         {(Object.keys(STATUS_STYLES) as AttendanceStatus[]).map((status) => (
           <span key={status} className="flex items-center gap-1.5">
             <span
-              className={`inline-block h-3 w-3 rounded border-2 ${STATUS_STYLES[status]}`}
+              className={`inline-block h-2 w-2 rounded-full border ${STATUS_STYLES[status]}`}
               aria-hidden
             />
             {ATTENDANCE_STATUS_LABELS[status]}

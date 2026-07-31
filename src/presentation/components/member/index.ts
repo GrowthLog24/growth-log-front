@@ -5,3 +5,5 @@ export { BadgeGrid } from "./BadgeGrid";
 export { GrowthLogList } from "./GrowthLogList";
 export { ProjectList } from "./ProjectList";
 export { SectionHeading } from "./SectionHeading";
+export { MemberMotion } from "./MemberMotion";
+export { GrowthTree } from "./GrowthTree";

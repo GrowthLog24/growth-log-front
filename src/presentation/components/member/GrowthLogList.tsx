@@ -24,7 +24,7 @@ function formatRoundLabel(log: GrowthLogSummaryDto): string {
  */
 export function GrowthLogList({ logs }: GrowthLogListProps) {
   return (
-    <section className="container-custom py-12">
+    <section className="container-custom py-10 md:py-16">
       <SectionHeading
         eyebrow="GROWTH LOG"
         title="성장일지 기록"
@@ -36,24 +36,25 @@ export function GrowthLogList({ logs }: GrowthLogListProps) {
       />
 
       {logs.length > 0 && (
-        <ul className="grid gap-4 md:grid-cols-2">
-          {logs.map((log) => (
-            <li key={log.id}>
+        <ul className="border-t border-black/10" data-member-reveal>
+          {logs.map((log, index) => (
+            <li key={log.id} className="border-b border-black/10">
               <Link
                 href={log.blogUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex h-full gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50"
+                className="group grid grid-cols-[36px_1fr_auto] items-center gap-3 py-4 sm:grid-cols-[52px_88px_1fr_auto] sm:gap-5"
               >
+                <span className="font-mono text-[10px] text-muted-foreground">{String(index + 1).padStart(2, "0")}</span>
                 {/* 썸네일 */}
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
+                <div className="relative hidden h-14 w-[88px] overflow-hidden bg-muted sm:block">
                   {log.thumbnailUrl ? (
                     <Image
                       src={log.thumbnailUrl}
                       alt=""
                       fill
                       sizes="96px"
-                      className="object-cover transition-transform group-hover:scale-105"
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
                     <span className="flex h-full items-center justify-center">
@@ -62,36 +63,30 @@ export function GrowthLogList({ logs }: GrowthLogListProps) {
                   )}
                 </div>
 
-                <div className="flex min-w-0 flex-1 flex-col">
+                <div className="min-w-0">
                   <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                    <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                    <span className="font-mono text-[10px] text-primary">
                       {formatRoundLabel(log)}
                     </span>
                     {log.field && (
-                      <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground">
                         {log.field}
                       </span>
                     )}
                   </div>
 
-                  <p className="line-clamp-2 font-semibold text-foreground group-hover:text-primary">
+                  <p className="truncate text-base font-semibold text-foreground transition-colors group-hover:text-primary sm:text-lg">
                     {log.title}
                   </p>
 
                   {log.excerpt && (
-                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                    <p className="mt-1 hidden line-clamp-1 text-xs leading-relaxed text-muted-foreground sm:block">
                       {log.excerpt}
                     </p>
                   )}
 
-                  <span className="mt-auto flex items-center gap-1 pt-2 text-[11px] font-medium text-muted-foreground">
-                    글 읽기
-                    <ArrowUpRight
-                      className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                      aria-hidden
-                    />
-                  </span>
                 </div>
+                <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-primary" aria-hidden />
               </Link>
             </li>
           ))}
