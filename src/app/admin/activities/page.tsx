@@ -21,6 +21,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -542,6 +543,7 @@ function ActivityFormDialog({
           thumbnailUrl: editingActivity.thumbnailUrl || "",
           generation: editingActivity.generation,
           isActive: editingActivity.isActive,
+          showOnHome: editingActivity.showOnHome !== false,
         };
 
         // 기존 썸네일이 있으면 미리보기 설정
@@ -635,6 +637,7 @@ function ActivityFormDialog({
           thumbnailUrl: "",
           generation: currentGeneration,
           isActive: true,
+          showOnHome: true,
         });
       }
     }
@@ -702,6 +705,7 @@ function ActivityFormDialog({
         generation: Number(formData.generation) || currentGeneration,
         order: 0,
         isActive: formData.isActive !== false,
+        showOnHome: formData.showOnHome !== false,
       };
 
       // 프로젝트 참여자: ID와 표시용 이름을 함께 저장합니다.
@@ -943,6 +947,21 @@ function ActivityFormDialog({
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">기</span>
             </div>
+          </div>
+
+          {/* 공통: 홈페이지 노출 여부 */}
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label htmlFor="showOnHome">홈페이지 활동 기록에 노출</Label>
+              <p className="text-xs text-muted-foreground">
+                끄면 홈페이지에서는 숨겨지고, 회원 개인 업적 페이지에만 표시됩니다.
+              </p>
+            </div>
+            <Switch
+              id="showOnHome"
+              checked={formData.showOnHome !== false}
+              onCheckedChange={(checked) => updateField("showOnHome", checked)}
+            />
           </div>
 
           {/* 카테고리별 필드 */}

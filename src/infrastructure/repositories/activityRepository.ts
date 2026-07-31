@@ -27,14 +27,13 @@ export interface MemberIdentity {
 }
 
 /**
- * 문서 ID 기준으로 중복을 제거합니다.
+ * 홈페이지에 노출할 활동인지 판정합니다.
+ *
+ * `showOnHome`이 명시적으로 false인 경우에만 제외하므로,
+ * 필드가 없는 기존 문서는 그대로 노출됩니다.
  */
-function dedupeById<T extends { id: string }>(items: readonly T[]): T[] {
-  const map = new Map<string, T>();
-  for (const item of items) {
-    map.set(item.id, item);
-  }
-  return [...map.values()];
+function isVisibleOnHome(activity: Activity): boolean {
+  return activity.showOnHome !== false;
 }
 
 /**
@@ -45,7 +44,7 @@ export class ActivityRepository {
   private collectionRef = collection(db, COLLECTIONS.ACTIVITIES);
 
   /**
-   * 전체 활동 목록 조회 (활성화된 것만)
+   * 전체 활동 목록 조회 (홈페이지 노출 대상만)
    */
   async getAllActivities(): Promise<Activity[]> {
     try {
@@ -55,10 +54,9 @@ export class ActivityRepository {
         orderBy("order", "asc")
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Activity[];
+      return snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }) as Activity)
+        .filter(isVisibleOnHome);
     } catch (error) {
       console.error("Failed to fetch activities:", error);
       return [];
@@ -66,7 +64,7 @@ export class ActivityRepository {
   }
 
   /**
-   * 카테고리별 활동 목록 조회 (활성화된 것만)
+   * 카테고리별 활동 목록 조회 (홈페이지 노출 대상만)
    */
   async getActivitiesByCategory(category: ActivityCategory): Promise<Activity[]> {
     try {
@@ -78,10 +76,9 @@ export class ActivityRepository {
         orderBy(orderField, "desc")
       );
       const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Activity[];
+      return snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }) as Activity)
+        .filter(isVisibleOnHome);
     } catch (error) {
       console.error(`Failed to fetch activities for category ${category}:`, error);
       return [];
@@ -91,27 +88,20 @@ export class ActivityRepository {
   /**
    * 특정 회원이 제출한 성장일지 목록 조회
    *
-   * memberId로 조회한 결과와, memberId가 없는 과거 데이터를 위한
-   * 이름 + 기수 매칭 결과를 합칩니다.
+   * `memberId`로 명시적으로 연결된 글만 조회합니다.
+   * 이름 매칭 폴백을 두면 홈페이지용으로 등록된 글이 동명의 회원
+   * 페이지에 의도치 않게 노출되므로, 공개 페이지에서는 사용하지 않습니다.
+   * (관리자 화면은 미연결 글을 찾기 위해 이름 매칭을 계속 사용합니다)
    *
    * @param {MemberIdentity} member - 회원 식별 정보
    * @returns {Promise<GrowthLogActivity[]>} 회차 내림차순 성장일지 목록
    */
   async getGrowthLogsByMember(member: MemberIdentity): Promise<GrowthLogActivity[]> {
     try {
-      const [byId, byName] = await Promise.all([
-        this.queryActivities([
-          where("category", "==", "growth-log"),
-          where("memberId", "==", member.memberId),
-        ]),
-        this.queryActivities([
-          where("category", "==", "growth-log"),
-          where("authorName", "==", member.memberName),
-          where("generation", "==", member.generation),
-        ]),
-      ]);
-
-      const logs = dedupeById([...byId, ...byName]) as GrowthLogActivity[];
+      const logs = (await this.queryActivities([
+        where("category", "==", "growth-log"),
+        where("memberId", "==", member.memberId),
+      ])) as GrowthLogActivity[];
 
       return logs
         .filter((log) => log.isActive)
@@ -125,31 +115,18 @@ export class ActivityRepository {
   /**
    * 특정 회원이 참여한 프로젝트 목록 조회
    *
-   * 참여자 배열(participantMemberIds)에 포함된 프로젝트와,
-   * 참여자 정보가 없는 과거 데이터를 위해 프로젝트장 이름이 일치하는
-   * 같은 기수 프로젝트를 함께 조회합니다.
+   * 참여자 배열(`participantMemberIds`)에 명시적으로 포함된 것만 조회합니다.
+   * 성장일지와 같은 이유로 프로젝트장 이름 매칭 폴백은 사용하지 않습니다.
    *
    * @param {MemberIdentity} member - 회원 식별 정보
    * @returns {Promise<ProjectActivity[]>} 참여 프로젝트 목록
    */
   async getProjectsByMember(member: MemberIdentity): Promise<ProjectActivity[]> {
     try {
-      const [byParticipant, byLeader] = await Promise.all([
-        this.queryActivities([
-          where("category", "==", "project"),
-          where("participantMemberIds", "array-contains", member.memberId),
-        ]),
-        this.queryActivities([
-          where("category", "==", "project"),
-          where("leaderName", "==", member.memberName),
-          where("generation", "==", member.generation),
-        ]),
-      ]);
-
-      const projects = dedupeById([
-        ...byParticipant,
-        ...byLeader,
-      ]) as ProjectActivity[];
+      const projects = (await this.queryActivities([
+        where("category", "==", "project"),
+        where("participantMemberIds", "array-contains", member.memberId),
+      ])) as ProjectActivity[];
 
       return projects
         .filter((project) => project.isActive)
