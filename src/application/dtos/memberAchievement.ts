@@ -26,13 +26,12 @@ export interface MemberProfileDto {
   generation: number;
   memberType: MemberType;
   isActive: boolean;
-  /**
-   * 회원이 등록한 외부 링크 (블로그·포트폴리오 등)
-   *
-   * 기존 redirectUrl 값을 그대로 사용하되, 자동 이동 대신
-   * 업적 페이지 안에서 링크 버튼으로 노출합니다.
-   */
-  externalUrl: string | null;
+  /** 프로필 이미지 URL. 없으면 null */
+  profileImageUrl: string | null;
+  /** 한 줄 소개. 없으면 null */
+  bio: string | null;
+  /** 기술 분야. 없으면 null */
+  field: string | null;
 }
 
 /**
