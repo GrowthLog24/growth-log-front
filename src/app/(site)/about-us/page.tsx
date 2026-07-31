@@ -89,6 +89,12 @@ export default async function AboutUsPage() {
 
   const currentGeneration = siteConfig?.currentGeneration || 5;
 
+  // 서버 타임존(배포 환경은 UTC)과 무관하게 한국 기준 연도를 사용
+  const currentYear = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+  }).format(new Date());
+
   // 통계 데이터 구성 (숫자 타입으로 전달하여 애니메이션 적용)
   // 운영 기간과 누적 기수는 현재 기수에서 자동 계산 (관리자 페이지와 동일한 로직)
   // 운영 기간: 1기당 6개월이므로 올림 처리 (5기 = 2.5년 = 3년차)
@@ -232,10 +238,10 @@ export default async function AboutUsPage() {
         <div className="container-custom">
           <div className="text-center mb-12">
             <span className="inline-block px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
-              {currentGeneration}TH GENERATION ROADMAP
+              PROGRAM ROADMAP
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              {currentGeneration}기 월별 일정 소개
+              {currentYear} 월별 일정 소개
             </h2>
           </div>
 
