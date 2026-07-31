@@ -148,42 +148,44 @@ export function BlogPublisherWorkspace() {
     setIsPublishing(true);
     let completed = jobs.filter((job) => job.status === "done").length;
 
-    for (let index = 0; index < jobs.length; index += 1) {
-      const job = jobs[index];
-      if (job.status === "done") continue;
+    try {
+      for (const [index, job] of jobs.entries()) {
+        if (job.status === "done") continue;
 
-      setJobs((current) => current.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, status: "running", message: "" } : item,
-      ));
+        setJobs((current) => current.map((item, itemIndex) =>
+          itemIndex === index ? { ...item, status: "running", message: "" } : item,
+        ));
 
-      const result = await saveTistoryDraft({
-        blogUrl: TISTORY_MANAGE_BLOG_URL,
-        category: category.trim(),
-        title: job.title,
-        html: job.html,
-        tags: job.tags,
-        attachments: job.attachments,
-      });
+        const result = await saveTistoryDraft({
+          blogUrl: TISTORY_MANAGE_BLOG_URL,
+          category: category.trim(),
+          title: job.title,
+          html: job.html,
+          tags: job.tags,
+          attachments: job.attachments,
+        });
 
-      if (result.ok) completed += 1;
-      setJobs((current) => current.map((item, itemIndex) =>
-        itemIndex === index
-          ? {
-            ...item,
-            status: result.ok ? "done" : "failed",
-            message: result.message,
-          }
-          : item,
-      ));
+        if (result.ok) completed += 1;
+        setJobs((current) => current.map((item, itemIndex) =>
+          itemIndex === index
+            ? {
+              ...item,
+              status: result.ok ? "done" : "failed",
+              message: result.message,
+            }
+            : item,
+        ));
 
-      if (result.code === "TISTORY_LOGIN_REQUIRED") {
-        setLoginMessage(result.message);
-        toast.error("전용 Chrome에서 티스토리 로그인 후 다시 실행해 주세요.");
-        break;
+        if (result.code === "TISTORY_LOGIN_REQUIRED") {
+          setLoginMessage(result.message);
+          toast.error("전용 Chrome에서 티스토리 로그인 후 다시 실행해 주세요.");
+          break;
+        }
       }
+    } finally {
+      setIsPublishing(false);
     }
 
-    setIsPublishing(false);
     if (completed === jobs.length) {
       toast.success(`${completed}개 글을 모두 비공개 저장했습니다.`);
     } else {
@@ -198,6 +200,8 @@ export function BlogPublisherWorkspace() {
       ? "연결 앱 준비됨"
       : status === "pairing"
         ? "연결 승인 필요"
+        : status === "error"
+          ? "연결 앱 응답 오류"
         : "연결 앱 필요";
 
   return (

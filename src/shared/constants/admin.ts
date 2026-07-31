@@ -13,7 +13,6 @@ import {
   ClipboardCheck,
   Trophy,
   MousePointerClick,
-  Send,
   FileUp,
   type LucideIcon,
 } from "lucide-react";

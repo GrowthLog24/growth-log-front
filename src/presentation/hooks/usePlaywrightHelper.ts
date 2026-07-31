@@ -60,6 +60,12 @@ async function parseResult(response: Response): Promise<HelperResult> {
   return fallback;
 }
 
+function statusForResult(response: Response, result: HelperResult): PlaywrightHelperStatus {
+  if (result.code === "PAIRING_REQUIRED" || result.authorized === false) return "pairing";
+  if (!response.ok) return "error";
+  return "connected";
+}
+
 /**
  * 운영진 PC의 Growth Log 연결 앱(로컬 Playwright 자동화 서버)과 통신합니다.
  * 연결 상태 확인, 페어링, 로그인/게시/수정 자동화 요청을 제공합니다.
@@ -76,7 +82,7 @@ export function usePlaywrightHelper() {
       const response = await fetchWithTimeout("/health");
       if (!response.ok) throw new Error(`연결 응답 ${response.status}`);
       const result = await parseResult(response);
-      setStatus(result.authorized === false ? "pairing" : "connected");
+      setStatus(statusForResult(response, result));
     } catch {
       setStatus("missing");
     }
@@ -98,7 +104,7 @@ export function usePlaywrightHelper() {
         const response = await fetchWithTimeout("/health");
         if (!response.ok) continue;
         const result = await parseResult(response);
-        if (result.authorized !== false) {
+        if (statusForResult(response, result) === "connected") {
           setStatus("connected");
           return {
             ok: true,
@@ -139,7 +145,7 @@ export function usePlaywrightHelper() {
         timeoutMs,
       );
       const result = await parseResult(response);
-      setStatus(result.code === "PAIRING_REQUIRED" ? "pairing" : "connected");
+      setStatus(statusForResult(response, result));
       if (!result.ok) setError(result.message);
       return result;
     } catch {
