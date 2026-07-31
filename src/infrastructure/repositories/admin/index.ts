@@ -7,3 +7,8 @@ export { activityAdminRepository } from "./activityAdminRepository";
 export { testimonialAdminRepository } from "./testimonialAdminRepository";
 export { recruitmentAdminRepository } from "./recruitmentAdminRepository";
 export { awardAdminRepository } from "./awardAdminRepository";
+export { meetingAdminRepository } from "./meetingAdminRepository";
+export {
+  attendanceAdminRepository,
+  buildAttendanceId,
+} from "./attendanceAdminRepository";

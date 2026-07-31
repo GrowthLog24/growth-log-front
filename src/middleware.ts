@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
+import { IS_ADMIN_AUTH_BYPASSED } from "@/shared/constants/devAuth";
 
 const { auth } = NextAuth({
   ...authConfig,
@@ -41,6 +42,17 @@ export async function middleware(request: NextRequest) {
 
   // /admin 경로 인증 처리
   if (pathname.startsWith("/admin")) {
+    // 로컬 개발 전용 우회 (프로덕션 빌드에서는 항상 false)
+    if (IS_ADMIN_AUTH_BYPASSED) {
+      // 우회 중에는 로그인이 필요 없으므로, 로그인 페이지로 들어오면
+      // 대시보드로 보냅니다. (OAuth 미설정 상태에서 로그인 버튼을 눌러
+      // invalid_client 에러를 만나는 혼란을 막기 위함)
+      if (pathname === "/admin/login") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+      return NextResponse.next();
+    }
+
     // @ts-expect-error - NextAuth의 auth 함수 타입 이슈
     return auth(request);
   }
