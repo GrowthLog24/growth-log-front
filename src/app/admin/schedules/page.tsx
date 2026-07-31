@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus, X, Check } from "lucide-react";
+import { Loader2, Plus, X, Check, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,6 +32,14 @@ const PHASE_LABELS: Record<number, string> = {
 };
 
 /**
+ * 편집 중인 활동의 위치
+ */
+interface EditingActivity {
+  phase: number;
+  index: number;
+}
+
+/**
  * 월별 일정 관리 페이지 (실시간 저장)
  */
 export default function AdminSchedulesPage() {
@@ -39,6 +47,8 @@ export default function AdminSchedulesPage() {
   const [savingPhase, setSavingPhase] = useState<number | null>(null);
   const [schedules, setSchedules] = useState<MonthlySchedule[]>([]);
   const [newActivities, setNewActivities] = useState<Record<number, string>>({});
+  const [editing, setEditing] = useState<EditingActivity | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,6 +118,60 @@ export default function AdminSchedulesPage() {
     setSchedules((prev) =>
       prev.map((s) => (s.phase === phase ? newSchedule : s))
     );
+    // 삭제로 인덱스가 밀리므로 편집 상태는 초기화
+    cancelEdit();
+
+    // 실시간 저장
+    await saveSchedule(newSchedule);
+  };
+
+  const startEdit = (phase: number, index: number, activity: string) => {
+    setEditing({ phase, index });
+    setEditValue(activity);
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setEditValue("");
+  };
+
+  const isEditing = (phase: number, index: number) =>
+    editing?.phase === phase && editing?.index === index;
+
+  // 편집 내용 확정 (실시간 저장)
+  const commitEdit = async () => {
+    if (!editing) return;
+
+    const { phase, index } = editing;
+    const activity = editValue.trim();
+    if (!activity) {
+      toast.error("활동 내용을 입력해주세요.");
+      return;
+    }
+
+    const updatedSchedule = schedules.find((s) => s.phase === phase);
+    if (!updatedSchedule) {
+      cancelEdit();
+      return;
+    }
+
+    // 변경되지 않았으면 저장하지 않고 편집만 종료
+    if (updatedSchedule.activities[index] === activity) {
+      cancelEdit();
+      return;
+    }
+
+    const newSchedule = {
+      ...updatedSchedule,
+      activities: updatedSchedule.activities.map((item, i) =>
+        i === index ? activity : item
+      ),
+    };
+
+    setSchedules((prev) =>
+      prev.map((s) => (s.phase === phase ? newSchedule : s))
+    );
+    cancelEdit();
 
     // 실시간 저장
     await saveSchedule(newSchedule);
@@ -117,6 +181,16 @@ export default function AdminSchedulesPage() {
     if (e.key === "Enter") {
       e.preventDefault();
       addActivity(phase);
+    }
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancelEdit();
     }
   };
 
@@ -159,31 +233,92 @@ export default function AdminSchedulesPage() {
                 </div>
               </div>
               <CardDescription>
-                활동 내용을 추가하세요. About Us 페이지에 bullet point로 표시됩니다.
+                활동 내용을 추가하거나 클릭하여 수정하세요. About Us 페이지에 bullet point로 표시됩니다.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {/* 기존 활동 목록 */}
               {schedule.activities.length > 0 && (
                 <div className="space-y-2">
-                  {schedule.activities.map((activity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 p-2 bg-gray-6 rounded-md"
-                    >
-                      <span className="flex-1 text-sm">• {activity}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => removeActivity(schedule.phase, index)}
-                        disabled={savingPhase === schedule.phase}
+                  {schedule.activities.map((activity, index) =>
+                    isEditing(schedule.phase, index) ? (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 p-2 bg-gray-6 rounded-md"
                       >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
+                        <Input
+                          autoFocus
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={handleEditKeyDown}
+                          className="flex-1 h-8"
+                          disabled={savingPhase === schedule.phase}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-primary/10 hover:text-primary"
+                          onClick={commitEdit}
+                          disabled={savingPhase === schedule.phase}
+                          aria-label="수정 완료"
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={cancelEdit}
+                          disabled={savingPhase === schedule.phase}
+                          aria-label="수정 취소"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        key={index}
+                        className="group flex items-center gap-2 p-2 bg-gray-6 rounded-md"
+                      >
+                        <button
+                          type="button"
+                          className="flex-1 text-left text-sm cursor-text"
+                          onClick={() =>
+                            startEdit(schedule.phase, index, activity)
+                          }
+                          disabled={savingPhase === schedule.phase}
+                        >
+                          • {activity}
+                        </button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                          onClick={() =>
+                            startEdit(schedule.phase, index, activity)
+                          }
+                          disabled={savingPhase === schedule.phase}
+                          aria-label="활동 수정"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => removeActivity(schedule.phase, index)}
+                          disabled={savingPhase === schedule.phase}
+                          aria-label="활동 삭제"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )
+                  )}
                 </div>
               )}
 
