@@ -110,13 +110,18 @@ export default function MeetingsPage() {
     fetchData();
   }, []);
 
-  /** 선택된 회차와 같은 기수의 활성 회원만 출결 대상으로 표시합니다. */
+  /**
+   * 회차 시점에 활동 중이던 활성 회원을 출결 대상으로 표시합니다.
+   *
+   * 이전 기수에 가입한 정회원도 현재 기수 정기모임에 참석하므로,
+   * 가입 기수가 회차 기수 이하인 회원을 모두 포함합니다.
+   */
   const targetMembers = useMemo(() => {
     if (!selectedMeeting) return [];
     return members
       .filter(
         (member) =>
-          member.generation === selectedMeeting.generation && member.isActive
+          member.generation <= selectedMeeting.generation && member.isActive
       )
       .sort((a, b) => a.memberName.localeCompare(b.memberName, "ko"));
   }, [members, selectedMeeting]);

@@ -378,7 +378,8 @@ export default function MembersPage() {
         memberName: member.memberName,
         generation: member.generation,
         cells: meetings
-          .filter((meeting) => meeting.generation === member.generation)
+          // 정회원도 이후 기수 정기모임에 참석하므로 가입 기수 이상을 모두 담습니다.
+          .filter((meeting) => meeting.generation >= member.generation)
           .map((meeting) => ({
             meetingGeneration: meeting.generation,
             round: meeting.round,
@@ -495,8 +496,8 @@ export default function MembersPage() {
         let unmatchedCells = 0;
 
         for (const cell of row.cells) {
-          // 자기 기수가 아닌 회차 칸은 입력 실수로 보고 반영하지 않습니다.
-          if (cell.meetingGeneration !== row.generation) {
+          // 가입 이전 기수의 회차는 참석 대상이 아니었으므로 반영하지 않습니다.
+          if (cell.meetingGeneration < row.generation) {
             unmatchedCells++;
             continue;
           }

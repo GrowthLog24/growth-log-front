@@ -59,7 +59,7 @@ export async function getMemberAchievement(
   };
 
   const [meetings, attendances, growthLogs, projects] = await Promise.all([
-    meetingRepository.getByGeneration(member.generation),
+    meetingRepository.getFromGeneration(member.generation),
     attendanceRepository.getByMemberId(member.id),
     activityRepository.getGrowthLogsByMember(identity),
     activityRepository.getProjectsByMember(identity),
