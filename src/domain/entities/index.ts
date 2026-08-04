@@ -654,6 +654,9 @@ export type PromotionBoardType = "학과" | "지역대학";
  */
 export type PromotionBoardSourceKind = "excel-snapshot" | "google-sheets";
 
+/** 운영 시트 D열의 `1p 게시여부` 값 */
+export type PromotionBoardFirstPageStatus = "O" | "X";
+
 /**
  * 방송대 홍보 게시 회차 결과
  */
@@ -673,6 +676,7 @@ export interface PromotionBoard {
   group: string;
   name: string;
   type: PromotionBoardType;
+  firstPageStatus: PromotionBoardFirstPageStatus;
   boardName: string;
   status: PromotionBoardStatus;
   homepageUrl: string;

@@ -1,5 +1,6 @@
 import type {
   PromotionBoard,
+  PromotionBoardFirstPageStatus,
   PromotionBoardSnapshot,
   PromotionBoardSourceKind,
   PromotionBoardStatus,
@@ -15,8 +16,8 @@ export const GOOGLE_SHEETS_ID = "1gPZe8cwqKbMU2PBXg2V3mYLLT3MkhdkDZpTXcGqOtE0";
 export const GOOGLE_SHEETS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/edit`;
 
 export const GOOGLE_SHEETS_RANGES = {
-  departments: { gid: "392712092", range: "A7:U1000" },
-  regionals: { gid: "1190277445", range: "A6:T1000" },
+  departments: { gid: "392712092", range: "A2:W1000" },
+  regionals: { gid: "1190277445", range: "A2:V1000" },
 } as const;
 
 /**
@@ -59,6 +60,7 @@ function mapDepartmentRecord(record: SheetRecord): PromotionBoard {
     group: text(record["단과대학"]),
     name: text(record["학과·학부/전공"]),
     type: "학과",
+    firstPageStatus: normalizeFirstPageStatus(record["1p 게시여부"]),
     boardName: text(record["게시판 명칭"]),
     status: normalizeStatus(record["확인 상태"]),
     homepageUrl: text(record["학과 대표 홈페이지"]),
@@ -76,6 +78,7 @@ function mapRegionalRecord(record: SheetRecord): PromotionBoard {
     group: "지역대학",
     name: text(record["지역대학"]),
     type: "지역대학",
+    firstPageStatus: normalizeFirstPageStatus(record["1p 게시여부"]),
     boardName: text(record["게시판 명칭"]),
     status: normalizeStatus(record["확인 상태"]),
     homepageUrl: text(record["지역대학 대표 홈페이지"]),
@@ -114,6 +117,10 @@ function normalizeDate(value: SheetCell): string {
 
 function text(value: SheetCell): string {
   return String(value ?? "").trim();
+}
+
+function normalizeFirstPageStatus(value: SheetCell): PromotionBoardFirstPageStatus {
+  return text(value).toUpperCase() === "O" ? "O" : "X";
 }
 
 function nullableNumber(value: SheetCell): number | null {
