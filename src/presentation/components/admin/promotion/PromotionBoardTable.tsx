@@ -28,7 +28,7 @@ const POST_ROUNDS = [1, 2, 3] as const;
 type PostRound = (typeof POST_ROUNDS)[number];
 
 type SortKey =
-  | "type" | "name" | "status" | "lastChecked" | "totalPosts"
+  | "type" | "name" | "firstPageStatus" | "status" | "lastChecked" | "totalPosts"
   | `postDate${PostRound}` | `postCount${PostRound}`;
 type SortState = { key: SortKey; direction: "asc" | "desc" } | null;
 
@@ -59,6 +59,7 @@ function sortValue(board: PromotionBoard, key: SortKey): string | number {
   switch (key) {
     case "type": return board.type;
     case "name": return board.name;
+    case "firstPageStatus": return board.firstPageStatus;
     case "status": return board.status;
     case "lastChecked": return board.lastChecked;
     case "totalPosts": return board.totalPosts ?? -1;
@@ -69,6 +70,10 @@ function sortValue(board: PromotionBoard, key: SortKey): string | number {
       return key.startsWith("postDate") ? posting?.postedAt ?? "" : posting?.count ?? -1;
     }
   }
+}
+
+function isBoardSelectable(board: PromotionBoard) {
+  return board.status !== "게시판 없음" && board.firstPageStatus !== "O";
 }
 
 /**
@@ -88,7 +93,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
     return snapshot.boards.filter((board) => {
       if (typeFilter !== "전체" && board.type !== typeFilter) return false;
       if (!keyword) return true;
-      const haystack = `${board.group} ${board.name} ${board.boardName} ${board.status} ${board.note}`.toLowerCase();
+      const haystack = `${board.group} ${board.name} ${board.boardName} ${board.status} ${board.firstPageStatus} ${board.note}`.toLowerCase();
       return haystack.includes(keyword);
     });
   }, [snapshot.boards, typeFilter, query]);
@@ -108,16 +113,29 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
   const pageCount = Math.max(Math.ceil(sorted.length / pageSize), 1);
   const currentPageIndex = Math.min(pageIndex, pageCount - 1);
   const pageRows = sorted.slice(currentPageIndex * pageSize, currentPageIndex * pageSize + pageSize);
+  const selectedBoards = useMemo(
+    () => snapshot.boards.filter((board) => selectedIds.has(board.id) && isBoardSelectable(board)),
+    [selectedIds, snapshot.boards],
+  );
 
   useEffect(() => {
+    onSelectionChange(selectedBoards);
+  }, [onSelectionChange, selectedBoards]);
+
+  const updateQuery = (value: string) => {
+    setQuery(value);
     setPageIndex(0);
-  }, [query, typeFilter, pageSize]);
+  };
 
-  useEffect(() => {
-    const validIds = new Set(snapshot.boards.map((board) => board.id));
-    onSelectionChange(snapshot.boards.filter((board) => selectedIds.has(board.id) && validIds.has(board.id)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIds, snapshot.boards]);
+  const updateTypeFilter = (value: "전체" | PromotionBoardType) => {
+    setTypeFilter(value);
+    setPageIndex(0);
+  };
+
+  const updatePageSize = (value: number) => {
+    setPageSize(value);
+    setPageIndex(0);
+  };
 
   const toggleSort = (key: SortKey) => {
     setSort((current) => {
@@ -127,17 +145,18 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
     });
   };
 
-  const toggleRow = (boardId: string) => {
+  const toggleRow = (board: PromotionBoard) => {
+    if (!isBoardSelectable(board)) return;
     setSelectedIds((current) => {
       const next = new Set(current);
-      if (next.has(boardId)) next.delete(boardId);
-      else next.add(boardId);
+      if (next.has(board.id)) next.delete(board.id);
+      else next.add(board.id);
       return next;
     });
   };
 
   // 검색·유형 필터에 걸린 전체 게시판(모든 페이지)을 대상으로 전체 선택/해제합니다.
-  const selectableFilteredIds = filtered.filter((board) => board.status !== "게시판 없음").map((board) => board.id);
+  const selectableFilteredIds = filtered.filter(isBoardSelectable).map((board) => board.id);
   const isAllFilteredSelected = selectableFilteredIds.length > 0 && selectableFilteredIds.every((id) => selectedIds.has(id));
   const isSomeFilteredSelected = selectableFilteredIds.some((id) => selectedIds.has(id));
 
@@ -181,7 +200,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
             </Button>
             <div className="relative w-full sm:w-48">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="학과·지역 검색" />
+              <Input className="pl-8" value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="학과·지역 검색" />
             </div>
           </div>
         </div>
@@ -193,7 +212,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
                 key={tab.label}
                 variant={typeFilter === tab.label ? "secondary" : "ghost"}
                 size="sm"
-                onClick={() => setTypeFilter(tab.label)}
+                onClick={() => updateTypeFilter(tab.label)}
               >
                 {tab.label}
                 <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-foreground">{tab.count}</span>
@@ -213,7 +232,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
         </div>
       </div>
 
-      <Table className="min-w-[1680px]">
+      <Table className="min-w-[1760px]">
         <TableHeader className="bg-muted/30">
           <TableRow className="hover:bg-transparent">
             <TableHead rowSpan={2} className="w-12 p-0 text-center">
@@ -235,6 +254,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
             </TableHead>
             <SortableHead label="구분" sortKey="type" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[88px]" />
             <SortableHead label="게시 대상" sortKey="name" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[224px]" />
+            <SortableHead label="1p 게시" sortKey="firstPageStatus" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[80px] text-center" />
             <SortableHead label="상태" sortKey="status" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[96px]" />
             <SortableHead label="마지막 확인" sortKey="lastChecked" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[112px]" />
             {POST_ROUNDS.map((round) => (
@@ -256,66 +276,77 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {pageRows.length > 0 ? pageRows.map((board) => (
-            <TableRow key={board.id} data-state={selectedIds.has(board.id) ? "selected" : undefined}>
-              <TableCell className="p-0 text-center">
-                <label className={`flex items-center justify-center px-2 py-2 ${board.status === "게시판 없음" ? "cursor-not-allowed" : "cursor-pointer"}`}>
-                  <input
-                    className="size-3.5 cursor-pointer accent-primary disabled:cursor-not-allowed"
-                    aria-label={`${board.name} 선택`}
-                    type="checkbox"
-                    checked={selectedIds.has(board.id)}
-                    disabled={board.status === "게시판 없음"}
-                    onChange={() => toggleRow(board.id)}
-                  />
-                </label>
-              </TableCell>
-              <TableCell><Badge variant="outline">{board.type}</Badge></TableCell>
-              <TableCell>
-                <strong className="block whitespace-nowrap text-xs">{board.name}</strong>
-                <span className="mt-0.5 block whitespace-nowrap text-[11px] text-muted-foreground">{board.group} · {board.boardName}</span>
-              </TableCell>
-              <TableCell><Badge className={statusBadgeClass[board.status]}>{board.status}</Badge></TableCell>
-              <TableCell className="font-mono text-xs">{board.lastChecked || "-"}</TableCell>
-              {POST_ROUNDS.map((round) => {
-                const posting = board.postings.find((item) => item.round === round);
-                return (
-                  <Fragment key={round}>
-                    <TableCell className="border-l font-mono text-xs">{posting?.postedAt || "-"}</TableCell>
-                    <TableCell>
-                      {posting?.postUrl ? (
-                        <a className="text-xs font-medium text-primary hover:underline" href={posting.postUrl} target="_blank" rel="noreferrer">글 URL 열기</a>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right"><CountCell value={posting?.count ?? null} /></TableCell>
-                  </Fragment>
-                );
-              })}
-              <TableCell className="text-right"><CountCell value={board.totalPosts} /></TableCell>
-              <TableCell>
-                <a className="text-xs font-medium text-primary hover:underline" href={board.boardUrl} target="_blank" rel="noreferrer" title={board.note || `${board.name} 게시판 열기`}>
-                  {board.status === "게시판 없음" ? "홈페이지" : "게시판 열기"}
-                </a>
-              </TableCell>
-            </TableRow>
-          )) : (
+          {pageRows.length > 0 ? pageRows.map((board) => {
+            const isSelectable = isBoardSelectable(board);
+            return (
+              <TableRow key={board.id} data-state={isSelectable && selectedIds.has(board.id) ? "selected" : undefined}>
+                <TableCell className="p-0 text-center">
+                  <label
+                    className={`flex items-center justify-center px-2 py-2 ${isSelectable ? "cursor-pointer" : "cursor-not-allowed"}`}
+                    title={board.firstPageStatus === "O" ? "1p 게시 완료 행은 다시 게시할 수 없습니다." : undefined}
+                  >
+                    <input
+                      className="size-3.5 cursor-pointer accent-primary disabled:cursor-not-allowed"
+                      aria-label={`${board.name} 선택`}
+                      type="checkbox"
+                      checked={isSelectable && selectedIds.has(board.id)}
+                      disabled={!isSelectable}
+                      onChange={() => toggleRow(board)}
+                    />
+                  </label>
+                </TableCell>
+                <TableCell><Badge variant="outline">{board.type}</Badge></TableCell>
+                <TableCell>
+                  <strong className="block whitespace-nowrap text-xs">{board.name}</strong>
+                  <span className="mt-0.5 block whitespace-nowrap text-[11px] text-muted-foreground">{board.group} · {board.boardName}</span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <Badge variant={board.firstPageStatus === "O" ? "default" : "outline"}>
+                    {board.firstPageStatus}
+                  </Badge>
+                </TableCell>
+                <TableCell><Badge className={statusBadgeClass[board.status]}>{board.status}</Badge></TableCell>
+                <TableCell className="font-mono text-xs">{board.lastChecked || "-"}</TableCell>
+                {POST_ROUNDS.map((round) => {
+                  const posting = board.postings.find((item) => item.round === round);
+                  return (
+                    <Fragment key={round}>
+                      <TableCell className="border-l font-mono text-xs">{posting?.postedAt || "-"}</TableCell>
+                      <TableCell>
+                        {posting?.postUrl ? (
+                          <a className="text-xs font-medium text-primary hover:underline" href={posting.postUrl} target="_blank" rel="noreferrer">글 URL 열기</a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right"><CountCell value={posting?.count ?? null} /></TableCell>
+                    </Fragment>
+                  );
+                })}
+                <TableCell className="text-right"><CountCell value={board.totalPosts} /></TableCell>
+                <TableCell>
+                  <a className="text-xs font-medium text-primary hover:underline" href={board.boardUrl} target="_blank" rel="noreferrer" title={board.note || `${board.name} 게시판 열기`}>
+                    {board.status === "게시판 없음" ? "홈페이지" : "게시판 열기"}
+                  </a>
+                </TableCell>
+              </TableRow>
+            );
+          }) : (
             <TableRow>
-              <TableCell colSpan={16} className="py-10 text-center text-sm text-muted-foreground">검색 조건에 맞는 게시판이 없습니다.</TableCell>
+              <TableCell colSpan={17} className="py-10 text-center text-sm text-muted-foreground">검색 조건에 맞는 게시판이 없습니다.</TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
 
       <div className="flex flex-col gap-3 border-t p-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <span>{sorted.length}개 게시판 · {selectedIds.size}개 선택</span>
+        <span>{sorted.length}개 게시판 · {selectedBoards.length}개 선택</span>
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2">페이지당
             <select
               className="h-7 rounded-md border bg-transparent px-2 text-xs"
               value={pageSize}
-              onChange={(event) => setPageSize(Number(event.target.value))}
+              onChange={(event) => updatePageSize(Number(event.target.value))}
             >
               {[5, 10, 25].map((size) => <option key={size} value={size}>{size}</option>)}
             </select>
