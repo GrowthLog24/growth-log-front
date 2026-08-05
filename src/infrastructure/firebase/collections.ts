@@ -62,6 +62,9 @@ export const COLLECTIONS = {
 
   /** 정기모임 출결 기록 */
   ATTENDANCES: "attendances",
+
+  /** 홍보물 QR 링크 */
+  PROMOTION_LINKS: "promotionLinks",
 } as const;
 
 /**
