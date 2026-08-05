@@ -65,6 +65,9 @@ export const COLLECTIONS = {
 
   /** 홍보물 QR 링크 */
   PROMOTION_LINKS: "promotionLinks",
+
+  /** 홍보물 QR 스캔 기록 */
+  PROMOTION_LINK_SCANS: "promotionLinkScans",
 } as const;
 
 /**

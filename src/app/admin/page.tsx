@@ -22,8 +22,20 @@ import { communityBlogAdminRepository } from "@/infrastructure/repositories/admi
 import { activityAdminRepository } from "@/infrastructure/repositories/admin/activityAdminRepository";
 import { noticeRepository } from "@/infrastructure/repositories/noticeRepository";
 import { faqAdminRepository } from "@/infrastructure/repositories/admin/faqAdminRepository";
+import { promotionLinkAdminRepository } from "@/infrastructure/repositories/admin/promotionLinkAdminRepository";
+import {
+  buildQrAnalytics,
+  type QrAnalytics,
+} from "@/application/services/promotionQrAnalytics";
+import { QrAnalyticsSection } from "@/presentation/components/admin";
 import { formatRelativeTime } from "@/shared/utils/date";
 import type { Notice, CommunityBlog } from "@/domain/entities";
+
+/** QR 분석 집계 기간 (일) */
+const QR_ANALYTICS_DAYS = 30;
+
+/** 하루 밀리초 */
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface StatCardProps {
   title: string;
@@ -94,6 +106,30 @@ function buildRecentItems(
 }
 
 /**
+ * QR 스캔 분석 데이터 조회
+ *
+ * 증감률 계산을 위해 집계 기간의 2배만큼 스캔 기록을 가져옵니다.
+ * QR 기능은 대시보드의 부가 정보이므로, 조회에 실패해도 대시보드 전체가
+ * 죽지 않도록 빈 집계를 돌려줍니다.
+ */
+async function getQrAnalytics(): Promise<QrAnalytics> {
+  const now = new Date();
+
+  try {
+    const [links, scans] = await Promise.all([
+      promotionLinkAdminRepository.getAll(),
+      promotionLinkAdminRepository.getScansSince(
+        new Date(now.getTime() - QR_ANALYTICS_DAYS * 2 * DAY_MS)
+      ),
+    ]);
+    return buildQrAnalytics(links, scans, { days: QR_ANALYTICS_DAYS, now });
+  } catch (error) {
+    console.error("Failed to fetch QR analytics:", error);
+    return buildQrAnalytics([], [], { days: QR_ANALYTICS_DAYS, now });
+  }
+}
+
+/**
  * Firestore에서 대시보드 통계 데이터 조회
  */
 async function getDashboardData() {
@@ -135,8 +171,9 @@ async function getDashboardData() {
  * 관리자 대시보드 페이지
  */
 export default async function AdminDashboardPage() {
-  const [{ stats, recentItems }, session] = await Promise.all([
+  const [{ stats, recentItems }, qrAnalytics, session] = await Promise.all([
     getDashboardData(),
+    getQrAnalytics(),
     auth(),
   ]);
 
@@ -190,6 +227,9 @@ export default async function AdminDashboardPage() {
           href="/admin/faqs"
         />
       </div>
+
+      {/* QR Analytics */}
+      <QrAnalyticsSection analytics={qrAnalytics} />
 
       {/* 빠른 작업 */}
       <div className="grid gap-4 md:grid-cols-2">
