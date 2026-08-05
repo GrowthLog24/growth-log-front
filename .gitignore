@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude code (로컬 설정 및 작업용 worktree)
+/.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

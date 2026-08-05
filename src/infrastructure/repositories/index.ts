@@ -11,3 +11,4 @@ export { preRegistrationRepository } from "./preRegistrationRepository";
 export { memberRepository } from "./memberRepository";
 export { meetingRepository } from "./meetingRepository";
 export { attendanceRepository } from "./attendanceRepository";
+export { promotionLinkRepository } from "./promotionLinkRepository";
