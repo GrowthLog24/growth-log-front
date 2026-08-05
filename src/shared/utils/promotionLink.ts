@@ -1,5 +1,8 @@
 import { SITE_METADATA } from "@/shared/constants";
 
+/** 홍보물 QR이 가리키는 경로 (앞에 /, 뒤에는 없음) */
+export const PROMOTION_LINK_PATH = "/apply";
+
 /** 키워드에 허용되는 문자 (소문자 영숫자, 하이픈, 언더스코어) */
 const KEYWORD_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
@@ -101,15 +104,15 @@ export function getPromotionLinkBaseUrl(): string {
  *
  * @param {string} keyword - 정규화된 키워드
  * @param {string} [baseUrl] - 기준 주소 (기본값: 공개 사이트 주소)
- * @returns {string} `{baseUrl}/links/{keyword}` 형태의 주소
+ * @returns {string} `{baseUrl}/apply/{keyword}` 형태의 주소
  *
  * @example
  * buildPromotionLinkUrl("spring-poster", "https://www.growthlog.org");
- * // => "https://www.growthlog.org/links/spring-poster"
+ * // => "https://www.growthlog.org/apply/spring-poster"
  */
 export function buildPromotionLinkUrl(
   keyword: string,
   baseUrl: string = getPromotionLinkBaseUrl()
 ): string {
-  return `${baseUrl.replace(/\/$/, "")}/links/${keyword}`;
+  return `${baseUrl.replace(/\/$/, "")}${PROMOTION_LINK_PATH}/${keyword}`;
 }

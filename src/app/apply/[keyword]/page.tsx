@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 /**
  * 홍보물 QR 리디렉트 페이지
  *
- * `/links/{keyword}` 로 들어온 요청을 관리자에서 등록한 목적지 주소로 보냅니다.
+ * `/apply/{keyword}` 로 들어온 요청을 관리자에서 등록한 목적지 주소로 보냅니다.
  * 링크가 없거나 비활성 상태면 404를 보여줍니다.
  */
 export default async function PromotionLinkPage({ params }: PageProps) {
@@ -29,9 +29,9 @@ export default async function PromotionLinkPage({ params }: PageProps) {
 
   // 통계 기록이 실패하더라도 방문자는 목적지로 이동해야 합니다.
   try {
-    await promotionLinkRepository.increaseScanCount(link.id);
+    await promotionLinkRepository.recordScan(link);
   } catch (error) {
-    console.error("Failed to increase scan count:", error);
+    console.error("Failed to record promotion link scan:", error);
   }
 
   redirect(link.targetUrl);
