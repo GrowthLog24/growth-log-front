@@ -702,3 +702,31 @@ export interface Attendance {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
+
+/**
+ * 홍보물 QR 링크
+ * Collection: promotionLinks/{docId}
+ *
+ * 발급된 QR은 `{사이트 주소}/links/{keyword}`를 가리키고,
+ * 해당 경로는 서버에서 `targetUrl`로 리디렉트합니다.
+ * 목적지가 바뀌어도 이미 인쇄된 QR을 그대로 쓸 수 있습니다.
+ */
+export interface PromotionLink {
+  id: string;
+  /** QR 코드 이름 (예: "2026 봄 학기 모집 포스터") */
+  name: string;
+  /** QR 주소에 사용되는 키워드 (소문자 영숫자와 -, _ 만 허용, 전체에서 유일) */
+  keyword: string;
+  /** 어느 홍보물에 사용했는지 기록하는 노트 */
+  note: string;
+  /** QR을 찍었을 때 이동할 주소 */
+  targetUrl: string;
+  /** 활성 여부 (false면 스캔 시 404) */
+  isActive: boolean;
+  /** 누적 스캔 수 */
+  scanCount: number;
+  /** 마지막 스캔 시각 (한 번도 스캔되지 않았으면 없음) */
+  lastScannedAt?: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
