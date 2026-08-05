@@ -228,9 +228,6 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      {/* QR Analytics */}
-      <QrAnalyticsSection analytics={qrAnalytics} />
-
       {/* 빠른 작업 */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
@@ -303,6 +300,9 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* QR Analytics */}
+      <QrAnalyticsSection analytics={qrAnalytics} />
     </div>
   );
 }

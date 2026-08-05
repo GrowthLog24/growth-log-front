@@ -123,6 +123,18 @@
   --chart-4: #919191;
   --chart-5: #75D565;
 
+  /*
+   * 카테고리 구분용 계열 색 (QR별 추이 그래프 등)
+   * 순서를 고정해 사용하며, 슬롯이 모자라면 색을 돌려쓰지 않고 "기타"(-0)로 묶습니다.
+   * 색각 이상 구분(ΔE)·명도 대역·배경 대비 검증을 통과한 조합입니다.
+   */
+  --series-0: #919191;
+  --series-1: #00962B;
+  --series-2: #2A78D6;
+  --series-3: #EB6834;
+  --series-4: #4A3AA7;
+  --series-5: #D55181;
+
   /* Sidebar */
   --sidebar: #FFFFFF;
   --sidebar-foreground: #222222;
@@ -158,6 +170,14 @@
   --chart-3: #75D565;
   --chart-4: #BDBDBD;
   --chart-5: #90DF83;
+
+  /* 어두운 배경에 맞춰 다시 고른 계열 색 (밝기만 바꾼 것이 아니라 별도 검증) */
+  --series-0: #BDBDBD;
+  --series-1: #38A726;
+  --series-2: #3987E5;
+  --series-3: #D95926;
+  --series-4: #9085E9;
+  --series-5: #D55181;
   --sidebar: #333333;
   --sidebar-foreground: #FCFCFC;
   --sidebar-primary: #4BBE38;
