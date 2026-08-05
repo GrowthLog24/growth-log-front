@@ -707,7 +707,7 @@ export interface Attendance {
  * 홍보물 QR 링크
  * Collection: promotionLinks/{docId}
  *
- * 발급된 QR은 `{사이트 주소}/links/{keyword}`를 가리키고,
+ * 발급된 QR은 `{사이트 주소}/apply/{keyword}`를 가리키고,
  * 해당 경로는 서버에서 `targetUrl`로 리디렉트합니다.
  * 목적지가 바뀌어도 이미 인쇄된 QR을 그대로 쓸 수 있습니다.
  */
@@ -729,4 +729,21 @@ export interface PromotionLink {
   lastScannedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+/**
+ * 홍보물 QR 스캔 기록
+ * Collection: promotionLinkScans/{docId}
+ *
+ * 스캔 1회당 문서 1개를 남겨 기간별 추이를 집계합니다.
+ * 링크가 삭제된 뒤에도 어떤 QR이었는지 알 수 있도록 keyword를 함께 저장합니다.
+ */
+export interface PromotionLinkScan {
+  id: string;
+  /** 스캔된 링크 문서 ID */
+  linkId: string;
+  /** 스캔된 링크의 키워드 (비정규화 필드) */
+  keyword: string;
+  /** 스캔 시각 */
+  scannedAt: Timestamp;
 }

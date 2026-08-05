@@ -6,13 +6,14 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  Timestamp,
   query,
   orderBy,
   where,
   limit,
 } from "firebase/firestore";
 import { db, COLLECTIONS } from "@/infrastructure/firebase";
-import type { PromotionLink } from "@/domain/entities";
+import type { PromotionLink, PromotionLinkScan } from "@/domain/entities";
 
 /** 홍보물 QR 링크 생성·수정 입력값 */
 export interface PromotionLinkInput {
@@ -28,6 +29,7 @@ export interface PromotionLinkInput {
  */
 export class PromotionLinkAdminRepository {
   private collectionRef = collection(db, COLLECTIONS.PROMOTION_LINKS);
+  private scansRef = collection(db, COLLECTIONS.PROMOTION_LINK_SCANS);
 
   /**
    * 전체 링크 목록 조회 (최근 등록순)
@@ -39,6 +41,27 @@ export class PromotionLinkAdminRepository {
       id: doc.id,
       ...doc.data(),
     })) as PromotionLink[];
+  }
+
+  /**
+   * 지정한 시각 이후의 스캔 기록을 조회합니다.
+   *
+   * 대시보드의 기간별 추이 집계에 사용합니다.
+   *
+   * @param {Date} from - 조회 시작 시각 (이 시각 포함)
+   * @returns {Promise<PromotionLinkScan[]>} 오래된 순으로 정렬된 스캔 기록
+   */
+  async getScansSince(from: Date): Promise<PromotionLinkScan[]> {
+    const q = query(
+      this.scansRef,
+      where("scannedAt", ">=", Timestamp.fromDate(from)),
+      orderBy("scannedAt", "asc")
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as PromotionLinkScan[];
   }
 
   /**
