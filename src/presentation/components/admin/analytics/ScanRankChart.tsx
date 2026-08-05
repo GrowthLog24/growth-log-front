@@ -55,9 +55,13 @@ export function ScanRankChart({ items, days, className }: ScanRankChartProps) {
               role="img"
               aria-label={`${item.name}: 최근 ${days}일 ${item.count}회 스캔`}
             >
+              {/* 색은 추이 그래프의 선과 같은 QR을 가리킵니다. */}
               <div
-                className="h-full rounded-r-[4px] bg-[var(--color-green-1)] dark:bg-[var(--color-green-4)]"
-                style={{ width: `${width}%` }}
+                className="h-full rounded-r-[4px]"
+                style={{
+                  width: `${width}%`,
+                  backgroundColor: `var(--series-${item.colorSlot})`,
+                }}
               />
             </div>
           </li>

@@ -6,8 +6,16 @@ const TIME_ZONE = "Asia/Seoul";
 /** 기본 집계 기간 (일) */
 const DEFAULT_DAYS = 30;
 
-/** 순위 차트에 보여줄 QR 개수 */
+/**
+ * 개별 선/막대로 구분해 보여줄 QR 개수
+ *
+ * 이보다 많으면 색을 돌려쓰지 않고 "기타"로 묶습니다.
+ * (같은 색이 다른 QR을 가리키면 그래프를 잘못 읽게 됩니다)
+ */
 const TOP_LINK_LIMIT = 5;
+
+/** "기타"로 묶인 QR의 식별자 */
+export const OTHER_SERIES_ID = "__others__";
 
 /** 하루 밀리초 */
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -31,6 +39,21 @@ export interface QrLinkRank {
   count: number;
   /** 누적 스캔 수 */
   totalCount: number;
+  /** 색상 슬롯 (1부터 시작, 0은 "기타") */
+  colorSlot: number;
+}
+
+/** 추이 그래프의 QR별 선 하나 */
+export interface QrSeries {
+  id: string;
+  name: string;
+  keyword: string;
+  /** 색상 슬롯 (1부터 시작, 0은 "기타") */
+  colorSlot: number;
+  /** daily와 같은 길이·순서의 일별 스캔 수 */
+  counts: number[];
+  /** 기간 내 합계 */
+  total: number;
 }
 
 /** 대시보드 QR 분석 데이터 */
@@ -49,8 +72,10 @@ export interface QrAnalytics {
   activeLinks: number;
   /** 전체 QR 수 */
   totalLinks: number;
-  /** 일별 추이 (오래된 날짜부터) */
+  /** 전체 QR 합계의 일별 추이 (오래된 날짜부터) */
   daily: QrDailyPoint[];
+  /** QR별 일별 추이 (스캔이 있는 QR만, 많은 순) */
+  series: QrSeries[];
   /** 기간 내 스캔이 많은 QR 순위 */
   topLinks: QrLinkRank[];
 }
@@ -139,7 +164,11 @@ export function buildQrAnalytics(
   const rangeStart = now.getTime() - days * DAY_MS;
   const previousRangeStart = rangeStart - days * DAY_MS;
 
+  /** 날짜 키 → daily 배열 인덱스 */
+  const dayIndexByKey = new Map(daily.map((point, index) => [point.date, index]));
+
   const countsByLinkId = new Map<string, number>();
+  const dailyCountsByLinkId = new Map<string, number[]>();
   let rangeScans = 0;
   let previousRangeScans = 0;
 
@@ -162,13 +191,23 @@ export function buildQrAnalytics(
     if (countsByDay.has(key)) {
       countsByDay.set(key, countsByDay.get(key)! + 1);
     }
+
+    const dayIndex = dayIndexByKey.get(key);
+    if (dayIndex !== undefined) {
+      let linkCounts = dailyCountsByLinkId.get(scan.linkId);
+      if (!linkCounts) {
+        linkCounts = new Array<number>(daily.length).fill(0);
+        dailyCountsByLinkId.set(scan.linkId, linkCounts);
+      }
+      linkCounts[dayIndex]++;
+    }
   }
 
   for (const point of daily) {
     point.count = countsByDay.get(point.date) ?? 0;
   }
 
-  const topLinks: QrLinkRank[] = links
+  const rankedLinks = links
     .map((link) => ({
       id: link.id,
       name: link.name,
@@ -177,8 +216,48 @@ export function buildQrAnalytics(
       totalCount: link.scanCount ?? 0,
     }))
     // 기간 내 스캔이 같으면 누적이 많은 QR을 위로 올립니다.
-    .sort((a, b) => b.count - a.count || b.totalCount - a.totalCount)
-    .slice(0, TOP_LINK_LIMIT);
+    .sort((a, b) => b.count - a.count || b.totalCount - a.totalCount);
+
+  const topLinks: QrLinkRank[] = rankedLinks
+    .slice(0, TOP_LINK_LIMIT)
+    .map((link, index) => ({ ...link, colorSlot: index + 1 }));
+
+  const series: QrSeries[] = [];
+  for (const link of topLinks) {
+    const counts = dailyCountsByLinkId.get(link.id);
+    // 기간 내 스캔이 없는 QR은 0으로만 이어진 선이라 그래프를 어지럽힙니다.
+    if (!counts) continue;
+    series.push({
+      id: link.id,
+      name: link.name,
+      keyword: link.keyword,
+      colorSlot: link.colorSlot,
+      counts,
+      total: link.count,
+    });
+  }
+
+  // 색을 돌려쓰지 않도록 상위 밖의 QR은 하나의 "기타" 선으로 합칩니다.
+  const otherCounts = new Array<number>(daily.length).fill(0);
+  let otherTotal = 0;
+  for (const link of rankedLinks.slice(TOP_LINK_LIMIT)) {
+    const counts = dailyCountsByLinkId.get(link.id);
+    if (!counts) continue;
+    for (let index = 0; index < counts.length; index++) {
+      otherCounts[index] += counts[index];
+    }
+    otherTotal += link.count;
+  }
+  if (otherTotal > 0) {
+    series.push({
+      id: OTHER_SERIES_ID,
+      name: `기타 ${rankedLinks.length - TOP_LINK_LIMIT}개`,
+      keyword: "",
+      colorSlot: 0,
+      counts: otherCounts,
+      total: otherTotal,
+    });
+  }
 
   let totalScans = 0;
   let activeLinks = 0;
@@ -201,6 +280,7 @@ export function buildQrAnalytics(
     activeLinks,
     totalLinks: links.length,
     daily,
+    series,
     topLinks,
   };
 }

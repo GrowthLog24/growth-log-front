@@ -85,6 +85,7 @@ export function QrAnalyticsSection({ analytics }: QrAnalyticsSectionProps) {
     activeLinks,
     totalLinks,
     daily,
+    series,
     topLinks,
   } = analytics;
 
@@ -133,7 +134,7 @@ export function QrAnalyticsSection({ analytics }: QrAnalyticsSectionProps) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <CardTitle className="text-sm font-medium">
-                  일별 스캔 추이
+                  QR별 일별 스캔 추이
                 </CardTitle>
                 <CardDescription>최근 {days}일</CardDescription>
               </div>
@@ -141,7 +142,7 @@ export function QrAnalyticsSection({ analytics }: QrAnalyticsSectionProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <ScanTrendChart data={daily} />
+            <ScanTrendChart points={daily} series={series} />
           </CardContent>
         </Card>
 
