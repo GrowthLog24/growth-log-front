@@ -14,6 +14,7 @@ import {
   Trophy,
   MousePointerClick,
   FileUp,
+  Instagram,
   QrCode,
   type LucideIcon,
 } from "lucide-react";
@@ -75,6 +76,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: FileUp,
   },
   {
+    title: "카드뉴스 제작",
+    href: "/admin/instagram-content",
+    icon: Instagram,
+  },
+  {
     title: "FAQ",
     href: "/admin/faqs",
     icon: HelpCircle,
@@ -128,6 +134,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/testimonials": "멤버 후기",
   "/admin/notices": "공지사항",
   "/admin/blog-publisher": "블로그 자동 게시",
+  "/admin/instagram-content": "카드뉴스 제작",
   "/admin/faqs": "FAQ",
   "/admin/schedules": "월별 일정",
   "/admin/members": "멤버 관리",

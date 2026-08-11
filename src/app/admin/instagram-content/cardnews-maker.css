@@ -1,0 +1,266 @@
+#cardnews-maker{
+  --g-symbol:#00962B; --g-logo:#3FB52B;
+  --g-hi-dark:#75D565; --g-hi-light:#B3EEAA; --g-number:#00962B; --g-link:#007D23;
+  --f-kr:'Pretendard',-apple-system,sans-serif; --f-num:'Montserrat',sans-serif;
+  --paper:#FAFAFA; --paper-alt:#F5F5F5; --ink:#1A1A1A; --body:#666;
+  --muted:#919191; --hairline:#E6E6E6; --white:#FFF;
+  --z:.46;
+}
+#cardnews-maker *{margin:0;padding:0;box-sizing:border-box}
+#cardnews-maker{background:var(--paper-alt);font-family:var(--f-kr);color:var(--ink);padding:32px 36px 48px;line-height:1.5}
+#cardnews-maker button,#cardnews-maker input,#cardnews-maker select,#cardnews-maker textarea{font:inherit}
+#cardnews-maker button:focus-visible,#cardnews-maker input:focus-visible,#cardnews-maker select:focus-visible,#cardnews-maker textarea:focus-visible{outline:2px solid var(--g-symbol);outline-offset:3px}
+
+/* ===== TABS ===== */
+#cardnews-maker .tabs{max-width:1560px;margin:0 auto;display:flex;gap:32px;border-bottom:1px solid var(--hairline);background:var(--paper);padding:0 28px}
+#cardnews-maker .tab{border:0;background:transparent;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.08em;
+  padding:18px 0 15px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+#cardnews-maker .tab:hover{color:var(--ink)}
+#cardnews-maker .tab.active{color:var(--g-symbol);border-bottom-color:var(--g-symbol)}
+
+#cardnews-maker .top{max-width:1560px;margin:0 auto 32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--paper);padding:28px;border-bottom:1px solid var(--hairline)}
+#cardnews-maker .top h1{font-size:25px;font-weight:800;letter-spacing:-.025em;width:100%;padding-top:25px;position:relative}
+#cardnews-maker .top h1::before{content:'CARD NEWS STUDIO';position:absolute;left:0;top:0;color:var(--g-symbol);font-family:var(--f-num);
+  font-size:11px;font-weight:800;letter-spacing:.2em}
+#cardnews-maker .top p{font-size:13px;color:var(--body);width:100%;line-height:1.7;border-top:1px solid var(--hairline);padding-top:18px;margin-top:8px}
+#cardnews-maker .top code{background:transparent;color:var(--ink);font-weight:600}
+#cardnews-maker .btn{border:1px solid var(--ink);background:var(--ink);color:var(--white);font-weight:700;font-size:12px;
+  padding:9px 14px;border-radius:0;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+#cardnews-maker .btn:hover{background:var(--g-symbol);border-color:var(--g-symbol)}
+#cardnews-maker .btn.sec{background:transparent;color:var(--ink);border-color:#BDBDBD}
+#cardnews-maker .btn.sec:hover{background:var(--white);border-color:var(--ink)}
+#cardnews-maker .btn.hi-a{border-bottom:3px solid var(--g-hi-dark)}
+#cardnews-maker .btn.hi-b{border-bottom:3px solid var(--g-hi-light)}
+#cardnews-maker .tool-sep{width:1px;height:26px;background:var(--hairline)}
+#cardnews-maker .page-count{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--body)}
+#cardnews-maker .page-count select{border:1px solid #BDBDBD;border-radius:0;background:var(--white);padding:8px 28px 8px 10px;color:var(--ink)}
+#cardnews-maker .zoom{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:var(--body);margin-left:auto}
+#cardnews-maker .zoom input{accent-color:var(--g-symbol)}
+#cardnews-maker .nameRow{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--body);width:100%;margin-top:8px}
+#cardnews-maker .nameRow label{font-weight:700;color:var(--ink);flex:none}
+#cardnews-maker .nameRow input{font-size:13px;padding:9px 11px;border:1px solid #BDBDBD;border-radius:0;width:360px;background:var(--white)}
+#cardnews-maker .nameRow #namePreview{color:var(--g-symbol);font-weight:600;font-family:ui-monospace,monospace;font-size:12px}
+#cardnews-maker .nameRow select{font-size:12px;padding:9px 10px;border:1px solid #BDBDBD;border-radius:0;background:var(--white);color:var(--ink)}
+#cardnews-maker .nameRow input.changed{border-color:var(--g-symbol);background:#F1FBEF;box-shadow:inset 3px 0 0 var(--g-symbol)}
+#cardnews-maker .cards{max-width:1560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:start}
+#cardnews-maker .item{display:flex;flex-direction:column;gap:10px;min-width:0}
+#cardnews-maker .item .lbl{font-size:11px;font-weight:700;color:var(--body);letter-spacing:.04em;display:flex;justify-content:space-between;
+  align-items:center;gap:6px;flex-wrap:wrap;min-height:31px;border-bottom:1px solid var(--hairline);padding-bottom:8px}
+#cardnews-maker .item .lbl button{font-size:10.5px;padding:4px 7px}
+#cardnews-maker .ph-ctl{display:flex;gap:4px;align-items:center}
+#cardnews-maker .slot{width:100%;aspect-ratio:1080/1350;overflow:hidden;border:1px solid var(--hairline);border-radius:0;
+  box-shadow:0 12px 40px rgba(34,34,34,.10);background:var(--white)}
+#cardnews-maker .stage{width:1080px;height:1350px;transform:scale(var(--z));transform-origin:top left}
+@media(max-width:1100px){#cardnews-maker{padding:20px}#cardnews-maker .tabs,#cardnews-maker .top{padding-left:20px;padding-right:20px}#cardnews-maker .top{margin-bottom:24px}#cardnews-maker .zoom{margin-left:0}}
+#cardnews-maker .sys[hidden]{display:none}
+
+/* ===== PROMPT ZIP IMPORT ===== */
+#cardnews-maker .import-modal[hidden]{display:none}
+#cardnews-maker .import-modal{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:24px}
+#cardnews-maker .import-backdrop{position:absolute;inset:0;background:rgba(26,26,26,.68)}
+#cardnews-maker .import-dialog{position:relative;width:min(680px,100%);max-height:88vh;overflow:auto;background:var(--paper);border-top:4px solid var(--g-symbol);padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+#cardnews-maker .import-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+#cardnews-maker .import-kicker{font-family:var(--f-num);font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--g-symbol)}
+#cardnews-maker .import-title{margin-top:7px;font-size:24px;font-weight:800;letter-spacing:-.025em}
+#cardnews-maker .import-close{border:0;background:transparent;padding:4px;color:var(--body);font-size:22px;cursor:pointer}
+#cardnews-maker .drop-zone{margin-top:22px;width:100%;border:1px dashed #919191;background:var(--white);padding:34px 24px;text-align:left;cursor:pointer}
+#cardnews-maker .drop-zone.dragover{border-color:var(--g-symbol);background:#F1FBEF}
+#cardnews-maker .drop-zone strong{display:block;font-size:15px}
+#cardnews-maker .drop-zone span{display:block;margin-top:6px;font-size:12px;color:var(--body)}
+#cardnews-maker .archive-chooser{margin-top:20px;border-top:1px solid var(--hairline);padding-top:20px}
+#cardnews-maker .archive-chooser label{display:block;font-size:12px;font-weight:700;color:var(--body)}
+#cardnews-maker .archive-chooser select{margin-top:7px;width:100%;border:1px solid #BDBDBD;border-radius:0;background:var(--white);padding:10px;color:var(--ink)}
+#cardnews-maker .archive-preview{margin-top:12px;max-height:210px;overflow:auto;white-space:pre-wrap;border:1px solid var(--hairline);background:var(--white);padding:14px;font-family:ui-monospace,monospace;font-size:11px;line-height:1.6;color:var(--body)}
+#cardnews-maker .import-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+
+/* ===== DYNAMIC EDITORIAL CARDS ===== */
+#cardnews-maker .card.extra-card{background:#FAFAFA!important}
+#cardnews-maker .card.extra-card .tag{left:88px!important;top:96px!important;color:#00962B!important}
+#cardnews-maker .card.extra-card .heading{left:88px!important;top:220px!important;width:904px!important;color:#222!important;font-size:76px!important;line-height:1.2!important}
+#cardnews-maker .card.extra-card .lead{left:88px!important;top:500px!important;width:904px!important;color:#666!important;font-size:38px!important;line-height:1.5!important}
+#cardnews-maker .card.extra-card .extra-shot{left:88px;top:690px;width:904px;height:360px;background:#EEF1F4;z-index:2}
+#cardnews-maker .card.extra-card .list{position:absolute!important;left:88px!important;top:690px!important;width:904px!important;border-top:1px solid #E6E6E6!important;z-index:5!important}
+#cardnews-maker .card.extra-card .list .row{height:96px!important;display:flex!important;align-items:center!important;border-bottom:1px solid #E6E6E6!important}
+#cardnews-maker .card.extra-card .list .num{width:72px!important;flex:none!important;font-family:var(--f-num)!important;font-size:31px!important;font-weight:800!important;color:#00962B!important}
+#cardnews-maker .card.extra-card .list .txt{font-size:34px!important;font-weight:600!important;color:#333!important}
+#cardnews-maker .card.extra-card .source{position:absolute!important;left:88px!important;top:1080px!important;width:904px!important;color:#919191!important;font-size:21px!important;z-index:5!important}
+#cardnews-maker .card.extra-card .handle{color:#BDBDBD!important}
+#cardnews-maker .card.extra-card .divider{background:#E6E6E6!important}
+#cardnews-maker .card.extra-card .logo{color:#111!important}
+#cardnews-maker .card.extra-card .foot{color:#666!important}
+#cardnews-maker .card.extra-card .pagenum{color:#919191!important}
+
+/* ============ SHARED CARD BASE (세 시스템 공통 · 타입스케일 통일) ============ */
+#cardnews-maker .card{position:relative;width:1080px;height:1350px;overflow:hidden}
+#cardnews-maker .tag{position:absolute;left:80px;top:80px;font-weight:700;font-size:28px;line-height:1.3;z-index:5}
+#cardnews-maker .handle{position:absolute;right:80px;top:82px;font-weight:500;font-size:24px;letter-spacing:-.01em;z-index:5}
+#cardnews-maker .heading{position:absolute;left:80px;width:920px;font-weight:700;font-size:75px;line-height:1.2;letter-spacing:-.01em;
+  white-space:pre-line;z-index:5}
+#cardnews-maker .lead{position:absolute;left:80px;width:920px;white-space:pre-line;z-index:5;font-weight:400;font-size:41px;line-height:57px}
+#cardnews-maker mark{-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#cardnews-maker .divider{position:absolute;left:80px;top:1230px;width:920px;height:1px;z-index:5}
+#cardnews-maker .logo{position:absolute;left:80px;top:1184px;height:44px;display:flex;align-items:center;gap:9px;z-index:5}
+#cardnews-maker .logo svg{height:28px;width:auto;display:block;margin-left:2px}
+#cardnews-maker .logo .word{font-family:var(--f-num);font-weight:800;font-size:27px;letter-spacing:2px;color:currentColor;line-height:1}
+#cardnews-maker .foot{position:absolute;left:80px;top:1241px;font-weight:500;font-size:24px;z-index:5}
+#cardnews-maker .foot .en{font-family:var(--f-kr);font-weight:500}
+#cardnews-maker .pagenum{position:absolute;right:80px;top:1243px;font-family:var(--f-num);font-weight:700;font-style:italic;font-size:22px;z-index:5}
+#cardnews-maker [contenteditable]{outline:none}
+#cardnews-maker [contenteditable]:focus{outline:2px dashed rgba(18,156,57,.5);outline-offset:4px}
+
+/* ===== PHOTO SLOT 공통 동작 ===== */
+#cardnews-maker .ph{overflow:hidden;cursor:pointer;position:absolute}
+#cardnews-maker .ph img.phimg{position:absolute;max-width:none;max-height:none;display:block;
+  user-select:none;-webkit-user-drag:none;pointer-events:none;z-index:0}
+#cardnews-maker .ph.dragover{outline:3px dashed var(--g-symbol);outline-offset:-3px}
+#cardnews-maker .ph.filled{cursor:grab}
+#cardnews-maker .ph.filled:active{cursor:grabbing}
+#cardnews-maker .ph .ph-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  font-size:22px;font-weight:500;text-align:center;padding:24px;pointer-events:none;color:#9aa2ab}
+#cardnews-maker .ph.ondark .ph-empty{color:#cfd4cf}
+#cardnews-maker .ph.filled .ph-empty{display:none}
+#cardnews-maker .ph.filled{outline-offset:-2px}
+#cardnews-maker .ph.active{outline:2px solid var(--g-symbol)}
+
+/* 사진 조절 패널 (카드 밖 · 저장에 안 찍힘) */
+#cardnews-maker #phPanel{position:fixed;z-index:9999;display:none;gap:10px;align-items:center;
+  background:var(--ink);color:#fff;padding:9px 12px;border-radius:0;
+  box-shadow:0 10px 28px rgba(0,0,0,.28);font-family:var(--f-kr);font-size:12.5px;white-space:nowrap}
+#cardnews-maker #phPanel.on{display:flex}
+#cardnews-maker #phPanel::before{content:'';position:absolute;top:-6px;left:18px;border:6px solid transparent;border-top:0;border-bottom-color:var(--ink)}
+#cardnews-maker #phPanel .lbl{opacity:.75}
+#cardnews-maker #phPanel input[type=range]{width:130px;accent-color:var(--g-hi-dark)}
+#cardnews-maker #phPanel .val{width:38px;text-align:right;font-family:var(--f-num);font-weight:700}
+#cardnews-maker #phPanel button{font-family:var(--f-kr);font-size:12px;font-weight:600;padding:5px 10px;border:1px solid rgba(255,255,255,.28);border-radius:0;cursor:pointer;
+  background:rgba(255,255,255,.16);color:#fff}
+#cardnews-maker #phPanel button:hover{background:rgba(255,255,255,.28)}
+#cardnews-maker #phPanel button.warn{background:transparent}
+#cardnews-maker #phPanel .sep{width:1px;height:18px;background:rgba(255,255,255,.22)}
+
+#cardnews-maker #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);z-index:10000;
+  background:var(--ink);color:#fff;padding:11px 18px;border-radius:0;font-size:13.5px;font-weight:600;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.18s;max-width:90vw;text-align:center}
+#cardnews-maker #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#cardnews-maker .ph .zhint{position:absolute;left:0;right:0;bottom:0;padding:9px;text-align:center;font-size:13px;color:#fff;
+  background:rgba(0,0,0,.6);z-index:8;display:none}
+#cardnews-maker .ph.filled:hover .zhint{display:block}
+#cardnews-maker.exporting .ph .zhint{display:none!important}
+
+/* ================================================================
+   [1] 성장일지 — 다크 그라데이션 표지 + 라이트 본문(체크리스트/스크린샷)
+   ================================================================ */
+#cardnews-maker #sysJournal .card.light{background:#FAFAFA}
+/* 표지 배경 — PSD 원본 픽셀값에 맞춤 */
+#cardnews-maker #sysJournal .card.cover{background:
+  radial-gradient(105% 45% at 84% -2%, rgba(9,48,26,.62) 0%, rgba(5,19,2,0) 70%),
+  linear-gradient(180deg,#062009 0%,#051302 30%,#051302 100%)}
+#cardnews-maker #sysJournal .card.light .tag{color:#333333}
+#cardnews-maker #sysJournal .card.cover .tag{color:#79DD68}
+#cardnews-maker #sysJournal .card.light .handle{color:#c7c7c7}
+#cardnews-maker #sysJournal .card.cover .handle{color:#AAAAAA}
+#cardnews-maker #sysJournal .heading{top:256px;color:#333333}
+#cardnews-maker #sysJournal .card.cover .heading{top:363px;color:#EEEEEE}
+#cardnews-maker #sysJournal mark{background:var(--g-hi-light);color:#333333;padding:.06em .08em;border-radius:2px}
+#cardnews-maker #sysJournal mark.t{background:var(--g-hi-dark);color:#1A1A1A}
+#cardnews-maker #sysJournal .card.cover mark{background:var(--g-hi-dark);color:#1A1A1A}
+#cardnews-maker #sysJournal .lead{top:542px}
+#cardnews-maker #sysJournal .lead.mute{color:#777777}
+#cardnews-maker #sysJournal .lead.strong{color:#333333}
+#cardnews-maker #sysJournal .card.cover .lead{top:697px;font-weight:500;font-size:38px;line-height:1.21;color:#DDDDDD}
+#cardnews-maker #sysJournal .note{position:absolute;left:80px;top:726px;font-weight:300;font-size:38px;line-height:1.4;color:#777777;white-space:pre-line;z-index:5}
+#cardnews-maker #sysJournal .list{position:absolute;left:80px;top:714px;width:920px;border-top:1px solid #E9E9E9;z-index:5}
+#cardnews-maker #sysJournal .list .row{height:106px;display:flex;align-items:center;border-bottom:1px solid #E9E9E9}
+#cardnews-maker #sysJournal .list .num{font-family:var(--f-num);font-weight:700;font-style:italic;font-size:36px;color:var(--g-number);width:70px;flex:none}
+#cardnews-maker #sysJournal .list .txt{font-weight:600;font-size:36px;color:#555555}
+#cardnews-maker #sysJournal .source{position:absolute;left:80px;top:1088px;font-weight:400;font-size:22px;line-height:1.55;color:#555555;white-space:pre-line;z-index:5}
+#cardnews-maker #sysJournal .ph.jshot{left:501px;top:785px;width:500px;height:321px;border-radius:14px 14px 0 0;
+  background-color:#efefef;box-shadow:7px 7px 7px 0px rgba(221,221,221,.50);z-index:2}
+#cardnews-maker #sysJournal .shot-cap{position:absolute;right:89px;top:1125px;font-size:25px;color:#9C9C9C;white-space:nowrap;z-index:5}
+#cardnews-maker #sysJournal .card.light .divider{background:#E9E9E9}
+#cardnews-maker #sysJournal .card.cover .divider{background:rgba(255,255,255,.12)}
+#cardnews-maker #sysJournal .card.light .logo{color:#000}
+#cardnews-maker #sysJournal .card.cover .logo{color:#fff}
+#cardnews-maker #sysJournal .card.light .foot{color:#555555}
+#cardnews-maker #sysJournal .card.cover .foot{color:#AAAAAA}
+#cardnews-maker #sysJournal .card.light .pagenum{color:#b0b0b0}
+#cardnews-maker #sysJournal .card.cover .pagenum{color:#AAAAAA}
+
+/* ================================================================
+   [2] 정기모임 — 사진이 주인공 (밴드/풀블리드/라운드)
+   ================================================================ */
+#cardnews-maker #sysMeetup .card.photoinset{background:#FAFAFA}
+#cardnews-maker #sysMeetup .card.photocover{background:
+  radial-gradient(120% 58% at 82% 3%, rgba(28,110,52,.22) 0%, rgba(8,11,9,0) 52%), #080b09}
+#cardnews-maker #sysMeetup .photoinset .tag{color:#00962B}
+#cardnews-maker #sysMeetup .photocover .tag{color:#79DD68}
+#cardnews-maker #sysMeetup .handle{color:#AAAAAA}
+#cardnews-maker #sysMeetup .photoinset .heading{top:250px;color:#333333}
+#cardnews-maker #sysMeetup .photocover .heading{top:366px;color:#EEEEEE;text-shadow:0 2px 24px rgba(0,0,0,.45)}
+#cardnews-maker #sysMeetup #m4 .heading{color:#FAFAFA}
+#cardnews-maker #sysMeetup mark{background:var(--g-hi-light);color:#191919;padding:.06em .1em;border-radius:3px;text-shadow:none}
+#cardnews-maker #sysMeetup mark.t{background:var(--g-hi-dark);color:#191919}
+#cardnews-maker #sysMeetup .photocover mark{background:var(--g-hi-dark);color:#191919}
+#cardnews-maker #sysMeetup .photoinset .heading mark{background:transparent;color:var(--g-number);font-weight:800;padding:0}
+#cardnews-maker #sysMeetup .photoinset .lead{top:542px;font-weight:500;color:#777777}
+#cardnews-maker #sysMeetup .photocover .lead{top:593px;font-weight:500;font-size:38px;line-height:1.5;color:#DDDDDD;text-shadow:0 1px 16px rgba(0,0,0,.45)}
+#cardnews-maker #sysMeetup #m1 .lead{top:700px}
+#cardnews-maker #sysMeetup #m4 .lead{width:880px;color:#CCCCCC;font-size:36px}
+#cardnews-maker #sysMeetup .ph.cover{inset:0;z-index:0;background-color:#0c110d}
+#cardnews-maker #sysMeetup .veil{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 72% at 82% 2%, rgba(30,120,56,.24) 0%, rgba(0,0,0,0) 55%),
+   linear-gradient(180deg, rgba(6,10,8,.93) 0%, rgba(6,10,8,.88) 26%, rgba(6,10,8,.70) 50%, rgba(6,10,8,.52) 72%, rgba(6,10,8,.60) 100%)}
+#cardnews-maker #sysMeetup .ph.band{left:0;right:0;bottom:0;top:auto;height:772px;z-index:0;background-color:#0c110d}
+#cardnews-maker #sysMeetup .veil.band{inset:auto 0 0 0;height:772px;
+  background:radial-gradient(126% 82% at 50% 46%, rgba(8,11,9,0) 30%, rgba(8,11,9,.34) 66%, rgba(8,11,9,.80) 100%),
+   linear-gradient(180deg,#080b09 0%, rgba(8,11,9,.99) 8%, rgba(8,11,9,.62) 22%, rgba(8,11,9,.26) 37%,
+     rgba(8,11,9,.30) 52%, rgba(8,11,9,.60) 72%, rgba(8,11,9,.90) 86%, #080b09 100%)}
+#cardnews-maker #sysMeetup .ph.inset{left:79px;top:707px;width:921px;height:414px;border-radius:10px;
+  background-color:#eef1f4;box-shadow:0 20px 44px rgba(20,30,20,.12);z-index:2}
+#cardnews-maker #sysMeetup .photoinset .divider{background:#E6E6E6}
+#cardnews-maker #sysMeetup .photocover .divider{background:rgba(255,255,255,.14)}
+#cardnews-maker #sysMeetup .photoinset .logo{color:#000}
+#cardnews-maker #sysMeetup .photocover .logo{color:#fff}
+#cardnews-maker #sysMeetup .photoinset .foot{color:#555555}
+#cardnews-maker #sysMeetup .photocover .foot{color:#AAAAAA}
+#cardnews-maker #sysMeetup .pagenum{color:#AAAAAA}
+
+/* ================================================================
+   [3] 프로젝트 — 브라우저 목업 (거의 검정 표지 + 라이트 본문)
+   ================================================================ */
+#cardnews-maker #sysProject .card.light{background:#F5F5F5}
+#cardnews-maker #sysProject .card.cover{background:
+  radial-gradient(120% 80% at 80% 4%, rgba(40,120,60,.18) 0%, rgba(10,10,10,0) 55%),
+  linear-gradient(202deg,#141414 0%,#0E0E0E 55%,#0A0A0A 100%)}
+#cardnews-maker #sysProject .card.light .tag{color:#1E1E1E}
+#cardnews-maker #sysProject .card.cover .tag{color:#5FD35F}
+#cardnews-maker #sysProject .card.light .handle{color:#c7c7c7}
+#cardnews-maker #sysProject .card.cover .handle{color:#8A8A8A}
+#cardnews-maker #sysProject .heading{top:248px;color:#1E1E1E;letter-spacing:-.015em}
+#cardnews-maker #sysProject .card.cover .heading{top:352px;color:#F2F2F2}
+#cardnews-maker #sysProject mark{background:var(--g-hi-light);color:#1E1E1E;padding:.06em .08em;border-radius:2px}
+#cardnews-maker #sysProject mark.t{background:var(--g-hi-dark);color:#123A18}
+#cardnews-maker #sysProject .card.cover mark{background:var(--g-hi-dark);color:#123A18}
+#cardnews-maker #sysProject .lead{top:544px;color:#8A8A8A}
+#cardnews-maker #sysProject .card.cover .lead{top:672px;font-size:38px;line-height:1.45;color:#DDDDDD}
+#cardnews-maker #sysProject .frame{position:absolute;left:158px;top:722px;width:764px;border-radius:16px;overflow:hidden;
+  background:#fff;border:1px solid #e6e9ec;box-shadow:0 14px 30px rgba(30,40,60,.10);z-index:2}
+#cardnews-maker #sysProject .frame .chrome{height:42px;background:#f2f4f6;border-bottom:1px solid #e8ebee;display:flex;align-items:center;gap:9px;padding:0 17px}
+#cardnews-maker #sysProject .frame .chrome i{width:13px;height:13px;border-radius:50%;display:inline-block}
+#cardnews-maker #sysProject .frame .chrome i:nth-child(1){background:#ff5f57}
+#cardnews-maker #sysProject .frame .chrome i:nth-child(2){background:#febc2e}
+#cardnews-maker #sysProject .frame .chrome i:nth-child(3){background:#28c840}
+#cardnews-maker #sysProject .ph.pframe{position:relative;width:100%;height:350px;background-color:#eef1f4}
+#cardnews-maker #sysProject .ph.pbleed{left:0;top:792px;width:1080px;height:558px;background-color:#141a12;z-index:0}
+#cardnews-maker #sysProject .cover-fade{position:absolute;left:0;width:1080px;pointer-events:none;z-index:1}
+#cardnews-maker #sysProject .cover-fade.top{top:792px;height:128px;background:linear-gradient(to bottom,#0d0d0d 0%,rgba(13,13,13,0) 100%)}
+#cardnews-maker #sysProject .cover-fade.bot{top:1150px;height:200px;background:linear-gradient(to top,#0a0a0a 0%,rgba(10,10,10,.9) 42%,rgba(10,10,10,0) 100%)}
+#cardnews-maker #sysProject .card.light .divider{background:#E5E5E5}
+#cardnews-maker #sysProject .card.cover .divider{background:rgba(255,255,255,.10)}
+#cardnews-maker #sysProject .card.light .logo{color:#111}
+#cardnews-maker #sysProject .card.cover .logo{color:#fff}
+#cardnews-maker #sysProject .card.light .foot{color:#555555}
+#cardnews-maker #sysProject .card.cover .foot{color:#8A8A8A}
+#cardnews-maker #sysProject .card.light .pagenum{color:#b0b0b0}
+#cardnews-maker #sysProject .card.cover .pagenum{color:#8A8A8A}
+#cardnews-maker #sysJournal .card.cover{background:#1A1A1A}
