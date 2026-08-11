@@ -43,12 +43,6 @@
 #cardnews-maker .nameRow #namePreview{color:var(--g-symbol);font-weight:600;font-family:ui-monospace,monospace;font-size:12px}
 #cardnews-maker .nameRow select{font-size:12px;padding:9px 10px;border:1px solid #BDBDBD;border-radius:0;background:var(--white);color:var(--ink)}
 #cardnews-maker .nameRow input.changed{border-color:var(--g-symbol);background:#F1FBEF;box-shadow:inset 3px 0 0 var(--g-symbol)}
-#cardnews-maker #bulkpanel{border-top:1px solid var(--hairline);padding-top:18px}
-#cardnews-maker .bulk-help{font-size:13px;color:var(--body);margin-bottom:10px;line-height:1.7}
-#cardnews-maker .bulk-copy{width:100%;height:280px;font-family:ui-monospace,monospace;font-size:13px;line-height:1.6;
-  padding:14px;border:1px solid #BDBDBD;border-radius:0;box-sizing:border-box;background:var(--white);color:var(--ink)}
-#cardnews-maker .bulk-actions{margin-top:10px;display:flex;gap:8px;align-items:center}
-#cardnews-maker #bulkmsg{font-size:13px;color:var(--g-symbol);font-weight:600}
 #cardnews-maker .cards{max-width:1560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:start}
 #cardnews-maker .item{display:flex;flex-direction:column;gap:10px;min-width:0}
 #cardnews-maker .item .lbl{font-size:11px;font-weight:700;color:var(--body);letter-spacing:.04em;display:flex;justify-content:space-between;

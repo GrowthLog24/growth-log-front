@@ -1,5 +1,7 @@
 window.initCardNewsMaker = function initCardNewsMaker(root){
 const byId=id=>root.querySelector('#'+id);
+const controller=new AbortController();
+const listen=(target,type,handler,options={})=>target.addEventListener(type,handler,{...options,signal:controller.signal});
 const LOGO=`<svg viewBox="3.4 5.9 47.2 22.2" aria-label="Growth Log symbol"><g fill="none" stroke="#129C39" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,7.5 5,17 18,26.5"/><polyline points="36,7.5 49,17 36,26.5"/></g><g fill="#129C39"><path d="M27 21.5 C 20 21.5 19 13.8 23.2 11.5 C 25.7 14 27 17.4 27 21.5 Z"/><path d="M27 21.5 C 34 21.5 35 13.8 30.8 11.5 C 28.3 14 27 17.4 27 21.5 Z"/></g><rect x="26.1" y="19.5" width="1.8" height="7.2" rx="0.9" fill="#129C39"/></svg>`;
 
 /* ===== 시스템 정의 ===== */
@@ -33,11 +35,7 @@ function switchSys(k,btn){
   root.querySelectorAll('.sys').forEach(s=>s.hidden = (s.id!=='sys'+k));
   root.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t===btn));
   byId('sysTitle').textContent=cfg().title;
-  byId('bulkKeys').textContent=cfg().bulk.map(b=>'['+b.key+']').join(' / ');
-  byId('bulk').value='';
   byId('pageCount').value=String(cfg().bulk.length);
-  const p=byId('bulkpanel');
-  if(p.style.display==='block') loadCurrent();
   refreshNameUI();
   if(typeof closePhPanel==='function') closePhPanel();
   fitZoom();
@@ -105,7 +103,6 @@ function setPageCount(value,systemKey=CUR){
   refreshPageNumbers(systemKey);
   if(systemKey===CUR){
     byId('pageCount').value=String(system.bulk.length);
-    byId('bulkKeys').textContent=system.bulk.map(b=>'['+b.key+']').join(' / ');
     refreshNameUI(); fitZoom();
   }
 }
@@ -129,7 +126,7 @@ function setZoom(v){
   fitZoom();
   root.querySelectorAll('.ph.filled').forEach(layoutShot);
 }
-window.addEventListener('resize',fitZoom);
+listen(window,'resize',fitZoom);
 
 /* ===== 공통 요소 자동 생성 (핸들 · 푸터 · 사진칸 내부) ===== */
 root.querySelectorAll('.sys').forEach(sys=>{
@@ -279,18 +276,18 @@ async function exportAll(){                    // 전체 = ZIP 한 개로 저장
 
 /* ===== 초록 강조 : 씌우기 / 지우기 ===== */
 let lastRange=null;
-document.addEventListener('selectionchange',()=>{
+listen(document,'selectionchange',()=>{
   const s=window.getSelection();
   if(s.rangeCount && !s.isCollapsed){
     const n=s.anchorNode, host=(n&&n.nodeType===3?n.parentElement:n);
-    if(host && host.closest && host.closest('[contenteditable]')) lastRange=s.getRangeAt(0).cloneRange();
+    if(host && root.contains(host) && host.closest('[contenteditable]')) lastRange=s.getRangeAt(0).cloneRange();
   }
 });
 function liveRange(){
   const s=window.getSelection();
   if(s.rangeCount && !s.isCollapsed){
     const n=s.anchorNode, host=(n&&n.nodeType===3?n.parentElement:n);
-    if(host && host.closest && host.closest('[contenteditable]')) return s.getRangeAt(0);
+    if(host && root.contains(host) && host.closest('[contenteditable]')) return s.getRangeAt(0);
   }
   return lastRange;
 }
@@ -407,29 +404,30 @@ function clearById(id){ clearShot(byId(id)); }
 function bindPhotoSlot(el){
   if(!el||el.dataset.bound)return;
   decoratePhotoSlot(el); el.dataset.bound='true';
-  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('dragover');});
-  el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
-  el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('dragover');
+  listen(el,'dragover',e=>{e.preventDefault();el.classList.add('dragover');});
+  listen(el,'dragleave',()=>el.classList.remove('dragover'));
+  listen(el,'drop',e=>{e.preventDefault();el.classList.remove('dragover');
     if(e.dataTransfer.files[0])setShotImg(el,e.dataTransfer.files[0]);});
   let on=false,sx,sy,ox0,oy0,moved=false;
-  el.addEventListener('pointerdown',e=>{
+  listen(el,'pointerdown',e=>{
     if(!el.classList.contains('filled')||e.target.closest('.ctl'))return;
     on=true; moved=false; const t=el._t; sx=e.clientX; sy=e.clientY; ox0=t.ox; oy0=t.oy;
     e.preventDefault();
-    window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up);
+    window.addEventListener('pointermove',mv,{signal:controller.signal});
+    window.addEventListener('pointerup',up,{signal:controller.signal});
   });
   function mv(e){ if(!on)return; const z=curZoom();
     if(Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy)>3) moved=true;
     el._t.ox=ox0+(e.clientX-sx)/z; el._t.oy=oy0+(e.clientY-sy)/z; layoutShot(el);
     if(PH_CUR===el) placePhPanel(); }
   function up(){ on=false; window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up); }
-  el.addEventListener('wheel',e=>{
+  listen(el,'wheel',e=>{
     if(!el.classList.contains('filled'))return;
     e.preventDefault();
     const t=el._t; t.s=Math.min(maxScaleOf(el),Math.max(1,t.s*(e.deltaY<0?1.08:1/1.08)));
     layoutShot(el); if(PH_CUR===el) syncPhPanel();
   },{passive:false});
-  el.addEventListener('click',e=>{
+  listen(el,'click',e=>{
     if(e.target.closest('.ctl'))return;
     if(!el.classList.contains('filled')){ pickShot(el); return; }
     if(moved){ moved=false; return; }       // 드래그 끝난 클릭은 무시
@@ -437,7 +435,7 @@ function bindPhotoSlot(el){
   });
 }
 root.querySelectorAll('.ph').forEach(bindPhotoSlot);
-window.addEventListener('resize',()=>{root.querySelectorAll('.ph.filled').forEach(layoutShot);closePhPanel();});
+listen(window,'resize',()=>{root.querySelectorAll('.ph.filled').forEach(layoutShot);closePhPanel();});
 
 /* ===== 사진 조절 패널 : 사진 클릭 → 아래에 표시, 바깥 클릭 → 사라짐 ===== */
 let PH_CUR=null;
@@ -477,40 +475,18 @@ function phZoomInput(v){
 function phFit(){ if(!PH_CUR)return; PH_CUR._t={s:1,ox:0,oy:0}; layoutShot(PH_CUR); syncPhPanel(); }
 function phReplace(){ if(PH_CUR) pickShot(PH_CUR,1); }
 function phDelete(){ if(!PH_CUR)return; clearShot(PH_CUR); closePhPanel(); }
-document.addEventListener('mousedown',e=>{           // 다른 곳 클릭하면 닫힘
+listen(document,'mousedown',e=>{           // 다른 곳 클릭하면 닫힘
   if(!PH_CUR)return;
   if(e.target.closest('#phPanel')||e.target.closest('.ph'))return;
   closePhPanel();
 });
-window.addEventListener('scroll',closePhPanel,true);
+listen(window,'scroll',closePhPanel,{capture:true});
 
 /* ===== 카드 카피 적용 ===== */
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function toHTML(v){ return esc(v)
   .replace(/\{\{(.+?)\}\}/g,'<mark class="t">$1</mark>')   // {{제목강조}} = 진한 초록
   .replace(/\[\[(.+?)\]\]/g,'<mark>$1</mark>'); }          // [[본문강조]] = 연한 초록
-function fromHTML(el){
-  let h=el.innerHTML
-        .replace(/<mark[^>]*class="t"[^>]*>([\s\S]*?)<\/mark>/gi,'{{$1}}')
-        .replace(/<mark[^>]*>([\s\S]*?)<\/mark>/gi,'[[$1]]')
-        .replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'')
-        .replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ');
-  return h.replace(/ /g,' ').replace(/[ \t]+\n/g,'\n').trim();
-}
-function serialize(){
-  const systemName={Journal:'성장일지',Meetup:'정기모임',Project:'프로젝트'}[CUR];
-  let out=['세트이름: '+(cfg().setName||''),'시스템: '+systemName,'장수: '+cfg().bulk.length,''];
-  cfg().bulk.forEach((c,index)=>{
-    out.push('[카드'+(index+1)+']');
-    const card=byId(c.id);
-    for(const [label,sel] of c.f){
-      if(label==='항목'){ card.querySelectorAll(sel).forEach(n=>out.push('항목: '+fromHTML(n).replace(/\n/g,' '))); }
-      else{ const n=card.querySelector(sel); if(n) out.push(label+': '+fromHTML(n)); }
-    }
-    out.push('');
-  });
-  return out.join('\n').trim()+'\n';
-}
 function parse(text){
   const cards={}; let cur=null,field=null;
   for(let raw of text.split('\n')){
@@ -548,17 +524,13 @@ function inferredPageCount(data){
   const numbered=Object.keys(data).map(key=>key.match(/^카드(\d+)$/)).filter(Boolean).map(match=>Number(match[1]));
   return numbered.length ? Math.max(...numbered) : 0;
 }
-function applyBulk(){
-  const raw=byId('bulk').value;
+function applyBulk(raw){
   const sys=detectSys(raw);
   if(sys && sys!==CUR){                       // 붙여넣기만 해도 맞는 탭으로
     const i={Journal:0,Meetup:1,Project:2}[sys];
-    const keep=raw;
     switchSys(sys,root.querySelectorAll('.tab')[i]);
-    byId('bulk').value=keep;
-    byId('bulkpanel').style.display='block';
   }
-  const data=parse(byId('bulk').value);
+  const data=parse(raw);
   const requested=data.__count||inferredPageCount(data);
   if(requested) setPageCount(requested);
   let applied=0;
@@ -619,9 +591,7 @@ function loadCopyText(text,fname){
   }
   const fromName=nameFromFile(fname);
   if(fromName){ cfg().setName=fromName; refreshNameUI(); markNameChanged(); }
-  const p=byId('bulkpanel'); p.style.display='block';
-  byId('bulk').value=text;
-  applyBulk();                                // 파일 안 '세트이름:' 줄이 있으면 그게 덮어씀
+  applyBulk(text);                            // 파일 안 '세트이름:' 줄이 있으면 그게 덮어씀
 }
 /* ===== 프롬프트 ZIP / MD 가져오기 ===== */
 let ARCHIVE_ENTRIES=[];
@@ -711,49 +681,41 @@ async function applyArchiveEntry(){
   closeImportModal();
   flash('카피 적용됨 · 사진 '+photos+'개 연결');
 }
-function loadCurrent(){ byId('bulk').value=serialize(); flash('현재 카드 내용을 불러왔어요'); }
 let TOAST_T=null;
 function flash(msg){
-  const b=byId('bulkmsg'); if(b){ b.textContent=msg; }
   const t=byId('toast');
   t.textContent=msg; t.classList.add('on');
   clearTimeout(TOAST_T);
-  TOAST_T=setTimeout(()=>{ t.classList.remove('on'); if(b) b.textContent=''; },3200);
+  TOAST_T=setTimeout(()=>t.classList.remove('on'),3200);
 }
-/* 텍스트칸에 .md 파일을 끌어다 놓아도 열린다 */
-(function(){
-  const ta=byId('bulk');
-  ta.addEventListener('dragover',e=>{e.preventDefault();ta.style.borderColor='#129C39';});
-  ta.addEventListener('dragleave',()=>ta.style.borderColor='');
-  ta.addEventListener('drop',e=>{
-    e.preventDefault(); ta.style.borderColor='';
-    const f=e.dataTransfer.files[0]; if(!f)return;
-    const r=new FileReader(); r.onload=ev=>loadCopyText(ev.target.result,f.name); r.readAsText(f,'utf-8');
-  });
-})();
-byId('archiveInput').addEventListener('change',event=>loadPromptArchive(event.target.files[0]));
+listen(byId('archiveInput'),'change',event=>loadPromptArchive(event.target.files[0]));
 (function(){
   const drop=byId('archiveDrop');
-  drop.addEventListener('dragover',event=>{event.preventDefault();drop.classList.add('dragover');});
-  drop.addEventListener('dragleave',()=>drop.classList.remove('dragover'));
-  drop.addEventListener('drop',event=>{
+  listen(drop,'dragover',event=>{event.preventDefault();drop.classList.add('dragover');});
+  listen(drop,'dragleave',()=>drop.classList.remove('dragover'));
+  listen(drop,'drop',event=>{
     event.preventDefault(); drop.classList.remove('dragover');
     loadPromptArchive(event.dataTransfer.files[0]);
   });
 })();
-document.addEventListener('keydown',event=>{
+listen(document,'keydown',event=>{
   if(event.key==='Escape'&&!byId('importModal').hidden) closeImportModal();
 });
-byId('bulkKeys').textContent=SYS.Journal.bulk.map(b=>'['+b.key+']').join(' / ');
 Object.keys(SYS).forEach(refreshPageNumbers);
 refreshNameUI();
 fitZoom();
-window.addEventListener('load',fitZoom);
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitZoom);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>root.isConnected&&fitZoom());
 Object.assign(window.cardNewsMaker = {}, {
   phZoomInput, phFit, phReplace, phDelete, closeImportModal, pickPromptArchive,
   previewArchiveEntry, applyArchiveEntry, switchSys, clearHi, applyHi, exportAll,
-  openImportModal, setPageCount, setFmt, onSetName, applyBulk, loadCurrent,
+  openImportModal, setPageCount, setFmt, onSetName,
   pickById, clearById, exp, pickShot, clearShot
 });
+return ()=>{
+  controller.abort();
+  clearTimeout(TOAST_T);
+  closePhPanel();
+  document.body.style.overflow='';
+  delete window.cardNewsMaker;
+};
 };

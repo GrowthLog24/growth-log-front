@@ -7,7 +7,7 @@ import "./cardnews-maker.css";
 declare global {
   interface Window {
     cardNewsMaker?: Record<string, unknown>;
-    initCardNewsMaker?: (root: HTMLElement) => void;
+    initCardNewsMaker?: (root: HTMLElement) => () => void;
   }
 }
 
@@ -178,46 +178,6 @@ const editorMarkup = (run: EditorAction) => (
         </code>
         {" 하나로 받습니다."}
       </p>
-      <div id={"bulkpanel"} style={{ display: "none", width: "100%", marginTop: "4px" }}>
-        <div className={"bulk-help"}>
-          <b>
-            {"카피 파일(.md)을 열거나 이 칸에 끌어다 놓으면"}
-          </b>
-          {" 파일명이 저장 이름이 되고 탭도 자동으로 맞춰집니다 (예: "}
-          <code>
-            {"5기-성장일지-04-MQTT-카피템플릿.md"}
-          </code>
-          {" → "}
-          <code>
-            {"5기-성장일지-04-MQTT-1.png"}
-          </code>
-          {") · 형식: "}
-          <code id={"bulkKeys"}></code>
-          {" 아래에 "}
-          <code>
-            {"라벨:/제목:/받침:"}
-          </code>
-          {" · 제목 강조 "}
-          <code>
-            {"{{ }}"}
-          </code>
-          {" · 본문 강조 "}
-          <code>
-            {"[[ ]]"}
-          </code>
-          {"."}
-        </div>
-        <textarea id={"bulk"} className={"bulk-copy"} spellCheck={"false"}></textarea>
-        <div className={"bulk-actions"}>
-          <button className={"btn"} onClick={() => run("applyBulk")}>
-            {"적용 → 카드에 반영"}
-          </button>
-          <button className={"btn sec"} onClick={() => run("loadCurrent")}>
-            {"현재 카드 내용 불러오기"}
-          </button>
-          <span id={"bulkmsg"}></span>
-        </div>
-      </div>
     </div>
     <div className={"sys cards"} id={"sysJournal"}>
       <div className={"item"}>
@@ -700,6 +660,7 @@ type EditorAction = (name: string, ...args: unknown[]) => void;
 
 export function CardNewsMaker({ active }: { active: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const cleanupRef = useRef<() => void>(() => undefined);
 
   const run = useCallback<EditorAction>((name, ...args) => {
     const action = window.cardNewsMaker?.[name];
@@ -710,9 +671,11 @@ export function CardNewsMaker({ active }: { active: boolean }) {
   const initialize = useCallback(() => {
     const root = rootRef.current;
     if (!root || root.dataset.initialized || !window.initCardNewsMaker) return;
-    window.initCardNewsMaker(root);
+    cleanupRef.current = window.initCardNewsMaker(root);
     root.dataset.initialized = "true";
   }, []);
+
+  useEffect(() => () => cleanupRef.current(), []);
 
   useEffect(() => {
     if (!active) return;
