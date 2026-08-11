@@ -17,6 +17,7 @@ def validate(text: str, base_dir: Path | None = None) -> list[str]:
     if pages != list(range(1, count + 1)):
         errors.append("[카드1]부터 장수만큼 연속된 카드 구역이 필요합니다.")
 
+    blocks: dict[int, str] = {}
     for page in pages:
         block_match = re.search(
             rf"^\[카드{page}\]\s*$([\s\S]*?)(?=^\[카드\d+\]\s*$|\Z)",
@@ -24,9 +25,43 @@ def validate(text: str, base_dir: Path | None = None) -> list[str]:
             re.MULTILINE,
         )
         block = block_match.group(1) if block_match else ""
+        blocks[page] = block
         for field in ("라벨", "제목", "받침"):
             if not re.search(rf"^{field}\s*:\s*\S", block, re.MULTILINE):
                 errors.append(f"카드{page}: {field}이 비어 있습니다.")
+
+    system_match = re.search(r"^시스템\s*:\s*(성장일지|정기모임|프로젝트)\s*$", text, re.MULTILINE)
+    system = system_match.group(1) if system_match else ""
+    required_photos = {
+        "성장일지": {3},
+        "정기모임": {1, 2, 3, 4},
+        "프로젝트": {1, 2, 3, 4},
+    }.get(system, set())
+    for page in sorted(required_photos.intersection(pages)):
+        if not re.search(r"^사진\s*:\s*\S", blocks[page], re.MULTILINE):
+            errors.append(f"카드{page}: {system} 고정 사진 슬롯에 사진이 필요합니다.")
+    if system == "성장일지" and 3 in blocks and not re.search(r"^캡션\s*:\s*\S", blocks[3], re.MULTILINE):
+        errors.append("카드3: 성장일지 사진 캡션이 필요합니다.")
+
+    for page in [value for value in pages if value >= 5]:
+        block = blocks[page]
+        items = re.findall(r"^항목\s*:\s*\S", block, re.MULTILINE)
+        if not items and not re.search(r"^사진\s*:\s*\S", block, re.MULTILINE):
+            errors.append(f"카드{page}: 추가 카드는 사진 또는 항목으로 하단 영역을 채워야 합니다.")
+
+    if count in blocks:
+        last = blocks[count]
+        if len(re.findall(r"^항목\s*:\s*\S", last, re.MULTILINE)) != 3:
+            errors.append("마지막 카드는 항목이 정확히 3개여야 합니다.")
+        sources = [value.strip() for value in re.findall(r"^출처\s*:\s*(.*)$", last, re.MULTILINE)]
+        signoff = "더 많은 이야기는 그로스로그에서"
+        if signoff not in sources:
+            errors.append("마지막 카드의 첫 출처 줄에 사인오프가 필요합니다.")
+        if not any(value and value != signoff for value in sources):
+            errors.append("마지막 카드에 원문 출처가 필요합니다.")
+
+    if re.search(r"^사인오프\s*:", text, re.MULTILINE):
+        errors.append("`사인오프:`는 에디터가 인식하지 않습니다. 첫 `출처:` 줄을 사용하세요.")
 
     for item in re.findall(r"^항목\s*:\s*(.*)$", text, re.MULTILINE):
         if not item.strip():
@@ -52,7 +87,8 @@ def validate(text: str, base_dir: Path | None = None) -> list[str]:
 
 
 def self_test() -> None:
-    valid = """장수: 4
+    valid = """시스템: 성장일지
+장수: 4
 [카드1]
 라벨: 기술
 제목: 제목
@@ -66,16 +102,25 @@ def self_test() -> None:
 라벨: 기술
 제목: 제목
 받침: 받침
+사진: images/03.jpg
+캡션: 원문 사진
 [카드4]
 라벨: 행동
 제목: 제목
 받침: 받침
+항목: 첫 번째
+항목: 두 번째
+항목: 세 번째
+출처: 더 많은 이야기는 그로스로그에서
+출처: 매체명 '제목' (2026.08)
 """
     assert validate(valid) == []
     assert validate("장수: 11\n")
     assert validate("장수: 4\n제목: 잘못\\n줄바꿈\n")
     assert validate("장수: 4\n사진: https://example.com/a.jpg\n")
     assert validate("장수: 4\n항목:\n- 잘못된 항목\n")
+    assert validate(valid.replace("사진: images/03.jpg\n", ""))
+    assert validate(valid.replace("출처: 더 많은 이야기는 그로스로그에서\n", "사인오프: 더 많은 이야기는 그로스로그에서\n"))
 
 
 def main() -> int:
