@@ -2,34 +2,10 @@ import { toJpeg, toPng } from "html-to-image";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
 
-export type CardNewsSystem = "Journal" | "Meetup" | "Project";
-
-export interface CardNewsMakerActions {
-  phZoomInput(value: string): void;
-  phFit(): void;
-  phReplace(): void;
-  phDelete(): void;
-  closeImportModal(): void;
-  pickPromptArchive(): void;
-  previewArchiveEntry(index: string): void;
-  applyArchiveEntry(): Promise<void>;
-  switchSys(system: CardNewsSystem, button: HTMLElement): void;
-  clearHi(): void;
-  applyHi(kind: "title" | "body"): void;
-  exportAll(): Promise<void>;
-  openImportModal(): void;
-  setPageCount(value: string): void;
-  setZoom(value: string): void;
-  setFmt(value: string): void;
-  onSetName(): void;
-  pickById(id: string): void;
-  clearById(id: string): void;
-  exp(id: string): Promise<void>;
-}
+type CardNewsSystem = "Journal" | "Meetup" | "Project";
 
 type EditorEventMap = WindowEventMap & DocumentEventMap & HTMLElementEventMap;
 type EditorEvent<Target extends EventTarget, Name extends keyof EditorEventMap> = EditorEventMap[Name] & {
-  target: HTMLElement;
   currentTarget: Target;
 };
 type PhotoTransform = { s: number; ox: number; oy: number };
@@ -37,7 +13,7 @@ type PhotoSlot = HTMLElement & {
   _t?: PhotoTransform;
 };
 type CardField = [label: string, selector: string];
-type CardConfig = { id: string; key: string; f: CardField[]; dynamic?: boolean };
+type CardConfig = { id: string; key: string; f: CardField[] };
 type SystemConfig = { title: string; file: string; setName: string; bulk: CardConfig[] };
 type ParsedCard = Record<string, string | string[] | undefined> & {
   항목?: string[];
@@ -45,7 +21,6 @@ type ParsedCard = Record<string, string | string[] | undefined> & {
 };
 type ParsedPrompt = Record<string, ParsedCard | string | number | undefined> & {
   __set?: string;
-  __sys?: string;
   __count?: number;
 };
 type ArchiveEntry = { name: string; text: string };
@@ -122,14 +97,14 @@ function refreshPageNumbers(systemKey: CardNewsSystem){
   });
 }
 function extraCardConfig(systemKey: CardNewsSystem,index: number): CardConfig{
-  return {id:PAGE_PREFIX[systemKey]+index,key:'카드'+index,dynamic:true,
+  return {id:PAGE_PREFIX[systemKey]+index,key:'카드'+index,
     f:[['라벨','.tag'],['제목','.heading'],['받침','.lead'],['항목','.list .txt'],['출처','.source']]};
 }
 function createExtraCard(systemKey: CardNewsSystem,index: number){
   const config=extraCardConfig(systemKey,index);
   const item=document.createElement('div');
-  item.className='item'; item.dataset.dynamic='true';
-  item.innerHTML=`<div class="lbl"><span>${pad2(index)} · 추가 카드</span><span class="ph-ctl"><button class="btn sec" data-card-action="pick" data-card-id="${config.id}-ph">사진</button><button class="btn sec" data-card-action="clear" data-card-id="${config.id}-ph">지우기</button><button class="btn sec" data-card-action="export" data-card-id="${config.id}" title="이 카드 한 장만 저장">저장</button></span></div>
+  item.className='item';
+  item.innerHTML=`<div class="lbl"><span>${pad2(index)} · 추가 카드</span><span class="ph-ctl"><button type="button" class="btn sec" data-card-action="pick" data-card-id="${config.id}-ph">사진</button><button type="button" class="btn sec" data-card-action="clear" data-card-id="${config.id}-ph">지우기</button><button type="button" class="btn sec" data-card-action="export" data-card-id="${config.id}" title="이 카드 한 장만 저장">저장</button></span></div>
     <div class="slot"><div class="stage"><div class="card extra-card" id="${config.id}">
       <div class="tag" contenteditable>POINT · 추가 내용</div>
       <div class="heading" contenteditable>한 카드에 하나의\n메시지를 적어주세요</div>
@@ -159,7 +134,6 @@ function setPageCount(value: string|number,systemKey: CardNewsSystem=CUR){
   while(system.bulk.length>wanted){
     const removed=system.bulk.pop();
     if(!removed)break;
-    if(!removed.dynamic){ system.bulk.push(removed); break; }
     byId(removed.id).closest('.item')?.remove();
   }
   refreshPageNumbers(systemKey);
@@ -199,7 +173,6 @@ function decoratePhotoSlot(el: PhotoSlot){
   if(el.querySelector('.ph-empty'))return;
   el.insertAdjacentHTML('afterbegin',
     `<div class="ph-empty"><span>${el.dataset.label||'사진'} — 클릭 또는 여기로 끌어다 놓기</span></div>
-     <div class="ctl"><button type="button" data-card-action="replace">사진 교체</button><button type="button" data-card-action="delete">삭제</button></div>
      <div class="zhint">드래그로 이동 · 휠로 확대/축소</div>`);
 }
 root.querySelectorAll<PhotoSlot>('.ph').forEach(decoratePhotoSlot);
@@ -208,7 +181,7 @@ root.querySelectorAll<PhotoSlot>('.ph').forEach(decoratePhotoSlot);
    규칙: {세트이름}-{장번호}.png   예) 5기-성장일지-01-AI시대개발자-1.png
    세트이름을 폴더명과 같게 두면 다운로드 폴더에서 안 겹치고, 그대로 폴더에 옮기면 됩니다. */
 function safeName(s: string){
-  return (s||'').trim().replace(/[\\/:*?"<>|]/g,'-').replace(/\s+/g,' ').replace(/-+/g,'-').replace(/^-|-$/g,'');
+  return s.trim().replace(/[\\/:*?"<>|]/g,'-').replace(/\s+/g,' ').replace(/-+/g,'-').replace(/^-|-$/g,'');
 }
 let EXPORT_FMT='jpg';   // 기본 저장 형식
 function setFmt(v: string){ EXPORT_FMT=(v==='jpg'?'jpg':'png'); refreshNameUI(); }
@@ -223,7 +196,7 @@ function onSetName(){
 }
 function refreshNameUI(){
   const inp=byId<HTMLInputElement>('setName');
-  if(document.activeElement!==inp) inp.value=cfg().setName||'';
+  if(document.activeElement!==inp) inp.value=cfg().setName;
   const ext='.'+EXPORT_FMT;
   byId('namePreview').textContent='→ '+setNameOf()+'-1'+ext+' … -'+cfg().bulk.length+ext;
 }
@@ -243,7 +216,7 @@ function saveBlob(blob: Blob,name: string){
 function b64ToBlob(b64: string,type: string){
   const bin=atob(b64), arr=new Uint8Array(bin.length);
   for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
-  return new Blob([arr],{type:type||'image/png'});
+  return new Blob([arr],{type});
 }
 /* 카드 → PNG(base64)
    · 화면의 미리보기는 건드리지 않는다. 같은 .sys 안에 화면 밖 사본을 만들어 원본 크기(1080×1350)로 렌더링
@@ -320,8 +293,9 @@ async function exportAll(){                    // 전체 = ZIP 한 개로 저장
   }catch(e){
     console.error(e);
     flash('저장 실패('+done+'/'+list.length+'장 완료): '+errorMessage(e));
+  }finally{
+    EXPORTING=false;
   }
-  EXPORTING=false;
 }
 
 /* ===== 초록 강조 : 씌우기 / 지우기 ===== */
@@ -395,9 +369,6 @@ function layoutShot(el: PhotoSlot){
   img.style.left=((el.clientWidth-w)/2+t.ox)+'px';
   img.style.top =((el.clientHeight-h)/2+t.oy)+'px';
 }
-/* 넣은 사진을 저장에 적합한 크기로 다시 인코딩한다.
-   원본 그대로(수 MB짜리 data URL)를 배경으로 쓰면 저장 단계에서 이미지 처리기가 터져
-   "저장 실패: Cannot read properties of undefined" 가 난다. 화면 표시 품질에는 영향이 없다. */
 /* 원본을 그대로 쓰는 것이 원칙(화질 보존).
    브라우저가 감당 못 할 만큼 극단적으로 큰 경우에만 줄이고, 그때도 무손실 PNG로 유지한다. */
 const IMG_MAX_PIXELS=40e6;      // 총 화소 상한 (이보다 작으면 손대지 않음)
@@ -416,7 +387,7 @@ function fitImage(im: HTMLImageElement){
   x.drawImage(im,0,0,w,h);
   const out=c.toDataURL('image/png');                // 무손실
   c.width=c.height=0;
-  return {url:out,w:w,h:h};
+  return {url:out,w,h};
 }
 function setShotImg(el: PhotoSlot,file: File){
   if(!file.type.startsWith('image/'))return;
@@ -466,7 +437,7 @@ function bindPhotoSlot(el: PhotoSlot|null){
     const file=e.dataTransfer?.files[0]; if(file)setShotImg(el,file);});
   let on=false,sx=0,sy=0,ox0=0,oy0=0,moved=false;
   listen(el,'pointerdown',e=>{
-    if(!el.classList.contains('filled')||e.target.closest('.ctl'))return;
+    if(!el.classList.contains('filled'))return;
     on=true; moved=false; const t=transformOf(el); sx=e.clientX; sy=e.clientY; ox0=t.ox; oy0=t.oy;
     e.preventDefault();
     window.addEventListener('pointermove',mv,{signal:controller.signal});
@@ -484,8 +455,7 @@ function bindPhotoSlot(el: PhotoSlot|null){
     const t=transformOf(el); t.s=Math.min(maxScaleOf(el),Math.max(1,t.s*(e.deltaY<0?1.08:1/1.08)));
     layoutShot(el); if(PH_CUR===el) syncPhPanel();
   },{passive:false});
-  listen(el,'click',e=>{
-    if(e.target.closest('.ctl'))return;
+  listen(el,'click',()=>{
     if(!el.classList.contains('filled')){ pickShot(el); return; }
     if(moved){ moved=false; return; }       // 드래그 끝난 클릭은 무시
     openPhPanel(el);
@@ -535,7 +505,7 @@ function phReplace(){ if(PH_CUR) pickShot(PH_CUR,true); }
 function phDelete(){ if(!PH_CUR)return; clearShot(PH_CUR); closePhPanel(); }
 listen(document,'mousedown',e=>{           // 다른 곳 클릭하면 닫힘
   if(!PH_CUR)return;
-  if(e.target.closest('#phPanel')||e.target.closest('.ph'))return;
+  if(e.target instanceof Element&&(e.target.closest('#phPanel')||e.target.closest('.ph')))return;
   closePhPanel();
 });
 listen(window,'scroll',closePhPanel,{capture:true});
@@ -556,7 +526,6 @@ function parse(text: string): ParsedPrompt{
     const meta=line.match(/^(세트이름|시스템|장수)\s*:\s*(.*)$/);
     if(meta){
       if(meta[1]==='세트이름') cards.__set=meta[2].trim();
-      if(meta[1]==='시스템') cards.__sys=meta[2].trim();
       if(meta[1]==='장수') cards.__count=Number(meta[2].trim());
       field=null; continue;
     }
@@ -586,8 +555,7 @@ function inferredPageCount(data: ParsedPrompt){
 function loadCopyText(raw: string,fname: string){
   const sys=detectSys(raw);
   if(sys && sys!==CUR){                       // 붙여넣기만 해도 맞는 탭으로
-    const i={Journal:0,Meetup:1,Project:2}[sys];
-    const tab=root.querySelectorAll<HTMLElement>('.tab')[i];
+    const tab=root.querySelector<HTMLElement>(`.tab[data-sys="${sys}"]`);
     if(tab)switchSys(sys,tab);
   }
   const data=parse(raw);
@@ -753,16 +721,15 @@ refreshNameUI();
 fitZoom();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>root.isConnected&&fitZoom());
 listen(root,'click',event=>{
+  if(!(event.target instanceof Element))return;
   const button=event.target.closest<HTMLElement>('[data-card-action]');
   if(!button)return;
   const action=button.dataset.cardAction, id=button.dataset.cardId;
   if(action==='pick'&&id)pickById(id);
   if(action==='clear'&&id)clearById(id);
   if(action==='export'&&id)exp(id);
-  if(action==='replace')pickShot(button.closest<PhotoSlot>('.ph'),true);
-  if(action==='delete')clearShot(button.closest<PhotoSlot>('.ph'));
 });
-const actions: CardNewsMakerActions = {
+const actions = {
   phZoomInput, phFit, phReplace, phDelete, closeImportModal, pickPromptArchive,
   previewArchiveEntry, applyArchiveEntry, switchSys, clearHi, applyHi, exportAll,
   openImportModal, setPageCount, setZoom, setFmt, onSetName,
@@ -776,3 +743,5 @@ return {actions,destroy(){
   root.querySelectorAll<HTMLElement>('.ph[data-bound]').forEach(slot=>delete slot.dataset.bound);
 }};
 }
+
+export type CardNewsMakerActions = ReturnType<typeof initCardNewsMaker>["actions"];

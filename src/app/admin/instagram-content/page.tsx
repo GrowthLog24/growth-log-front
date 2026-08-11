@@ -10,7 +10,7 @@ const promptExample = `$growth-log-cardnews
 흥미를 느끼게 구성해줘. 완성된 프롬프트.md, 캡션.md, 원문.md를 ZIP으로 묶어줘.`;
 
 export default function AdminInstagramContentPage() {
-  const [view, setView] = useState<"guide" | "editor">("guide");
+  const [editorOpen, setEditorOpen] = useState(false);
 
   return (
     <div className="-m-6 min-h-[calc(100vh-3.5rem)] bg-[#F5F5F5] text-[#1A1A1A]">
@@ -27,18 +27,18 @@ export default function AdminInstagramContentPage() {
           <button
             type="button"
             className={`cursor-pointer px-4 py-2 text-sm font-bold ${
-              view === "guide" ? "bg-[#1A1A1A] text-white" : "text-[#666]"
+              !editorOpen ? "bg-[#1A1A1A] text-white" : "text-[#666]"
             }`}
-            onClick={() => setView("guide")}
+            onClick={() => setEditorOpen(false)}
           >
             처음부터 보기
           </button>
           <button
             type="button"
             className={`cursor-pointer px-4 py-2 text-sm font-bold ${
-              view === "editor" ? "bg-[#1A1A1A] text-white" : "text-[#666]"
+              editorOpen ? "bg-[#1A1A1A] text-white" : "text-[#666]"
             }`}
-            onClick={() => setView("editor")}
+            onClick={() => setEditorOpen(true)}
           >
             제작기 열기
           </button>
@@ -47,7 +47,7 @@ export default function AdminInstagramContentPage() {
 
       <main
         className="mx-auto max-w-6xl px-8 py-12"
-        hidden={view !== "guide"}
+        hidden={editorOpen}
       >
           <section className="max-w-3xl">
             <p className="text-sm font-bold text-[#00962B]">처음 사용하는 분께</p>
@@ -128,15 +128,15 @@ export default function AdminInstagramContentPage() {
             <button
               type="button"
               className="bg-[#1A1A1A] px-6 py-3 text-sm font-extrabold text-white hover:bg-[#00962B]"
-              onClick={() => setView("editor")}
+              onClick={() => setEditorOpen(true)}
             >
               카드뉴스 제작 시작
             </button>
           </section>
       </main>
 
-      <div hidden={view !== "editor"}>
-        <CardNewsMaker active={view === "editor"} />
+      <div hidden={!editorOpen}>
+        <CardNewsMaker active={editorOpen} />
       </div>
     </div>
   );

@@ -9,6 +9,26 @@ type EditorAction = <Action extends keyof CardNewsMakerActions>(
   ...args: Parameters<CardNewsMakerActions[Action]>
 ) => void;
 
+const CardToolbar = ({ label, cardId, photoId, run }: { label: string; cardId: string; photoId?: string; run: EditorAction }) => (
+  <div className="lbl">
+    <span>{label}</span>
+    <span className="ph-ctl">
+      {photoId && <>
+        <button type="button" className="btn sec" onClick={() => run("pickById", photoId)}>사진</button>
+        <button type="button" className="btn sec" onClick={() => run("clearById", photoId)}>지우기</button>
+      </>}
+      <button type="button" className="btn sec" onClick={() => run("exp", cardId)} title="이 카드 한 장만 저장">저장</button>
+    </span>
+  </div>
+);
+
+const BrowserFrame = ({ id, label }: { id: string; label: string }) => (
+  <div className="frame">
+    <div className="chrome"><i /><i /><i /></div>
+    <div className="ph pframe" id={id} data-label={label} />
+  </div>
+);
+
 const EditorMarkup = ({ run }: { run: EditorAction }) => (
   <>
     <div id={"toast"}></div>
@@ -107,27 +127,9 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
       <label className={"page-count"} htmlFor={"pageCount"}>
         {"카드 수\n    "}
         <select id={"pageCount"} defaultValue="4" onChange={(event) => run("setPageCount", event.currentTarget.value)}>
-          <option value={"4"}>
-            {"4장"}
-          </option>
-          <option value={"5"}>
-            {"5장"}
-          </option>
-          <option value={"6"}>
-            {"6장"}
-          </option>
-          <option value={"7"}>
-            {"7장"}
-          </option>
-          <option value={"8"}>
-            {"8장"}
-          </option>
-          <option value={"9"}>
-            {"9장"}
-          </option>
-          <option value={"10"}>
-            {"10장"}
-          </option>
+          {Array.from({ length: 7 }, (_, index) => index + 4).map((count) => (
+            <option key={count} value={count}>{count}장</option>
+          ))}
         </select>
       </label>
       <div className={"zoom"}>
@@ -179,16 +181,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
     </div>
     <div className={"sys cards"} id={"sysJournal"}>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"01 · 표지 (다크)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("exp", "j1")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="01 · 표지 (다크)" cardId="j1" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card cover"} id={"j1"}>
@@ -205,22 +198,12 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
               <div className={"lead"} contentEditable suppressContentEditableWarning>
                 {"AI는 이미 코드를 꽤 잘 짭니다.\n문제는 무엇을 만들지 서로 다르게 이해할 때 생깁니다."}
               </div>
-              <div className={"deco-plant"}></div>
             </div>
           </div>
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"02 · BEFORE (라이트)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("exp", "j2")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="02 · BEFORE (라이트)" cardId="j2" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"j2"}>
@@ -238,22 +221,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"03 · AFTER (스크린샷)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "jph3")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "jph3")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "j3")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="03 · AFTER (스크린샷)" cardId="j3" photoId="jph3" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"j3"}>
@@ -282,16 +250,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"04 · 체크리스트 (마무리)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("exp", "j4")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="04 · 체크리스트 (마무리)" cardId="j4" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"j4"}>
@@ -340,22 +299,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
     </div>
     <div className={"sys cards"} id={"sysMeetup"} hidden>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"01 · 표지 (하단 밴드 사진)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "mph1")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "mph1")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "m1")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="01 · 표지 (하단 밴드 사진)" cardId="m1" photoId="mph1" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card photocover"} id={"m1"}>
@@ -379,22 +323,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"02 · 본문1 (라운드 사진)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "mph2")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "mph2")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "m2")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="02 · 본문1 (라운드 사진)" cardId="m2" photoId="mph2" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card photoinset"} id={"m2"}>
@@ -417,22 +346,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"03 · 본문2 (라운드 사진)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "mph3")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "mph3")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "m3")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="03 · 본문2 (라운드 사진)" cardId="m3" photoId="mph3" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card photoinset"} id={"m3"}>
@@ -451,22 +365,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"04 · 마무리 (풀블리드 사진)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "mph4")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "mph4")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "m4")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="04 · 마무리 (풀블리드 사진)" cardId="m4" photoId="mph4" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card photocover"} id={"m4"}>
@@ -488,22 +387,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
     </div>
     <div className={"sys cards"} id={"sysProject"} hidden>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"01 · 표지 (다크 · 풀블리드)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "pph1")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "pph1")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "p1")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="01 · 표지 (다크 · 풀블리드)" cardId="p1" photoId="pph1" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card cover"} id={"p1"}>
@@ -528,22 +412,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"02 · 첫 화면 (라이트)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "pph2")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "pph2")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "p2")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="02 · 첫 화면 (라이트)" cardId="p2" photoId="pph2" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p2"}>
@@ -556,35 +425,13 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
               <div className={"lead"} contentEditable suppressContentEditableWarning>
                 {"\"함께 성장하는 개발자 커뮤니티\" 한 줄과\n[6기 지원하기] 버튼을 첫 화면에 바로 뒀습니다."}
               </div>
-              <div className={"frame"}>
-                <div className={"chrome"}>
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                </div>
-                <div className={"ph pframe"} id={"pph2"} data-label={"첫 화면 스크린샷"}></div>
-              </div>
+              <BrowserFrame id="pph2" label="첫 화면 스크린샷" />
             </div>
           </div>
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"03 · 흐름 (라이트)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "pph3")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "pph3")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "p3")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="03 · 흐름 (라이트)" cardId="p3" photoId="pph3" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p3"}>
@@ -597,35 +444,13 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
               <div className={"lead"} contentEditable suppressContentEditableWarning>
                 {"About us → Activity → Projects → Recruit → Support\n방문자가 자연스럽게 합류까지 읽게 했습니다"}
               </div>
-              <div className={"frame"}>
-                <div className={"chrome"}>
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                </div>
-                <div className={"ph pframe"} id={"pph3"} data-label={"흐름 스크린샷"}></div>
-              </div>
+              <BrowserFrame id="pph3" label="흐름 스크린샷" />
             </div>
           </div>
         </div>
       </div>
       <div className={"item"}>
-        <div className={"lbl"}>
-          <span>
-            {"04 · 신뢰 (라이트)"}
-          </span>
-          <span className={"ph-ctl"}>
-            <button className={"btn sec"} onClick={() => run("pickById", "pph4")}>
-              {"사진"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("clearById", "pph4")}>
-              {"지우기"}
-            </button>
-            <button className={"btn sec"} onClick={() => run("exp", "p4")} title={"이 카드 한 장만 저장"}>
-              {"저장"}
-            </button>
-          </span>
-        </div>
+        <CardToolbar label="04 · 신뢰 (라이트)" cardId="p4" photoId="pph4" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p4"}>
@@ -638,14 +463,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
               <div className={"lead"} contentEditable suppressContentEditableWarning>
                 {"소개-활동-멤버 역량·추천사까지, 말 대신 증거로 담았습니다.\ngrowthlog.org에서 확인해보세요."}
               </div>
-              <div className={"frame"}>
-                <div className={"chrome"}>
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                </div>
-                <div className={"ph pframe"} id={"pph4"} data-label={"신뢰 스크린샷"}></div>
-              </div>
+              <BrowserFrame id="pph4" label="신뢰 스크린샷" />
             </div>
           </div>
         </div>
