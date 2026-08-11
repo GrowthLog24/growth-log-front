@@ -1,17 +1,15 @@
 "use client";
 
-import Script from "next/script";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { initCardNewsMaker, type CardNewsMakerActions } from "./cardnews-maker";
 import "./cardnews-maker.css";
 
-declare global {
-  interface Window {
-    cardNewsMaker?: Record<string, unknown>;
-    initCardNewsMaker?: (root: HTMLElement) => () => void;
-  }
-}
+type EditorAction = <Action extends keyof CardNewsMakerActions>(
+  name: Action,
+  ...args: Parameters<CardNewsMakerActions[Action]>
+) => void;
 
-const editorMarkup = (run: EditorAction) => (
+const EditorMarkup = ({ run }: { run: EditorAction }) => (
   <>
     <div id={"toast"}></div>
     <div id={"phPanel"}>
@@ -656,57 +654,30 @@ const editorMarkup = (run: EditorAction) => (
   </>
 );
 
-type EditorAction = (name: string, ...args: unknown[]) => void;
-
 export function CardNewsMaker({ active }: { active: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const cleanupRef = useRef<() => void>(() => undefined);
+  const actionsRef = useRef<CardNewsMakerActions | null>(null);
 
   const run = useCallback<EditorAction>((name, ...args) => {
-    const action = window.cardNewsMaker?.[name];
-    if (typeof action === "function") action(...args);
+    if (actionsRef.current) Reflect.apply(actionsRef.current[name], actionsRef.current, args);
   }, []);
-  const content = useMemo(() => editorMarkup(run), [run]);
-
-  const initialize = useCallback(() => {
+  useEffect(() => {
     const root = rootRef.current;
-    if (!root || root.dataset.initialized || !window.initCardNewsMaker) return;
-    cleanupRef.current = window.initCardNewsMaker(root);
+    if (!root) return;
+    const controller = initCardNewsMaker(root);
+    actionsRef.current = controller.actions;
     root.dataset.initialized = "true";
+    return () => {
+      controller.destroy();
+      actionsRef.current = null;
+      delete root.dataset.initialized;
+    };
   }, []);
-
-  useEffect(() => () => cleanupRef.current(), []);
 
   useEffect(() => {
     if (!active) return;
     requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
   }, [active]);
 
-  return (
-    <>
-      <div
-        id="cardnews-maker"
-        ref={rootRef}
-      >
-        {content}
-      </div>
-      <Script
-        src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
-        strategy="afterInteractive"
-      />
-      <Script
-        src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
-        strategy="afterInteractive"
-      />
-      <Script
-        src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js"
-        strategy="afterInteractive"
-      />
-      <Script
-        src="/admin/instagram-content/cardnews-maker.js"
-        strategy="afterInteractive"
-        onReady={initialize}
-      />
-    </>
-  );
+  return <div id="cardnews-maker" ref={rootRef}><EditorMarkup run={run} /></div>;
 }
