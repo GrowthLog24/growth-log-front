@@ -224,6 +224,7 @@ function b64ToBlob(b64: string,type: string){
    · toBlob은 브라우저·메모리 상황에 따라 null을 주는 일이 있어 toDataURL을 쓴다 */
 async function renderPngB64(id: string){
   const card=byId(id);
+  const backgroundColor=getComputedStyle(card).backgroundColor;
   closePhPanel();
   card.querySelectorAll<PhotoSlot>('.ph.filled').forEach(layoutShot);
 
@@ -232,7 +233,6 @@ async function renderPngB64(id: string){
   const holder=document.createElement('div');
   holder.style.cssText='position:fixed;left:-20000px;top:0;width:1080px;height:1350px;overflow:visible';
   const clone=card.cloneNode(true) as HTMLElement;
-  clone.removeAttribute('id');
   clone.style.transform='none';
   holder.appendChild(clone); sys.appendChild(holder);
 
@@ -243,7 +243,7 @@ async function renderPngB64(id: string){
     try{
       const opt={width:1080,height:1350,pixelRatio:2,cacheBust:false,style:{transform:'none',margin:'0'}};
       const u=(EXPORT_FMT==='jpg')
-        ? await toJpeg(clone,Object.assign({quality:0.95,backgroundColor:'#ffffff'},opt))
+        ? await toJpeg(clone,Object.assign({quality:0.95,backgroundColor},opt))
         : await toPng(clone,opt);
       if(u&&u.indexOf('base64,')>=0) url=u;
     }catch(err){ lastErr=err; }
@@ -252,7 +252,7 @@ async function renderPngB64(id: string){
       for(const sc of [2,1.5,1]){
         try{
           const canvas=await html2canvas(clone,{width:1080,height:1350,scale:sc,useCORS:true,
-            backgroundColor:(EXPORT_FMT==='jpg'?'#ffffff':null),logging:false});
+            backgroundColor:(EXPORT_FMT==='jpg'?backgroundColor:null),logging:false});
           const u=canvas&&(EXPORT_FMT==='jpg'?canvas.toDataURL('image/jpeg',0.95):canvas.toDataURL('image/png'));
           if(canvas) canvas.width=canvas.height=0;
           if(u&&u.indexOf('base64,')>=0){ url=u; flash(sc===2?'대체 엔진으로 저장했습니다':'해상도를 '+sc+'배로 낮춰 저장했습니다'); break; }
