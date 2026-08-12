@@ -187,8 +187,36 @@ ul.plain li:last-child{border-bottom:0}
   .cta-row{flex-direction:column; align-items:stretch}
 }
 
-footer{border-top:1px solid var(--line); background:#fff; padding:28px 0; margin-top:20px}
-footer p{margin:0; font-size:13px; color:var(--muted)}
+footer{border-top:1px solid #eaeaea; background:#f5f5f5; margin-top:0}
+.foot-wrap{max-width:1280px; margin:0 auto; padding:48px 32px}
+.foot-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:32px}
+.foot-brand{grid-column:span 2}
+.foot-logo{display:inline-block; margin-left:-8px}
+.foot-logo img{height:40px; width:auto; display:block}
+footer p{margin:0; font-size:14px; color:#666}
+.foot-tag{margin-top:8px !important; max-width:28rem}
+.foot-addr{margin-top:12px !important; display:flex; align-items:flex-start; gap:6px}
+.foot-addr svg{width:16px; height:16px; flex-shrink:0; margin-top:2px}
+.foot-social{margin-top:16px; display:flex; align-items:center; gap:16px}
+.foot-social a{display:inline-flex; border:0}
+.foot-social img{width:20px; height:20px; display:block}
+.foot-social a:hover{opacity:.7}
+.foot-copy{margin-top:16px !important}
+
+.foot-meta{margin-top:6px !important; font-size:12.5px; color:#8a8a8a}
+footer h3{font-size:14px; font-weight:600; color:#222; margin:0 0 16px}
+.foot-list{list-style:none; margin:0; padding:0}
+.foot-list li{margin-bottom:12px; font-size:14px}
+.foot-list li:last-child{margin-bottom:0}
+.foot-list a, footer .foot-addr span{font-size:14px}
+footer a{color:#666; text-decoration:none}
+footer a:hover{color:#222; text-decoration:none}
+
+@media (max-width:768px){
+  .foot-grid{grid-template-columns:1fr}
+  .foot-brand{grid-column:auto}
+  .foot-wrap{padding:40px 16px}
+}
 .empty{padding:60px 0; text-align:center; color:var(--muted)}
 
 @media (max-width:640px){
@@ -224,18 +252,58 @@ footer p{margin:0; font-size:13px; color:var(--muted)}
 <section class="cta">
   <div class="wrap">
     <h2>여기 있는 기록은 전부 회원이 직접 쓴 것입니다</h2>
-    <p>격일로 모여 각자 막힌 곳을 쓰고, 그게 쌓여 이 위키가 됐습니다. 6기 모집은 9월 1일까지입니다.</p>
+    <p>격일로 모여 각자 막힌 곳을 쓰고, 그게 쌓여 이 위키가 됐습니다. 전체 성장일지는 블로그에 있습니다.</p>
     <div class="cta-row">
-      <a class="cta-btn" href="https://www.growthlog.org/support/notice/wOkPeWAcri1MUOcrZaCT" target="_blank" rel="noopener">그로스로그 6기 알아보기 →</a>
+      <a class="cta-btn" href="https://blog.growthlog.org/" target="_blank" rel="noopener">블로그 바로가기 →</a>
       <a class="cta-btn ghost" href="https://www.growthlog.org/" target="_blank" rel="noopener">홈페이지 바로가기</a>
-      <a class="cta-btn ghost" href="https://blog.growthlog.org/" target="_blank" rel="noopener">블로그 바로가기</a>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">
-    <p id="foot"></p>
+  <div class="foot-wrap">
+    <div class="foot-grid">
+
+      <div class="foot-brand">
+        <a class="foot-logo" href="https://www.growthlog.org/" target="_blank" rel="noopener">
+          <img src="https://www.growthlog.org/images/logo/logo-light.svg" alt="Growth Log" width="192" height="38">
+        </a>
+        <p class="foot-tag">다양한 분야에 종사하는 멤버들과 함께하며 새로운 인사이트를 얻어가요.</p>
+        <p class="foot-addr">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>서울 강남구 강남대로84길 23 17층</span>
+        </p>
+        <div class="foot-social">
+          <a href="https://www.instagram.com/growth_log.official" target="_blank" rel="noopener noreferrer" aria-label="인스타그램"><img src="https://www.growthlog.org/instagram.svg" alt="Instagram" width="20" height="20"></a>
+          <a href="https://blog.growthlog.org" target="_blank" rel="noopener noreferrer" aria-label="블로그"><img src="https://www.growthlog.org/tistory.svg" alt="Tistory" width="20" height="20"></a>
+          <a href="https://pf.kakao.com/_gKxhxcG/chat" target="_blank" rel="noopener noreferrer" aria-label="카카오톡 채널"><img src="https://www.growthlog.org/kakao.svg" alt="KakaoTalk" width="20" height="20"></a>
+        </div>
+        <p class="foot-copy">© Copyright 2024-2026 Growth Log. All rights reserved.</p>
+        <p class="foot-meta" id="foot"></p>
+      </div>
+
+      <div>
+        <h3>바로가기</h3>
+        <ul class="foot-list">
+          <li><a href="https://www.growthlog.org/about-us" target="_blank" rel="noopener">About us</a></li>
+          <li><a href="https://www.growthlog.org/activity" target="_blank" rel="noopener">Activity</a></li>
+          <li><a href="https://www.growthlog.org/dev-ai" target="_blank" rel="noopener">Dev×AI</a></li>
+          <li><a href="https://www.growthlog.org/projects" target="_blank" rel="noopener">Projects</a></li>
+          <li><a href="https://www.growthlog.org/knou-cs" target="_blank" rel="noopener">KNOU CS</a></li>
+          <li><a href="https://www.growthlog.org/recruit" target="_blank" rel="noopener">Recruit</a></li>
+          <li><a href="https://www.growthlog.org/support" target="_blank" rel="noopener">Support</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>문의하기</h3>
+        <ul class="foot-list">
+          <li><a href="https://pf.kakao.com/_gKxhxcG/chat" target="_blank" rel="noopener noreferrer">카카오톡 채널</a></li>
+          <li><a href="mailto:contact@growthlog.org">contact@growthlog.org</a></li>
+        </ul>
+      </div>
+
+    </div>
   </div>
 </footer>
 
