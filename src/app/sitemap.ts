@@ -63,6 +63,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      // 정적 위키 — public/wiki/index.html, next.config.ts 의 rewrite 로 /wiki 에 연결됨.
+      // 기수가 끝날 때마다 갱신되므로 monthly.
+      url: `${baseUrl}/wiki`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
   ];
 
   // TODO: 동적 페이지 (activity/[id], support/notice/[id]) 추가 시
