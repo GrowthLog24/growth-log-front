@@ -23,8 +23,8 @@ export type CreationJob = {
   boardUrl: string;
   title: string;
   html: string;
-  /** 게시 회차(1·2·3차). 연결 앱은 2차 자동 저장 성공 시 운영 시트에 2차 게시/제목/링크를 기록합니다. */
-  round: 1 | 2 | 3;
+  /** 1부터 시작하는 게시 회차. 연결 앱은 게시 성공 시 운영 시트의 해당 회차에 날짜·제목·링크를 기록합니다. */
+  round: number;
   /** true면 연결 앱이 방송대 최종 저장·등록까지 자동으로 실행합니다. false면 내용만 채우고 사람이 최종 저장합니다. */
   confirmFinalSubmit: boolean;
 };

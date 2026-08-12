@@ -164,8 +164,8 @@ export function usePlaywrightHelper() {
 
   const openLogin = useCallback(() => request("/login"), [request]);
   const autoLogin = useCallback((credentials: LoginCredentials) => request("/login-auto", credentials), [request]);
-  const prepareModification = useCallback((job: ModificationJob) => request("/modify", job), [request]);
-  const prepareCreation = useCallback((job: CreationJob) => request("/create", job), [request]);
+  const prepareModification = useCallback((job: ModificationJob) => request("/modify", job, 180_000), [request]);
+  const prepareCreation = useCallback((job: CreationJob) => request("/create", job, 180_000), [request]);
   const openTistoryLogin = useCallback((blogUrl: string) => request("/tistory/login", { blogUrl }), [request]);
   const saveTistoryDraft = useCallback(
     (job: TistoryDraftRequest) => request("/tistory/draft", job, 180_000),

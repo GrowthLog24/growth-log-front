@@ -7,13 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmDialog } from "@/presentation/components/admin";
 import { usePlaywrightHelper } from "@/presentation/hooks/usePlaywrightHelper";
@@ -55,7 +48,8 @@ function createPreviewDocument(fragment: string) {
 /** 방송대 홍보 게시글 초안 작성 및 게시·수정 자동화 요청 폼 */
 export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFormProps) {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [postRound, setPostRound] = useState<1 | 2 | 3>(1);
+  const [postRound, setPostRound] = useState("1");
+  const postingRound = Math.max(1, Math.trunc(Number(postRound) || 1));
   const [postTitle, setPostTitle] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
   const [autoSubmit, setAutoSubmit] = useState(false);
@@ -63,7 +57,7 @@ export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFor
   const selectedCount = selectedBoards.length;
   // 선택한 게시판 중 각 작업을 실제로 실행할 수 있는(링크가 있는) 대상만 추립니다.
   const modifiableBoards = selectedBoards.filter(
-    (board) => board.postings.find((posting) => posting.round === postRound)?.postUrl,
+    (board) => board.postings.find((posting) => posting.round === postingRound)?.postUrl,
   );
   const creatableBoards = selectedBoards.filter((board) => board.boardUrl);
   const previewDocument = useMemo(() => createPreviewDocument(htmlContent), [htmlContent]);
@@ -83,7 +77,7 @@ export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFor
     for (const board of selectedBoards) {
       let result: HelperResult;
       if (pendingAction === "수정") {
-        const posting = board.postings.find((item) => item.round === postRound);
+        const posting = board.postings.find((item) => item.round === postingRound);
         if (!posting?.postUrl) {
           skipped.push(board.name);
           continue;
@@ -107,7 +101,7 @@ export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFor
           boardUrl: board.boardUrl,
           title: postTitle,
           html: htmlContent,
-          round: postRound,
+          round: postingRound,
           confirmFinalSubmit: autoSubmit,
         });
       }
@@ -125,7 +119,7 @@ export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFor
     htmlContent,
     onNotice,
     pendingAction,
-    postRound,
+    postingRound,
     postTitle,
     prepareCreation,
     prepareModification,
@@ -149,7 +143,7 @@ export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFor
   };
   const modificationDisabledReason = disabledReasonFor(
     modifiableBoards.length > 0,
-    `선택한 게시판 중 ${postRound}차 게시글 링크가 있는 곳이 없습니다.`,
+    `선택한 게시판 중 ${postingRound}차 게시글 링크가 있는 곳이 없습니다.`,
   );
   const creationDisabledReason = disabledReasonFor(
     creatableBoards.length > 0,
@@ -184,15 +178,20 @@ export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFor
 
           <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-[0.7fr_1.3fr]">
             <div className="grid gap-1.5">
-              <Label className="text-[11px] text-muted-foreground">게시 회차</Label>
-              <Select value={String(postRound)} onValueChange={(value) => setPostRound(Number(value) as 1 | 2 | 3)}>
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1차 게시</SelectItem>
-                  <SelectItem value="2">2차 게시</SelectItem>
-                  <SelectItem value="3">3차 게시</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="postRound" className="text-[11px] text-muted-foreground">게시 회차</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="postRound"
+                  name="postRound"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={postRound}
+                  onChange={(event) => setPostRound(event.currentTarget.value)}
+                  onBlur={() => setPostRound(String(postingRound))}
+                />
+                <span className="shrink-0 text-sm font-medium">게시</span>
+              </div>
             </div>
             <div className="grid gap-1.5">
               <Label className="text-[11px] text-muted-foreground">게시글 제목</Label>
