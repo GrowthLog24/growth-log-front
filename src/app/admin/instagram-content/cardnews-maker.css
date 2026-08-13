@@ -87,7 +87,6 @@
 #cardnews-maker .card.extra-card .source{position:absolute!important;left:88px!important;top:1080px!important;width:904px!important;color:#919191!important;font-size:21px!important;z-index:5!important}
 #cardnews-maker .card.extra-card .handle{color:#BDBDBD!important}
 #cardnews-maker .card.extra-card .divider{background:#E6E6E6!important}
-#cardnews-maker .card.extra-card .logo{color:#111!important}
 #cardnews-maker .card.extra-card .foot{color:#666!important}
 #cardnews-maker .card.extra-card .pagenum{color:#919191!important}
 
@@ -100,9 +99,9 @@
 #cardnews-maker .lead{position:absolute;left:80px;width:920px;white-space:pre-line;z-index:5;font-weight:400;font-size:41px;line-height:57px}
 #cardnews-maker mark{-webkit-box-decoration-break:clone;box-decoration-break:clone}
 #cardnews-maker .divider{position:absolute;left:80px;top:1230px;width:920px;height:1px;z-index:5}
-#cardnews-maker .logo{position:absolute;left:80px;top:1184px;height:44px;display:flex;align-items:center;gap:9px;z-index:5}
-#cardnews-maker .logo svg{height:28px;width:auto;display:block;margin-left:2px}
-#cardnews-maker .logo .word{font-family:var(--f-num);font-weight:800;font-size:27px;letter-spacing:2px;color:currentColor;line-height:1}
+#cardnews-maker .logo{position:absolute;left:80px;top:1184px;height:44px;display:flex;align-items:center;z-index:5}
+#cardnews-maker .logo img{height:32px;width:auto;display:block}
+#cardnews-maker .logo img.logo-dark{display:none}
 #cardnews-maker .foot{position:absolute;left:80px;top:1241px;font-weight:500;font-size:24px;z-index:5}
 #cardnews-maker .foot .en{font-family:var(--f-kr);font-weight:500}
 #cardnews-maker .pagenum{position:absolute;right:80px;top:1243px;font-family:var(--f-num);font-weight:700;font-style:italic;font-size:22px;z-index:5}
@@ -179,8 +178,8 @@
 #cardnews-maker #sysJournal .shot-cap{position:absolute;right:89px;top:1125px;font-size:25px;color:#9C9C9C;white-space:nowrap;z-index:5}
 #cardnews-maker #sysJournal .card.light .divider{background:#E9E9E9}
 #cardnews-maker #sysJournal .card.cover .divider{background:rgba(255,255,255,.12)}
-#cardnews-maker #sysJournal .card.light .logo{color:#000}
-#cardnews-maker #sysJournal .card.cover .logo{color:#fff}
+#cardnews-maker #sysJournal .card.cover .logo img.logo-light{display:none}
+#cardnews-maker #sysJournal .card.cover .logo img.logo-dark{display:block}
 #cardnews-maker #sysJournal .card.light .foot{color:#555555}
 #cardnews-maker #sysJournal .card.cover .foot{color:#AAAAAA}
 #cardnews-maker #sysJournal .card.light .pagenum{color:#b0b0b0}
@@ -219,8 +218,8 @@
   background-color:#eef1f4;box-shadow:0 20px 44px rgba(20,30,20,.12);z-index:2}
 #cardnews-maker #sysMeetup .photoinset .divider{background:#E6E6E6}
 #cardnews-maker #sysMeetup .photocover .divider{background:rgba(255,255,255,.14)}
-#cardnews-maker #sysMeetup .photoinset .logo{color:#000}
-#cardnews-maker #sysMeetup .photocover .logo{color:#fff}
+#cardnews-maker #sysMeetup .photocover .logo img.logo-light{display:none}
+#cardnews-maker #sysMeetup .photocover .logo img.logo-dark{display:block}
 #cardnews-maker #sysMeetup .photoinset .foot{color:#555555}
 #cardnews-maker #sysMeetup .photocover .foot{color:#AAAAAA}
 #cardnews-maker #sysMeetup .pagenum{color:#AAAAAA}
@@ -257,8 +256,8 @@
 #cardnews-maker #sysProject .cover-fade.bot{top:1150px;height:200px;background:linear-gradient(to top,#0a0a0a 0%,rgba(10,10,10,.9) 42%,rgba(10,10,10,0) 100%)}
 #cardnews-maker #sysProject .card.light .divider{background:#E5E5E5}
 #cardnews-maker #sysProject .card.cover .divider{background:rgba(255,255,255,.10)}
-#cardnews-maker #sysProject .card.light .logo{color:#111}
-#cardnews-maker #sysProject .card.cover .logo{color:#fff}
+#cardnews-maker #sysProject .card.cover .logo img.logo-light{display:none}
+#cardnews-maker #sysProject .card.cover .logo img.logo-dark{display:block}
 #cardnews-maker #sysProject .card.light .foot{color:#555555}
 #cardnews-maker #sysProject .card.cover .foot{color:#8A8A8A}
 #cardnews-maker #sysProject .card.light .pagenum{color:#b0b0b0}
