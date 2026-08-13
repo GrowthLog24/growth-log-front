@@ -36,7 +36,9 @@ const byId=<ElementType extends HTMLElement = HTMLElement>(id: string): ElementT
 const controller=new AbortController();
 const listen=<Target extends EventTarget,Name extends keyof EditorEventMap>(target: Target,type: Name,handler: (event: EditorEvent<Target,Name>)=>void,options: AddEventListenerOptions={})=>
   target.addEventListener(type,handler as EventListener,{...options,signal:controller.signal});
-const LOGO=`<svg viewBox="3.4 5.9 47.2 22.2" aria-label="Growth Log symbol"><g fill="none" stroke="#129C39" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18,7.5 5,17 18,26.5"/><polyline points="36,7.5 49,17 36,26.5"/></g><g fill="#129C39"><path d="M27 21.5 C 20 21.5 19 13.8 23.2 11.5 C 25.7 14 27 17.4 27 21.5 Z"/><path d="M27 21.5 C 34 21.5 35 13.8 30.8 11.5 C 28.3 14 27 17.4 27 21.5 Z"/></g><rect x="26.1" y="19.5" width="1.8" height="7.2" rx="0.9" fill="#129C39"/></svg>`;
+// 카드뉴스 스킬 assets/logo-on-light.png · logo-on-dark.png 원본 그대로 사용 (신규 브랜드 로고)
+const LOGO_HTML=`<img class="logo-light" src="/images/logo/card-logo-light.png" alt="Growth Log">`
+  +`<img class="logo-dark" src="/images/logo/card-logo-dark.png" alt="Growth Log">`;
 
 /* ===== 시스템 정의 ===== */
 const SYS: Record<CardNewsSystem,SystemConfig>={
@@ -85,7 +87,7 @@ function addCardChrome(card: HTMLElement,index: number,total: number){
   card.insertAdjacentHTML('beforeend',
     `<div class="handle" contenteditable>@growth_log.official</div>
      <div class="divider"></div>
-     <div class="logo">${LOGO}<span class="word">GROWTH LOG</span></div>
+     <div class="logo">${LOGO_HTML}</div>
      <div class="foot" contenteditable>AI와 함께 성장하는 개발 커뮤니티 <span class="en">Learn, Connect, Build</span></div>
      <div class="pagenum" contenteditable>${pad2(index)} / ${pad2(total)}</div>`);
 }
