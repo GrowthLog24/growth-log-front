@@ -262,4 +262,44 @@
 #cardnews-maker #sysProject .card.cover .foot{color:#8A8A8A}
 #cardnews-maker #sysProject .card.light .pagenum{color:#b0b0b0}
 #cardnews-maker #sysProject .card.cover .pagenum{color:#8A8A8A}
+
+/* ================================================================
+   [4] 그로스톡 — 정기모임(사진 표지)과 성장일지(텍스트+캡션)의 교집합
+   ================================================================ */
+#cardnews-maker #sysGrowthTalk .card.light{background:#FAFAFA}
+#cardnews-maker #sysGrowthTalk .card.photocover{background:
+  radial-gradient(120% 58% at 82% 3%, rgba(28,110,52,.22) 0%, rgba(8,11,9,0) 52%), #080b09}
+#cardnews-maker #sysGrowthTalk .card.light .tag{color:#333333}
+#cardnews-maker #sysGrowthTalk .card.photocover .tag{color:#79DD68}
+#cardnews-maker #sysGrowthTalk .handle{color:#AAAAAA}
+#cardnews-maker #sysGrowthTalk .card.light .heading{top:256px;color:#333333}
+#cardnews-maker #sysGrowthTalk .card.photocover .heading{top:366px;color:#EEEEEE;text-shadow:0 2px 24px rgba(0,0,0,.45)}
+#cardnews-maker #sysGrowthTalk mark{background:var(--g-hi-light);color:#333333;padding:.06em .08em;border-radius:2px}
+#cardnews-maker #sysGrowthTalk mark.t{background:var(--g-hi-dark);color:#1A1A1A}
+#cardnews-maker #sysGrowthTalk .card.photocover mark{background:var(--g-hi-dark);color:#1A1A1A}
+#cardnews-maker #sysGrowthTalk .card.light .lead{top:542px}
+#cardnews-maker #sysGrowthTalk .lead.mute{color:#777777}
+#cardnews-maker #sysGrowthTalk .card.photocover .lead{top:700px;font-weight:500;font-size:38px;line-height:1.5;color:#DDDDDD;text-shadow:0 1px 16px rgba(0,0,0,.45)}
+#cardnews-maker #sysGrowthTalk .ph.band{left:0;right:0;bottom:0;top:auto;height:772px;z-index:0;background-color:#0c110d}
+#cardnews-maker #sysGrowthTalk .veil{position:absolute;inset:0;z-index:1;pointer-events:none}
+#cardnews-maker #sysGrowthTalk .veil.band{inset:auto 0 0 0;height:772px;
+  background:radial-gradient(126% 82% at 50% 46%, rgba(8,11,9,0) 30%, rgba(8,11,9,.34) 66%, rgba(8,11,9,.80) 100%),
+   linear-gradient(180deg,#080b09 0%, rgba(8,11,9,.99) 8%, rgba(8,11,9,.62) 22%, rgba(8,11,9,.26) 37%,
+     rgba(8,11,9,.30) 52%, rgba(8,11,9,.60) 72%, rgba(8,11,9,.90) 86%, #080b09 100%)}
+#cardnews-maker #sysGrowthTalk .ph.inset{left:80px;top:700px;width:920px;height:380px;border-radius:10px;
+  background-color:#eef1f4;box-shadow:0 20px 44px rgba(20,30,20,.12);z-index:2}
+#cardnews-maker #sysGrowthTalk .shot-cap{position:absolute;left:80px;top:1096px;width:920px;font-size:25px;color:#9C9C9C;z-index:5}
+#cardnews-maker #sysGrowthTalk .list{position:absolute;left:80px;top:714px;width:920px;border-top:1px solid #E9E9E9;z-index:5}
+#cardnews-maker #sysGrowthTalk .list .row{height:106px;display:flex;align-items:center;border-bottom:1px solid #E9E9E9}
+#cardnews-maker #sysGrowthTalk .list .num{font-family:var(--f-num);font-weight:700;font-style:italic;font-size:36px;color:var(--g-number);width:70px;flex:none}
+#cardnews-maker #sysGrowthTalk .list .txt{font-weight:600;font-size:36px;color:#555555}
+#cardnews-maker #sysGrowthTalk .source{position:absolute;left:80px;top:1088px;font-weight:400;font-size:22px;line-height:1.55;color:#555555;white-space:pre-line;z-index:5}
+#cardnews-maker #sysGrowthTalk .card.light .divider{background:#E9E9E9}
+#cardnews-maker #sysGrowthTalk .card.photocover .divider{background:rgba(255,255,255,.14)}
+#cardnews-maker #sysGrowthTalk .card.photocover .logo img.logo-light{display:none}
+#cardnews-maker #sysGrowthTalk .card.photocover .logo img.logo-dark{display:block}
+#cardnews-maker #sysGrowthTalk .card.light .foot{color:#555555}
+#cardnews-maker #sysGrowthTalk .card.photocover .foot{color:#AAAAAA}
+#cardnews-maker #sysGrowthTalk .card.light .pagenum{color:#b0b0b0}
+#cardnews-maker #sysGrowthTalk .card.photocover .pagenum{color:#AAAAAA}
 #cardnews-maker #sysJournal .card.cover{background:#1A1A1A}

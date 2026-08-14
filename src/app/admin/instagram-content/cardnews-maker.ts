@@ -2,7 +2,7 @@ import { toJpeg, toPng } from "html-to-image";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
 
-type CardNewsSystem = "Journal" | "Meetup" | "Project";
+type CardNewsSystem = "Journal" | "Meetup" | "Project" | "GrowthTalk";
 
 type EditorEventMap = WindowEventMap & DocumentEventMap & HTMLElementEventMap;
 type EditorEvent<Target extends EventTarget, Name extends keyof EditorEventMap> = EditorEventMap[Name] & {
@@ -63,6 +63,13 @@ const SYS: Record<CardNewsSystem,SystemConfig>={
       {id:'p3',key:'흐름',  f:[['라벨','.tag'],['제목','.heading'],['받침','.lead']]},
       {id:'p4',key:'신뢰',  f:[['라벨','.tag'],['제목','.heading'],['받침','.lead']]},
     ]},
+  GrowthTalk:{title:'Growth Log · 그로스톡 카드뉴스', file:'growthtalk', setName:'5기-그로스톡-01-주제',
+    bulk:[
+      {id:'gt1',key:'표지',f:[['라벨','.tag'],['제목','.heading'],['받침','.lead']]},
+      {id:'gt2',key:'맥락',f:[['라벨','.tag'],['제목','.heading'],['받침','.lead']]},
+      {id:'gt3',key:'현장',f:[['라벨','.tag'],['제목','.heading'],['받침','.lead'],['캡션','.shot-cap']]},
+      {id:'gt4',key:'정리',f:[['라벨','.tag'],['제목','.heading'],['받침','.lead'],['항목','.list .txt'],['출처','.source']]},
+    ]},
 };
 let CUR: CardNewsSystem='Journal';
 function cfg(){ return SYS[CUR]; }
@@ -80,7 +87,7 @@ function switchSys(k: CardNewsSystem,btn: HTMLElement){
 }
 
 const MIN_PAGES=4, MAX_PAGES=10;
-const PAGE_PREFIX={Journal:'j',Meetup:'m',Project:'p'};
+const PAGE_PREFIX={Journal:'j',Meetup:'m',Project:'p',GrowthTalk:'gt'};
 function pad2(value: number){ return String(value).padStart(2,'0'); }
 function addCardChrome(card: HTMLElement,index: number,total: number){
   if(card.querySelector('.logo'))return;
@@ -605,8 +612,8 @@ function nameFromFile(fname: string){
   return s.length>=3 ? s : '';
 }
 function detectSys(text: string): CardNewsSystem|null{                    // 카피의 카드 키로 어느 탭인지 판별
-  const explicit=text.match(/^시스템\s*:\s*(성장일지|정기모임|프로젝트)\s*$/m);
-  if(explicit) return {성장일지:'Journal',정기모임:'Meetup',프로젝트:'Project'}[explicit[1] as '성장일지'|'정기모임'|'프로젝트'] as CardNewsSystem;
+  const explicit=text.match(/^시스템\s*:\s*(성장일지|정기모임|프로젝트|그로스톡)\s*$/m);
+  if(explicit) return {성장일지:'Journal',정기모임:'Meetup',프로젝트:'Project',그로스톡:'GrowthTalk'}[explicit[1] as '성장일지'|'정기모임'|'프로젝트'|'그로스톡'] as CardNewsSystem;
   let best: CardNewsSystem|null=null,bestN=0;
   for(const k of Object.keys(SYS) as CardNewsSystem[]){
     const n=SYS[k].bulk.filter(b=>new RegExp('^\\['+b.key+'\\]\\s*$','m').test(text)).length;
