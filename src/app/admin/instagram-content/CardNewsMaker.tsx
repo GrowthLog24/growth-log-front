@@ -415,7 +415,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <CardToolbar label="02 · 첫 화면 (라이트)" cardId="p2" photoId="pph2" run={run} />
+        <CardToolbar label="02 · 첫 화면 (사진 선택)" cardId="p2" photoId="pph2" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p2"}>
@@ -434,7 +434,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <CardToolbar label="03 · 흐름 (라이트)" cardId="p3" photoId="pph3" run={run} />
+        <CardToolbar label="03 · 흐름 (사진 선택)" cardId="p3" photoId="pph3" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p3"}>
@@ -453,7 +453,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <CardToolbar label="04 · 신뢰 (라이트)" cardId="p4" photoId="pph4" run={run} />
+        <CardToolbar label="04 · 신뢰 (사진 선택)" cardId="p4" photoId="pph4" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p4"}>
