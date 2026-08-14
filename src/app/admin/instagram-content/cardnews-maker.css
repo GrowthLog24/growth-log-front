@@ -76,15 +76,15 @@
 
 /* ===== DYNAMIC EDITORIAL CARDS ===== */
 #cardnews-maker .card.extra-card{background:#FAFAFA!important}
-#cardnews-maker .card.extra-card .tag{left:88px!important;top:96px!important;color:#00962B!important}
-#cardnews-maker .card.extra-card .heading{left:88px!important;top:220px!important;width:904px!important;color:#222!important;font-size:76px!important;line-height:1.2!important}
-#cardnews-maker .card.extra-card .lead{left:88px!important;top:500px!important;width:904px!important;color:#666!important;font-size:38px!important;line-height:1.5!important}
-#cardnews-maker .card.extra-card .extra-shot{left:88px;top:690px;width:904px;height:360px;background:#EEF1F4;z-index:2}
-#cardnews-maker .card.extra-card .list{position:absolute!important;left:88px!important;top:690px!important;width:904px!important;border-top:1px solid #E6E6E6!important;z-index:5!important}
+#cardnews-maker .card.extra-card .tag{left:80px!important;top:80px!important;color:#00962B!important}
+#cardnews-maker .card.extra-card .heading{left:80px!important;top:220px!important;width:920px!important;color:#222!important;font-size:76px!important;line-height:1.2!important}
+#cardnews-maker .card.extra-card .lead{left:80px!important;top:500px!important;width:920px!important;color:#666!important;font-size:38px!important;line-height:1.5!important}
+#cardnews-maker .card.extra-card .extra-shot{left:80px;top:690px;width:920px;height:360px;background:#EEF1F4;z-index:2}
+#cardnews-maker .card.extra-card .list{position:absolute!important;left:80px!important;top:690px!important;width:920px!important;border-top:1px solid #E6E6E6!important;z-index:5!important}
 #cardnews-maker .card.extra-card .list .row{height:96px!important;display:flex!important;align-items:center!important;border-bottom:1px solid #E6E6E6!important}
 #cardnews-maker .card.extra-card .list .num{width:72px!important;flex:none!important;font-family:var(--f-num)!important;font-size:31px!important;font-weight:800!important;color:#00962B!important}
 #cardnews-maker .card.extra-card .list .txt{font-size:34px!important;font-weight:600!important;color:#333!important}
-#cardnews-maker .card.extra-card .source{position:absolute!important;left:88px!important;top:1080px!important;width:904px!important;color:#919191!important;font-size:21px!important;z-index:5!important}
+#cardnews-maker .card.extra-card .source{position:absolute!important;left:80px!important;top:1080px!important;width:920px!important;color:#919191!important;font-size:21px!important;z-index:5!important}
 #cardnews-maker .card.extra-card .handle{color:#BDBDBD!important}
 #cardnews-maker .card.extra-card .divider{background:#E6E6E6!important}
 #cardnews-maker .card.extra-card .foot{color:#666!important}
@@ -159,14 +159,14 @@
 #cardnews-maker #sysJournal .card.light .handle{color:#c7c7c7}
 #cardnews-maker #sysJournal .card.cover .handle{color:#AAAAAA}
 #cardnews-maker #sysJournal .heading{top:256px;color:#333333}
-#cardnews-maker #sysJournal .card.cover .heading{top:363px;color:#EEEEEE}
+#cardnews-maker #sysJournal .card.cover .heading{top:366px;color:#EEEEEE}
 #cardnews-maker #sysJournal mark{background:var(--g-hi-light);color:#333333;padding:.06em .08em;border-radius:2px}
 #cardnews-maker #sysJournal mark.t{background:var(--g-hi-dark);color:#1A1A1A}
 #cardnews-maker #sysJournal .card.cover mark{background:var(--g-hi-dark);color:#1A1A1A}
 #cardnews-maker #sysJournal .lead{top:542px}
 #cardnews-maker #sysJournal .lead.mute{color:#777777}
 #cardnews-maker #sysJournal .lead.strong{color:#333333}
-#cardnews-maker #sysJournal .card.cover .lead{top:697px;font-weight:500;font-size:38px;line-height:1.21;color:#DDDDDD}
+#cardnews-maker #sysJournal .card.cover .lead{top:700px;font-weight:500;font-size:38px;line-height:1.21;color:#DDDDDD}
 #cardnews-maker #sysJournal .note{position:absolute;left:80px;top:726px;font-weight:300;font-size:38px;line-height:1.4;color:#777777;white-space:pre-line;z-index:5}
 #cardnews-maker #sysJournal .list{position:absolute;left:80px;top:714px;width:920px;border-top:1px solid #E9E9E9;z-index:5}
 #cardnews-maker #sysJournal .list .row{height:106px;display:flex;align-items:center;border-bottom:1px solid #E9E9E9}
@@ -236,14 +236,16 @@
 #cardnews-maker #sysProject .card.light .handle{color:#c7c7c7}
 #cardnews-maker #sysProject .card.cover .handle{color:#8A8A8A}
 #cardnews-maker #sysProject .heading{top:248px;color:#1E1E1E;letter-spacing:-.015em}
-#cardnews-maker #sysProject .card.cover .heading{top:352px;color:#F2F2F2}
+#cardnews-maker #sysProject .card.cover .heading{top:366px;color:#F2F2F2}
 #cardnews-maker #sysProject mark{background:var(--g-hi-light);color:#1E1E1E;padding:.06em .08em;border-radius:2px}
 #cardnews-maker #sysProject mark.t{background:var(--g-hi-dark);color:#123A18}
 #cardnews-maker #sysProject .card.cover mark{background:var(--g-hi-dark);color:#123A18}
 #cardnews-maker #sysProject .lead{top:544px;color:#8A8A8A}
-#cardnews-maker #sysProject .card.cover .lead{top:672px;font-size:38px;line-height:1.45;color:#DDDDDD}
+#cardnews-maker #sysProject .card.cover .lead{top:700px;font-size:38px;line-height:1.45;color:#DDDDDD}
 #cardnews-maker #sysProject .frame{position:absolute;left:158px;top:722px;width:764px;border-radius:16px;overflow:hidden;
   background:#fff;border:1px solid #e6e9ec;box-shadow:0 14px 30px rgba(30,40,60,.10);z-index:2}
+/* 사진을 넣기 전에는 빈 브라우저 프레임을 아예 숨긴다 (사진은 선택) */
+#cardnews-maker #sysProject .frame:has(.ph:not(.filled)){display:none}
 #cardnews-maker #sysProject .frame .chrome{height:42px;background:#f2f4f6;border-bottom:1px solid #e8ebee;display:flex;align-items:center;gap:9px;padding:0 17px}
 #cardnews-maker #sysProject .frame .chrome i{width:13px;height:13px;border-radius:50%;display:inline-block}
 #cardnews-maker #sysProject .frame .chrome i:nth-child(1){background:#ff5f57}
@@ -262,4 +264,44 @@
 #cardnews-maker #sysProject .card.cover .foot{color:#8A8A8A}
 #cardnews-maker #sysProject .card.light .pagenum{color:#b0b0b0}
 #cardnews-maker #sysProject .card.cover .pagenum{color:#8A8A8A}
+
+/* ================================================================
+   [4] 그로스톡 — 정기모임(사진 표지)과 성장일지(텍스트+캡션)의 교집합
+   ================================================================ */
+#cardnews-maker #sysGrowthTalk .card.light{background:#FAFAFA}
+#cardnews-maker #sysGrowthTalk .card.photocover{background:
+  radial-gradient(120% 58% at 82% 3%, rgba(28,110,52,.22) 0%, rgba(8,11,9,0) 52%), #080b09}
+#cardnews-maker #sysGrowthTalk .card.light .tag{color:#333333}
+#cardnews-maker #sysGrowthTalk .card.photocover .tag{color:#79DD68}
+#cardnews-maker #sysGrowthTalk .handle{color:#AAAAAA}
+#cardnews-maker #sysGrowthTalk .card.light .heading{top:256px;color:#333333}
+#cardnews-maker #sysGrowthTalk .card.photocover .heading{top:366px;color:#EEEEEE;text-shadow:0 2px 24px rgba(0,0,0,.45)}
+#cardnews-maker #sysGrowthTalk mark{background:var(--g-hi-light);color:#333333;padding:.06em .08em;border-radius:2px}
+#cardnews-maker #sysGrowthTalk mark.t{background:var(--g-hi-dark);color:#1A1A1A}
+#cardnews-maker #sysGrowthTalk .card.photocover mark{background:var(--g-hi-dark);color:#1A1A1A}
+#cardnews-maker #sysGrowthTalk .card.light .lead{top:542px}
+#cardnews-maker #sysGrowthTalk .lead.mute{color:#777777}
+#cardnews-maker #sysGrowthTalk .card.photocover .lead{top:700px;font-weight:500;font-size:38px;line-height:1.5;color:#DDDDDD;text-shadow:0 1px 16px rgba(0,0,0,.45)}
+#cardnews-maker #sysGrowthTalk .ph.band{left:0;right:0;bottom:0;top:auto;height:772px;z-index:0;background-color:#0c110d}
+#cardnews-maker #sysGrowthTalk .veil{position:absolute;inset:0;z-index:1;pointer-events:none}
+#cardnews-maker #sysGrowthTalk .veil.band{inset:auto 0 0 0;height:772px;
+  background:radial-gradient(126% 82% at 50% 46%, rgba(8,11,9,0) 30%, rgba(8,11,9,.34) 66%, rgba(8,11,9,.80) 100%),
+   linear-gradient(180deg,#080b09 0%, rgba(8,11,9,.99) 8%, rgba(8,11,9,.62) 22%, rgba(8,11,9,.26) 37%,
+     rgba(8,11,9,.30) 52%, rgba(8,11,9,.60) 72%, rgba(8,11,9,.90) 86%, #080b09 100%)}
+#cardnews-maker #sysGrowthTalk .ph.inset{left:80px;top:700px;width:920px;height:380px;border-radius:10px;
+  background-color:#eef1f4;box-shadow:0 20px 44px rgba(20,30,20,.12);z-index:2}
+#cardnews-maker #sysGrowthTalk .shot-cap{position:absolute;left:80px;top:1096px;width:920px;font-size:25px;color:#9C9C9C;z-index:5}
+#cardnews-maker #sysGrowthTalk .list{position:absolute;left:80px;top:714px;width:920px;border-top:1px solid #E9E9E9;z-index:5}
+#cardnews-maker #sysGrowthTalk .list .row{height:106px;display:flex;align-items:center;border-bottom:1px solid #E9E9E9}
+#cardnews-maker #sysGrowthTalk .list .num{font-family:var(--f-num);font-weight:700;font-style:italic;font-size:36px;color:var(--g-number);width:70px;flex:none}
+#cardnews-maker #sysGrowthTalk .list .txt{font-weight:600;font-size:36px;color:#555555}
+#cardnews-maker #sysGrowthTalk .source{position:absolute;left:80px;top:1088px;font-weight:400;font-size:22px;line-height:1.55;color:#555555;white-space:pre-line;z-index:5}
+#cardnews-maker #sysGrowthTalk .card.light .divider{background:#E9E9E9}
+#cardnews-maker #sysGrowthTalk .card.photocover .divider{background:rgba(255,255,255,.14)}
+#cardnews-maker #sysGrowthTalk .card.photocover .logo img.logo-light{display:none}
+#cardnews-maker #sysGrowthTalk .card.photocover .logo img.logo-dark{display:block}
+#cardnews-maker #sysGrowthTalk .card.light .foot{color:#555555}
+#cardnews-maker #sysGrowthTalk .card.photocover .foot{color:#AAAAAA}
+#cardnews-maker #sysGrowthTalk .card.light .pagenum{color:#b0b0b0}
+#cardnews-maker #sysGrowthTalk .card.photocover .pagenum{color:#AAAAAA}
 #cardnews-maker #sysJournal .card.cover{background:#1A1A1A}
