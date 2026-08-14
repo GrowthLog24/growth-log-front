@@ -103,6 +103,9 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
       <button className={"tab"} data-sys={"Project"} onClick={(event) => run("switchSys", "Project", event.currentTarget)}>
         {"프로젝트"}
       </button>
+      <button className={"tab"} data-sys={"GrowthTalk"} onClick={(event) => run("switchSys", "GrowthTalk", event.currentTarget)}>
+        {"그로스톡"}
+      </button>
     </div>
     <div className={"top"}>
       <h1 id={"sysTitle"}>
@@ -412,7 +415,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <CardToolbar label="02 · 첫 화면 (라이트)" cardId="p2" photoId="pph2" run={run} />
+        <CardToolbar label="02 · 첫 화면 (사진 선택)" cardId="p2" photoId="pph2" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p2"}>
@@ -431,7 +434,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <CardToolbar label="03 · 흐름 (라이트)" cardId="p3" photoId="pph3" run={run} />
+        <CardToolbar label="03 · 흐름 (사진 선택)" cardId="p3" photoId="pph3" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p3"}>
@@ -450,7 +453,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
         </div>
       </div>
       <div className={"item"}>
-        <CardToolbar label="04 · 신뢰 (라이트)" cardId="p4" photoId="pph4" run={run} />
+        <CardToolbar label="04 · 신뢰 (사진 선택)" cardId="p4" photoId="pph4" run={run} />
         <div className={"slot"}>
           <div className={"stage"}>
             <div className={"card light"} id={"p4"}>
@@ -464,6 +467,118 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
                 {"소개-활동-멤버 역량·추천사까지, 말 대신 증거로 담았습니다.\ngrowthlog.org에서 확인해보세요."}
               </div>
               <BrowserFrame id="pph4" label="신뢰 스크린샷" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className={"sys cards"} id={"sysGrowthTalk"} hidden>
+      <div className={"item"}>
+        <CardToolbar label="01 · 표지 (다크 · 사진)" cardId="gt1" photoId="gtph1" run={run} />
+        <div className={"slot"}>
+          <div className={"stage"}>
+            <div className={"card photocover"} id={"gt1"}>
+              <div className={"ph band ondark"} id={"gtph1"} data-label={"발표·현장 사진"}></div>
+              <div className={"veil band"}></div>
+              <div className={"tag"} contentEditable suppressContentEditableWarning>
+                {"그로스로그 · 그로스톡"}
+              </div>
+              <div className={"heading"} contentEditable suppressContentEditableWarning>
+                {"혼자 보던 코드를\n"}
+                <mark>
+                  {"함께 뜯어보는 시간"}
+                </mark>
+              </div>
+              <div className={"lead"} contentEditable suppressContentEditableWarning>
+                {"멤버들이 돌아가며 발표하고,\n그 자리에서 바로 묻고 답합니다."}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={"item"}>
+        <CardToolbar label="02 · 맥락 (라이트)" cardId="gt2" run={run} />
+        <div className={"slot"}>
+          <div className={"stage"}>
+            <div className={"card light"} id={"gt2"}>
+              <div className={"tag"} contentEditable suppressContentEditableWarning>
+                {"TALK · 이번 주제"}
+              </div>
+              <div className={"heading"} contentEditable suppressContentEditableWarning>
+                {"혼자 읽었으면\n그냥 넘어갔을 이야기"}
+              </div>
+              <div className={"lead mute"} contentEditable suppressContentEditableWarning>
+                {"매달 멤버 한 명이 요즘 파고든 주제를 들고 나와,\n다른 멤버들과 함께 뜯어봅니다."}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={"item"}>
+        <CardToolbar label="03 · 현장 (라이트 · 사진)" cardId="gt3" photoId="gtph3" run={run} />
+        <div className={"slot"}>
+          <div className={"stage"}>
+            <div className={"card light"} id={"gt3"}>
+              <div className={"tag"} contentEditable suppressContentEditableWarning>
+                {"TALK · 현장"}
+              </div>
+              <div className={"heading"} contentEditable suppressContentEditableWarning>
+                {"발표보다 질문이\n더 오래 이어졌습니다"}
+              </div>
+              <div className={"lead"} contentEditable suppressContentEditableWarning>
+                {"정해진 시간을 넘겨서까지\n서로 묻고 답했습니다."}
+              </div>
+              <div className={"ph inset"} id={"gtph3"} data-label={"그로스톡 현장 사진"}></div>
+              <div className={"shot-cap"} contentEditable suppressContentEditableWarning>
+                {"그날 그로스톡 현장입니다"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={"item"}>
+        <CardToolbar label="04 · 요약 (정리)" cardId="gt4" run={run} />
+        <div className={"slot"}>
+          <div className={"stage"}>
+            <div className={"card light"} id={"gt4"}>
+              <div className={"tag"} contentEditable suppressContentEditableWarning>
+                {"그로스톡 요약"}
+              </div>
+              <div className={"heading"} contentEditable suppressContentEditableWarning>
+                {"이번 그로스톡에서\n남은 이야기"}
+              </div>
+              <div className={"lead mute"} contentEditable suppressContentEditableWarning>
+                {"현장에서 나온 핵심을 세 줄로 정리했습니다."}
+              </div>
+              <div className={"list"}>
+                <div className={"row"}>
+                  <span className={"num"} contentEditable suppressContentEditableWarning>
+                    {"01"}
+                  </span>
+                  <span className={"txt"} contentEditable suppressContentEditableWarning>
+                    {"발표 주제와 핵심 결론"}
+                  </span>
+                </div>
+                <div className={"row"}>
+                  <span className={"num"} contentEditable suppressContentEditableWarning>
+                    {"02"}
+                  </span>
+                  <span className={"txt"} contentEditable suppressContentEditableWarning>
+                    {"가장 많이 나온 질문"}
+                  </span>
+                </div>
+                <div className={"row"}>
+                  <span className={"num"} contentEditable suppressContentEditableWarning>
+                    {"03"}
+                  </span>
+                  <span className={"txt"} contentEditable suppressContentEditableWarning>
+                    {"다음에 더 파볼 것"}
+                  </span>
+                </div>
+              </div>
+              <div className={"source"} contentEditable suppressContentEditableWarning>
+                {"더 많은 이야기는 그로스로그에서\n출처 : 그로스로그 그로스톡"}
+              </div>
             </div>
           </div>
         </div>

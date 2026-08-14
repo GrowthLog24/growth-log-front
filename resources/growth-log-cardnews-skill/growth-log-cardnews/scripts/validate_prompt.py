@@ -30,18 +30,21 @@ def validate(text: str, base_dir: Path | None = None) -> list[str]:
             if not re.search(rf"^{field}\s*:\s*\S", block, re.MULTILINE):
                 errors.append(f"카드{page}: {field}이 비어 있습니다.")
 
-    system_match = re.search(r"^시스템\s*:\s*(성장일지|정기모임|프로젝트)\s*$", text, re.MULTILINE)
+    system_match = re.search(r"^시스템\s*:\s*(성장일지|정기모임|프로젝트|그로스톡)\s*$", text, re.MULTILINE)
     system = system_match.group(1) if system_match else ""
     required_photos = {
         "성장일지": {3},
         "정기모임": {1, 2, 3, 4},
-        "프로젝트": {1, 2, 3, 4},
+        "프로젝트": {1},
+        "그로스톡": {1, 3},
     }.get(system, set())
     for page in sorted(required_photos.intersection(pages)):
         if not re.search(r"^사진\s*:\s*\S", blocks[page], re.MULTILINE):
             errors.append(f"카드{page}: {system} 고정 사진 슬롯에 사진이 필요합니다.")
     if system == "성장일지" and 3 in blocks and not re.search(r"^캡션\s*:\s*\S", blocks[3], re.MULTILINE):
         errors.append("카드3: 성장일지 사진 캡션이 필요합니다.")
+    if system == "그로스톡" and 3 in blocks and not re.search(r"^캡션\s*:\s*\S", blocks[3], re.MULTILINE):
+        errors.append("카드3: 그로스톡 사진 캡션이 필요합니다.")
 
     for page in [value for value in pages if value >= 5]:
         block = blocks[page]
