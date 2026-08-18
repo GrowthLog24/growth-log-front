@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:promotion-rounds": "node --no-warnings --experimental-strip-types scripts/check-promotion-rounds.mts",
     "prepare": "husky"
   },
   "dependencies": {
