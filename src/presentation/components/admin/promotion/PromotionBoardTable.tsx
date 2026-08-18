@@ -1,0 +1,391 @@
+"use client";
+
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { RefreshCw, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { PromotionBoard, PromotionBoardSnapshot, PromotionBoardStatus, PromotionBoardType } from "@/domain/entities";
+import { GOOGLE_SHEETS_URL } from "@/infrastructure/external/knouBoards/boardSheetSource";
+
+type PromotionBoardTableProps = {
+  snapshot: PromotionBoardSnapshot;
+  isRefreshing: boolean;
+  error: string;
+  onRefresh: () => void;
+  onSelectionChange: (boards: PromotionBoard[]) => void;
+};
+
+type SortKey =
+  | "type" | "name" | "firstPageStatus" | "status" | "lastChecked" | "totalPosts"
+  | `postDate${number}` | `postCount${number}`;
+type SortState = { key: SortKey; direction: "asc" | "desc" } | null;
+
+const statusBadgeClass: Record<PromotionBoardStatus, string> = {
+  "준비됨": "bg-emerald-500 hover:bg-emerald-500 text-white border-0",
+  "확인 필요": "bg-amber-500 hover:bg-amber-500 text-white border-0",
+  "게시판 없음": "bg-destructive hover:bg-destructive text-white border-0",
+};
+
+const countFormatter = new Intl.NumberFormat("ko-KR");
+
+function CountCell({ value }: { value: number | null }) {
+  return value === null
+    ? <span className="text-muted-foreground">-</span>
+    : <span className="font-mono text-xs font-medium">{countFormatter.format(value)}</span>;
+}
+
+function formatSyncedAt(value: string) {
+  if (!value.includes("T")) return `${value} 기준`;
+  return `${new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(value))} 동기화`;
+}
+
+function sortValue(board: PromotionBoard, key: SortKey): string | number {
+  switch (key) {
+    case "type": return board.type;
+    case "name": return board.name;
+    case "firstPageStatus": return board.firstPageStatus;
+    case "status": return board.status;
+    case "lastChecked": return board.lastChecked;
+    case "totalPosts": return board.totalPosts ?? -1;
+    default: {
+      // `postDate2`·`postCount10` 등 회차별 키에서 회차를 뽑아 해당 게시 정보로 정렬합니다.
+      const round = Number(key.replace(/^post(?:Date|Count)/, ""));
+      const posting = board.postings.find((item) => item.round === round);
+      return key.startsWith("postDate") ? posting?.postedAt ?? "" : posting?.count ?? -1;
+    }
+  }
+}
+
+function isBoardSelectable(board: PromotionBoard) {
+  return board.name !== "서울지역대학" && board.status !== "게시판 없음" && board.firstPageStatus !== "O";
+}
+
+/**
+ * 방송대 홍보 게시 대상(학과·지역대학 게시판) 현황판.
+ * 검색·유형 필터·정렬·페이지네이션·행 선택을 별도 라이브러리 없이 직접 구현합니다.
+ */
+export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, onSelectionChange }: PromotionBoardTableProps) {
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"전체" | PromotionBoardType>("전체");
+  const [sort, setSort] = useState<SortState>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const postRounds = snapshot.postRounds;
+
+  const filtered = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    return snapshot.boards.filter((board) => {
+      if (typeFilter !== "전체" && board.type !== typeFilter) return false;
+      if (!keyword) return true;
+      const haystack = `${board.group} ${board.name} ${board.boardName} ${board.status} ${board.firstPageStatus} ${board.note}`.toLowerCase();
+      return haystack.includes(keyword);
+    });
+  }, [snapshot.boards, typeFilter, query]);
+
+  const sorted = useMemo(() => {
+    if (!sort) return filtered;
+    const factor = sort.direction === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      const left = sortValue(a, sort.key);
+      const right = sortValue(b, sort.key);
+      if (left < right) return -1 * factor;
+      if (left > right) return 1 * factor;
+      return 0;
+    });
+  }, [filtered, sort]);
+
+  const pageCount = Math.max(Math.ceil(sorted.length / pageSize), 1);
+  const currentPageIndex = Math.min(pageIndex, pageCount - 1);
+  const pageRows = sorted.slice(currentPageIndex * pageSize, currentPageIndex * pageSize + pageSize);
+  const selectedBoards = useMemo(
+    () => snapshot.boards.filter((board) => selectedIds.has(board.id) && isBoardSelectable(board)),
+    [selectedIds, snapshot.boards],
+  );
+
+  useEffect(() => {
+    onSelectionChange(selectedBoards);
+  }, [onSelectionChange, selectedBoards]);
+
+  const updateQuery = (value: string) => {
+    setQuery(value);
+    setPageIndex(0);
+  };
+
+  const updateTypeFilter = (value: "전체" | PromotionBoardType) => {
+    setTypeFilter(value);
+    setPageIndex(0);
+  };
+
+  const updatePageSize = (value: number) => {
+    setPageSize(value);
+    setPageIndex(0);
+  };
+
+  const toggleSort = (key: SortKey) => {
+    setSort((current) => {
+      if (current?.key !== key) return { key, direction: "asc" };
+      if (current.direction === "asc") return { key, direction: "desc" };
+      return null;
+    });
+  };
+
+  const toggleRow = (board: PromotionBoard) => {
+    if (!isBoardSelectable(board)) return;
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(board.id)) next.delete(board.id);
+      else next.add(board.id);
+      return next;
+    });
+  };
+
+  // 검색·유형 필터에 걸린 전체 게시판(모든 페이지)을 대상으로 전체 선택/해제합니다.
+  const selectableFilteredIds = filtered.filter(isBoardSelectable).map((board) => board.id);
+  const isAllFilteredSelected = selectableFilteredIds.length > 0 && selectableFilteredIds.every((id) => selectedIds.has(id));
+  const isSomeFilteredSelected = selectableFilteredIds.some((id) => selectedIds.has(id));
+
+  const toggleAllFiltered = () => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (isAllFilteredSelected) {
+        selectableFilteredIds.forEach((id) => next.delete(id));
+      } else {
+        selectableFilteredIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const typeTabs: Array<{ label: "전체" | PromotionBoardType; count: number }> = [
+    { label: "전체", count: snapshot.boards.length },
+    { label: "학과", count: snapshot.boards.filter((board) => board.type === "학과").length },
+    { label: "지역대학", count: snapshot.boards.filter((board) => board.type === "지역대학").length },
+  ];
+
+  return (
+    <div className="rounded-md border">
+      <div className="flex flex-col gap-3 border-b p-4">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="text-sm font-semibold">게시판 미리보기</h2>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              <span className={error ? "text-amber-600" : snapshot.sourceLabel === "Google Sheets" ? "text-emerald-600" : "text-muted-foreground"}>
+                {error ? "Google Sheets 연결 오류 · 저장된 스냅샷 표시 중" : `${snapshot.sourceLabel} · ${formatSyncedAt(snapshot.syncedAt)}`}
+              </span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground">1분마다 자동 갱신</span>
+              <a className="font-medium text-primary hover:underline" href={GOOGLE_SHEETS_URL} target="_blank" rel="noreferrer">원본 시트</a>
+            </div>
+          </div>
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+            <Button variant="outline" size="sm" disabled={isRefreshing} onClick={onRefresh}>
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              {isRefreshing ? "동기화 중…" : "지금 갱신"}
+            </Button>
+            <div className="relative w-full sm:w-48">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input className="pl-8" value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="학과·지역 검색" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 overflow-x-auto" role="group" aria-label="게시판 유형 필터">
+            {typeTabs.map((tab) => (
+              <Button
+                key={tab.label}
+                variant={typeFilter === tab.label ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => updateTypeFilter(tab.label)}
+              >
+                {tab.label}
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-foreground">{tab.count}</span>
+              </Button>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="ml-auto shrink-0"
+            disabled={selectableFilteredIds.length === 0}
+            onClick={toggleAllFiltered}
+          >
+            {isAllFilteredSelected ? "전체 해제" : `전체 선택${typeFilter === "전체" ? "" : ` (${typeFilter})`}`}
+          </Button>
+        </div>
+      </div>
+
+      <Table className="min-w-[1760px]">
+        <TableHeader className="bg-muted/30">
+          <TableRow className="hover:bg-transparent">
+            <TableHead rowSpan={2} className="w-12 p-0 text-center">
+              <label
+                className="flex cursor-pointer items-center justify-center px-2 py-2"
+                title="검색된 게시판 전체 선택/해제"
+              >
+                <input
+                  className="size-3.5 cursor-pointer accent-primary"
+                  aria-label="검색된 게시판 전체 선택/해제"
+                  type="checkbox"
+                  checked={isAllFilteredSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = !isAllFilteredSelected && isSomeFilteredSelected;
+                  }}
+                  onChange={toggleAllFiltered}
+                />
+              </label>
+            </TableHead>
+            <SortableHead label="구분" sortKey="type" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[88px]" />
+            <SortableHead label="게시 대상" sortKey="name" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[224px]" />
+            <SortableHead label="1p 게시" sortKey="firstPageStatus" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[80px] text-center" />
+            <SortableHead label="상태" sortKey="status" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[96px]" />
+            <SortableHead label="마지막 확인" sortKey="lastChecked" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[112px]" />
+            {postRounds.map((round) => (
+              <TableHead key={round} colSpan={3} className="border-l text-center font-semibold">
+                {round}차 게시
+              </TableHead>
+            ))}
+            <SortableHead label="총계" sortKey="totalPosts" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[80px] text-right" />
+            <TableHead rowSpan={2} className="min-w-[96px]">게시판</TableHead>
+          </TableRow>
+          <TableRow className="hover:bg-transparent">
+            {postRounds.map((round) => (
+              <Fragment key={round}>
+                <SortableHead label="날짜" sortKey={`postDate${round}`} sort={sort} onSort={toggleSort} className="min-w-[112px] border-l" />
+                <TableHead className="min-w-[96px]">링크</TableHead>
+                <SortableHead label="소계" sortKey={`postCount${round}`} sort={sort} onSort={toggleSort} className="min-w-[80px] text-right" />
+              </Fragment>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {pageRows.length > 0 ? pageRows.map((board) => {
+            const isSelectable = isBoardSelectable(board);
+            return (
+              <TableRow key={board.id} data-state={isSelectable && selectedIds.has(board.id) ? "selected" : undefined}>
+                <TableCell className="p-0 text-center">
+                  <label
+                    className={`flex items-center justify-center px-2 py-2 ${isSelectable ? "cursor-pointer" : "cursor-not-allowed"}`}
+                    title={board.name === "서울지역대학"
+                      ? "서울지역대학은 게시 대상에서 제외됩니다."
+                      : board.firstPageStatus === "O" ? "1p 게시 완료 행은 다시 게시할 수 없습니다." : undefined}
+                  >
+                    <input
+                      className="size-3.5 cursor-pointer accent-primary disabled:cursor-not-allowed"
+                      aria-label={`${board.name} 선택`}
+                      type="checkbox"
+                      checked={isSelectable && selectedIds.has(board.id)}
+                      disabled={!isSelectable}
+                      onChange={() => toggleRow(board)}
+                    />
+                  </label>
+                </TableCell>
+                <TableCell><Badge variant="outline">{board.type}</Badge></TableCell>
+                <TableCell>
+                  <strong className="block whitespace-nowrap text-xs">{board.name}</strong>
+                  <span className="mt-0.5 block whitespace-nowrap text-[11px] text-muted-foreground">{board.group} · {board.boardName}</span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <Badge variant={board.firstPageStatus === "O" ? "default" : "outline"}>
+                    {board.firstPageStatus}
+                  </Badge>
+                </TableCell>
+                <TableCell><Badge className={statusBadgeClass[board.status]}>{board.status}</Badge></TableCell>
+                <TableCell className="font-mono text-xs">{board.lastChecked || "-"}</TableCell>
+                {postRounds.map((round) => {
+                  const posting = board.postings.find((item) => item.round === round);
+                  return (
+                    <Fragment key={round}>
+                      <TableCell className="border-l font-mono text-xs">{posting?.postedAt || "-"}</TableCell>
+                      <TableCell>
+                        {posting?.postUrl ? (
+                          <a className="text-xs font-medium text-primary hover:underline" href={posting.postUrl} target="_blank" rel="noreferrer">글 URL 열기</a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right"><CountCell value={posting?.count ?? null} /></TableCell>
+                    </Fragment>
+                  );
+                })}
+                <TableCell className="text-right"><CountCell value={board.totalPosts} /></TableCell>
+                <TableCell>
+                  <a className="text-xs font-medium text-primary hover:underline" href={board.boardUrl} target="_blank" rel="noreferrer" title={board.note || `${board.name} 게시판 열기`}>
+                    {board.status === "게시판 없음" ? "홈페이지" : "게시판 열기"}
+                  </a>
+                </TableCell>
+              </TableRow>
+            );
+          }) : (
+            <TableRow>
+              <TableCell colSpan={8 + postRounds.length * 3} className="py-10 text-center text-sm text-muted-foreground">검색 조건에 맞는 게시판이 없습니다.</TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      <div className="flex flex-col gap-3 border-t p-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <span>{sorted.length}개 게시판 · {selectedBoards.length}개 선택</span>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2">페이지당
+            <select
+              className="h-7 rounded-md border bg-transparent px-2 text-xs"
+              value={pageSize}
+              onChange={(event) => updatePageSize(Number(event.target.value))}
+            >
+              {[5, 10, 25].map((size) => <option key={size} value={size}>{size}</option>)}
+            </select>
+          </label>
+          <span>{currentPageIndex + 1} / {pageCount} 페이지</span>
+          <Button variant="outline" size="icon-sm" disabled={currentPageIndex === 0} onClick={() => setPageIndex(currentPageIndex - 1)} aria-label="이전 페이지">‹</Button>
+          <Button variant="outline" size="icon-sm" disabled={currentPageIndex >= pageCount - 1} onClick={() => setPageIndex(currentPageIndex + 1)} aria-label="다음 페이지">›</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SortableHead({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  className,
+  rowSpan,
+}: {
+  label: string;
+  sortKey: SortKey;
+  sort: SortState;
+  onSort: (key: SortKey) => void;
+  className?: string;
+  rowSpan?: number;
+}) {
+  const isSorted = sort?.key === sortKey;
+  return (
+    <TableHead rowSpan={rowSpan} className={className} aria-sort={isSorted ? (sort?.direction === "asc" ? "ascending" : "descending") : "none"}>
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 font-medium hover:text-foreground"
+        onClick={() => onSort(sortKey)}
+      >
+        {label}
+        <span className="text-[10px] text-muted-foreground">{isSorted ? (sort?.direction === "asc" ? "▲" : "▼") : ""}</span>
+      </button>
+    </TableHead>
+  );
+}
