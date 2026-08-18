@@ -16,8 +16,8 @@ export const GOOGLE_SHEETS_ID = "1gPZe8cwqKbMU2PBXg2V3mYLLT3MkhdkDZpTXcGqOtE0";
 export const GOOGLE_SHEETS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/edit`;
 
 export const GOOGLE_SHEETS_RANGES = {
-  departments: { gid: "392712092", range: "A2:W1000" },
-  regionals: { gid: "1190277445", range: "A2:V1000" },
+  departments: { gid: "392712092", range: "A2:1000" },
+  regionals: { gid: "1190277445", range: "A2:1000" },
 } as const;
 
 /**
@@ -34,15 +34,26 @@ export function createBoardSnapshot({
   source: PromotionBoardSourceKind;
   syncedAt: string;
 }): PromotionBoardSnapshot {
-  const departments = recordsFromValues(departmentValues).map(mapDepartmentRecord);
-  const regionals = recordsFromValues(regionalValues).map(mapRegionalRecord);
+  const postRounds = postingRoundsFromValues(departmentValues, regionalValues);
+  const departments = recordsFromValues(departmentValues).map((record) => mapDepartmentRecord(record, postRounds));
+  const regionals = recordsFromValues(regionalValues).map((record) => mapRegionalRecord(record, postRounds));
 
   return {
     source,
     sourceLabel: source === "google-sheets" ? "Google Sheets" : "엑셀 스냅샷",
     syncedAt,
+    postRounds,
     boards: [...departments, ...regionals],
   };
+}
+
+export function postingRoundsFromValues(...sheets: SheetValues[]): number[] {
+  const rounds = new Set<number>();
+  sheets.flatMap(([headers = []]) => headers).forEach((header) => {
+    const match = /^(\d+)차 게시$/.exec(text(header));
+    if (match) rounds.add(Number(match[1]));
+  });
+  return [...rounds].sort((a, b) => a - b);
 }
 
 export function recordsFromValues(values: SheetValues): SheetRecord[] {
@@ -54,7 +65,7 @@ export function recordsFromValues(values: SheetValues): SheetRecord[] {
     .map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index]])));
 }
 
-function mapDepartmentRecord(record: SheetRecord): PromotionBoard {
+function mapDepartmentRecord(record: SheetRecord, postRounds: number[]): PromotionBoard {
   return {
     id: `department-${text(record["번호"])}`,
     group: text(record["단과대학"]),
@@ -68,11 +79,11 @@ function mapDepartmentRecord(record: SheetRecord): PromotionBoard {
     lastChecked: normalizeDate(record["확인일"]),
     note: text(record["비고"]),
     totalPosts: nullableNumber(record["총계"]),
-    postings: mapPostings(record),
+    postings: mapPostings(record, postRounds),
   };
 }
 
-function mapRegionalRecord(record: SheetRecord): PromotionBoard {
+function mapRegionalRecord(record: SheetRecord, postRounds: number[]): PromotionBoard {
   return {
     id: `regional-${text(record["번호"])}`,
     group: "지역대학",
@@ -86,12 +97,12 @@ function mapRegionalRecord(record: SheetRecord): PromotionBoard {
     lastChecked: normalizeDate(record["확인일"]),
     note: text(record["자유게시판 여부"]) === "없음" ? "자유게시판 아님" : text(record["자유게시판 여부"]),
     totalPosts: nullableNumber(record["총계"]),
-    postings: mapPostings(record),
+    postings: mapPostings(record, postRounds),
   };
 }
 
-function mapPostings(record: SheetRecord): PromotionPostingRound[] {
-  return ([1, 2, 3] as const).map((round) => ({
+function mapPostings(record: SheetRecord, postRounds: number[]): PromotionPostingRound[] {
+  return postRounds.map((round) => ({
     round,
     postedAt: normalizeDate(record[`${round}차 게시`]),
     postUrl: text(record[`${round}차 링크`]),

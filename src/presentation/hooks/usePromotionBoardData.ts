@@ -9,6 +9,7 @@ const EMPTY_SNAPSHOT: PromotionBoardSnapshot = {
   source: "google-sheets",
   sourceLabel: "Google Sheets",
   syncedAt: "",
+  postRounds: [],
   boards: [],
 };
 

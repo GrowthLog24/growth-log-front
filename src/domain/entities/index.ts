@@ -661,7 +661,7 @@ export type PromotionBoardFirstPageStatus = "O" | "X";
  * 방송대 홍보 게시 회차 결과
  */
 export interface PromotionPostingRound {
-  round: 1 | 2 | 3;
+  round: number;
   postedAt: string;
   postUrl: string;
   count: number | null;
@@ -694,6 +694,7 @@ export interface PromotionBoardSnapshot {
   source: PromotionBoardSourceKind;
   sourceLabel: string;
   syncedAt: string;
+  postRounds: number[];
   boards: PromotionBoard[];
 }
 

@@ -24,12 +24,9 @@ type PromotionBoardTableProps = {
   onSelectionChange: (boards: PromotionBoard[]) => void;
 };
 
-const POST_ROUNDS = [1, 2, 3] as const;
-type PostRound = (typeof POST_ROUNDS)[number];
-
 type SortKey =
   | "type" | "name" | "firstPageStatus" | "status" | "lastChecked" | "totalPosts"
-  | `postDate${PostRound}` | `postCount${PostRound}`;
+  | `postDate${number}` | `postCount${number}`;
 type SortState = { key: SortKey; direction: "asc" | "desc" } | null;
 
 const statusBadgeClass: Record<PromotionBoardStatus, string> = {
@@ -64,8 +61,8 @@ function sortValue(board: PromotionBoard, key: SortKey): string | number {
     case "lastChecked": return board.lastChecked;
     case "totalPosts": return board.totalPosts ?? -1;
     default: {
-      // `postDate2`·`postCount3` 등 회차별 키에서 회차를 뽑아 해당 게시 정보로 정렬합니다.
-      const round = Number(key.slice(-1));
+      // `postDate2`·`postCount10` 등 회차별 키에서 회차를 뽑아 해당 게시 정보로 정렬합니다.
+      const round = Number(key.replace(/^post(?:Date|Count)/, ""));
       const posting = board.postings.find((item) => item.round === round);
       return key.startsWith("postDate") ? posting?.postedAt ?? "" : posting?.count ?? -1;
     }
@@ -73,7 +70,7 @@ function sortValue(board: PromotionBoard, key: SortKey): string | number {
 }
 
 function isBoardSelectable(board: PromotionBoard) {
-  return board.status !== "게시판 없음" && board.firstPageStatus !== "O";
+  return board.name !== "서울지역대학" && board.status !== "게시판 없음" && board.firstPageStatus !== "O";
 }
 
 /**
@@ -87,6 +84,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const postRounds = snapshot.postRounds;
 
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -257,7 +255,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
             <SortableHead label="1p 게시" sortKey="firstPageStatus" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[80px] text-center" />
             <SortableHead label="상태" sortKey="status" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[96px]" />
             <SortableHead label="마지막 확인" sortKey="lastChecked" sort={sort} onSort={toggleSort} rowSpan={2} className="min-w-[112px]" />
-            {POST_ROUNDS.map((round) => (
+            {postRounds.map((round) => (
               <TableHead key={round} colSpan={3} className="border-l text-center font-semibold">
                 {round}차 게시
               </TableHead>
@@ -266,7 +264,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
             <TableHead rowSpan={2} className="min-w-[96px]">게시판</TableHead>
           </TableRow>
           <TableRow className="hover:bg-transparent">
-            {POST_ROUNDS.map((round) => (
+            {postRounds.map((round) => (
               <Fragment key={round}>
                 <SortableHead label="날짜" sortKey={`postDate${round}`} sort={sort} onSort={toggleSort} className="min-w-[112px] border-l" />
                 <TableHead className="min-w-[96px]">링크</TableHead>
@@ -283,7 +281,9 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
                 <TableCell className="p-0 text-center">
                   <label
                     className={`flex items-center justify-center px-2 py-2 ${isSelectable ? "cursor-pointer" : "cursor-not-allowed"}`}
-                    title={board.firstPageStatus === "O" ? "1p 게시 완료 행은 다시 게시할 수 없습니다." : undefined}
+                    title={board.name === "서울지역대학"
+                      ? "서울지역대학은 게시 대상에서 제외됩니다."
+                      : board.firstPageStatus === "O" ? "1p 게시 완료 행은 다시 게시할 수 없습니다." : undefined}
                   >
                     <input
                       className="size-3.5 cursor-pointer accent-primary disabled:cursor-not-allowed"
@@ -307,7 +307,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
                 </TableCell>
                 <TableCell><Badge className={statusBadgeClass[board.status]}>{board.status}</Badge></TableCell>
                 <TableCell className="font-mono text-xs">{board.lastChecked || "-"}</TableCell>
-                {POST_ROUNDS.map((round) => {
+                {postRounds.map((round) => {
                   const posting = board.postings.find((item) => item.round === round);
                   return (
                     <Fragment key={round}>
@@ -333,7 +333,7 @@ export function PromotionBoardTable({ snapshot, isRefreshing, error, onRefresh, 
             );
           }) : (
             <TableRow>
-              <TableCell colSpan={17} className="py-10 text-center text-sm text-muted-foreground">검색 조건에 맞는 게시판이 없습니다.</TableCell>
+              <TableCell colSpan={8 + postRounds.length * 3} className="py-10 text-center text-sm text-muted-foreground">검색 조건에 맞는 게시판이 없습니다.</TableCell>
             </TableRow>
           )}
         </TableBody>
