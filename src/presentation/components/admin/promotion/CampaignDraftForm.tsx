@@ -73,6 +73,8 @@ export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFor
     let success = 0;
     const failed: string[] = [];
     const skipped: string[] = [];
+    // 실패 사유(연결 앱이 보낸 메시지)를 남겨 두어야 어디서 막혔는지 알 수 있습니다.
+    const failureReasons: string[] = [];
 
     for (const board of selectedBoards) {
       let result: HelperResult;
@@ -105,13 +107,17 @@ export function CampaignDraftForm({ selectedBoards, onNotice }: CampaignDraftFor
           confirmFinalSubmit: autoSubmit,
         });
       }
-      if (result.ok) success += 1;
-      else failed.push(board.name);
+      if (result.ok) {
+        success += 1;
+      } else {
+        failed.push(board.name);
+        failureReasons.push(`${board.name}: ${result.message}`);
+      }
     }
 
     const label = pendingAction === "수정" ? "수정" : "게시";
     const parts = [`${selectedBoards.length}곳 중 ${success}곳 ${label} 요청 완료`];
-    if (failed.length > 0) parts.push(`실패 ${failed.length}곳(${failed.join(", ")})`);
+    if (failed.length > 0) parts.push(`실패 ${failed.length}곳 — ${failureReasons.join(" / ")}`);
     if (skipped.length > 0) parts.push(`링크 없어 건너뜀 ${skipped.length}곳(${skipped.join(", ")})`);
     onNotice(parts.join(" · "));
   }, [
