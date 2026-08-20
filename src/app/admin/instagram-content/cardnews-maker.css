@@ -78,7 +78,7 @@
 #cardnews-maker .card.extra-card{background:#FAFAFA!important}
 #cardnews-maker .card.extra-card .tag{left:80px!important;top:80px!important;color:#00962B!important}
 #cardnews-maker .card.extra-card .heading{left:80px!important;top:220px!important;width:920px!important;color:#222!important;font-size:76px!important;line-height:1.2!important}
-#cardnews-maker .card.extra-card .lead{left:80px!important;top:500px!important;width:920px!important;color:#666!important;font-size:38px!important;line-height:1.5!important}
+#cardnews-maker .card.extra-card .lead{left:80px!important;top:480px!important;width:920px!important;color:#666!important;font-size:38px!important;line-height:1.5!important}
 #cardnews-maker .card.extra-card .extra-shot{left:80px;top:690px;width:920px;height:360px;background:#EEF1F4;z-index:2}
 #cardnews-maker .card.extra-card .list{position:absolute!important;left:80px!important;top:690px!important;width:920px!important;border-top:1px solid #E6E6E6!important;z-index:5!important}
 #cardnews-maker .card.extra-card .list .row{height:96px!important;display:flex!important;align-items:center!important;border-bottom:1px solid #E6E6E6!important}
@@ -163,10 +163,10 @@
 #cardnews-maker #sysJournal mark{background:var(--g-hi-light);color:#333333;padding:.06em .08em;border-radius:2px}
 #cardnews-maker #sysJournal mark.t{background:var(--g-hi-dark);color:#1A1A1A}
 #cardnews-maker #sysJournal .card.cover mark{background:var(--g-hi-dark);color:#1A1A1A}
-#cardnews-maker #sysJournal .lead{top:542px}
+#cardnews-maker #sysJournal .lead{top:521px}
 #cardnews-maker #sysJournal .lead.mute{color:#777777}
 #cardnews-maker #sysJournal .lead.strong{color:#333333}
-#cardnews-maker #sysJournal .card.cover .lead{top:700px;font-weight:500;font-size:38px;line-height:1.21;color:#DDDDDD}
+#cardnews-maker #sysJournal .card.cover .lead{top:669px;font-weight:500;font-size:38px;line-height:1.21;color:#DDDDDD}
 #cardnews-maker #sysJournal .note{position:absolute;left:80px;top:726px;font-weight:300;font-size:38px;line-height:1.4;color:#777777;white-space:pre-line;z-index:5}
 #cardnews-maker #sysJournal .list{position:absolute;left:80px;top:714px;width:920px;border-top:1px solid #E9E9E9;z-index:5}
 #cardnews-maker #sysJournal .list .row{height:106px;display:flex;align-items:center;border-bottom:1px solid #E9E9E9}
@@ -201,9 +201,9 @@
 #cardnews-maker #sysMeetup mark.t{background:var(--g-hi-dark);color:#191919}
 #cardnews-maker #sysMeetup .photocover mark{background:var(--g-hi-dark);color:#191919}
 #cardnews-maker #sysMeetup .photoinset .heading mark{background:transparent;color:var(--g-number);font-weight:800;padding:0}
-#cardnews-maker #sysMeetup .photoinset .lead{top:542px;font-weight:500;color:#777777}
-#cardnews-maker #sysMeetup .photocover .lead{top:593px;font-weight:500;font-size:38px;line-height:1.5;color:#DDDDDD;text-shadow:0 1px 16px rgba(0,0,0,.45)}
-#cardnews-maker #sysMeetup #m1 .lead{top:700px}
+#cardnews-maker #sysMeetup .photoinset .lead{top:520px;font-weight:500;color:#777777}
+#cardnews-maker #sysMeetup .photocover .lead{top:584px;font-weight:500;font-size:38px;line-height:1.5;color:#DDDDDD;text-shadow:0 1px 16px rgba(0,0,0,.45)}
+#cardnews-maker #sysMeetup #m1 .lead{top:669px}
 #cardnews-maker #sysMeetup #m4 .lead{width:880px;color:#CCCCCC;font-size:36px}
 #cardnews-maker #sysMeetup .ph.cover{inset:0;z-index:0;background-color:#0c110d}
 #cardnews-maker #sysMeetup .veil{position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -240,8 +240,8 @@
 #cardnews-maker #sysProject mark{background:var(--g-hi-light);color:#1E1E1E;padding:.06em .08em;border-radius:2px}
 #cardnews-maker #sysProject mark.t{background:var(--g-hi-dark);color:#123A18}
 #cardnews-maker #sysProject .card.cover mark{background:var(--g-hi-dark);color:#123A18}
-#cardnews-maker #sysProject .lead{top:544px;color:#8A8A8A}
-#cardnews-maker #sysProject .card.cover .lead{top:700px;font-size:38px;line-height:1.45;color:#DDDDDD}
+#cardnews-maker #sysProject .lead{top:521px;color:#8A8A8A}
+#cardnews-maker #sysProject .card.cover .lead{top:669px;font-size:38px;line-height:1.45;color:#DDDDDD}
 #cardnews-maker #sysProject .frame{position:absolute;left:158px;top:722px;width:764px;border-radius:16px;overflow:hidden;
   background:#fff;border:1px solid #e6e9ec;box-shadow:0 14px 30px rgba(30,40,60,.10);z-index:2}
 /* 사진을 넣기 전에는 빈 브라우저 프레임을 아예 숨긴다 (사진은 선택) */
@@ -279,9 +279,9 @@
 #cardnews-maker #sysGrowthTalk mark{background:var(--g-hi-light);color:#333333;padding:.06em .08em;border-radius:2px;text-shadow:none}
 #cardnews-maker #sysGrowthTalk mark.t{background:var(--g-hi-dark);color:#1A1A1A}
 #cardnews-maker #sysGrowthTalk .card.photocover mark{background:var(--g-hi-dark);color:#1A1A1A}
-#cardnews-maker #sysGrowthTalk .card.light .lead{top:542px}
+#cardnews-maker #sysGrowthTalk .card.light .lead{top:521px}
 #cardnews-maker #sysGrowthTalk .lead.mute{color:#777777}
-#cardnews-maker #sysGrowthTalk .card.photocover .lead{top:700px;font-weight:500;font-size:38px;line-height:1.5;color:#DDDDDD;text-shadow:0 1px 16px rgba(0,0,0,.45)}
+#cardnews-maker #sysGrowthTalk .card.photocover .lead{top:669px;font-weight:500;font-size:38px;line-height:1.5;color:#DDDDDD;text-shadow:0 1px 16px rgba(0,0,0,.45)}
 #cardnews-maker #sysGrowthTalk .ph.band{left:0;right:0;bottom:0;top:auto;height:772px;z-index:0;background-color:#0c110d}
 #cardnews-maker #sysGrowthTalk .veil{position:absolute;inset:0;z-index:1;pointer-events:none}
 #cardnews-maker #sysGrowthTalk .veil.band{inset:auto 0 0 0;height:772px;
