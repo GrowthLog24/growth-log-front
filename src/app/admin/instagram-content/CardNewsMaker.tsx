@@ -408,7 +408,7 @@ const EditorMarkup = ({ run }: { run: EditorAction }) => (
                 {"About부터 6기 지원까지,\n한 흐름으로 이어지는 growth Log 웹사이트입니다."}
               </div>
               <div className={"ph pbleed ondark"} id={"pph1"} data-label={"표지 스크린샷"}></div>
-              <div className={"cover-fade top"}></div>
+              <div className={"cover-fade cover-fade-top"}></div>
               <div className={"cover-fade bot"}></div>
             </div>
           </div>
