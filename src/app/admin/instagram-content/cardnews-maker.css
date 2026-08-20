@@ -276,7 +276,7 @@
 #cardnews-maker #sysGrowthTalk .handle{color:#AAAAAA}
 #cardnews-maker #sysGrowthTalk .card.light .heading{top:256px;color:#333333}
 #cardnews-maker #sysGrowthTalk .card.photocover .heading{top:366px;color:#EEEEEE;text-shadow:0 2px 24px rgba(0,0,0,.45)}
-#cardnews-maker #sysGrowthTalk mark{background:var(--g-hi-light);color:#333333;padding:.06em .08em;border-radius:2px}
+#cardnews-maker #sysGrowthTalk mark{background:var(--g-hi-light);color:#333333;padding:.06em .08em;border-radius:2px;text-shadow:none}
 #cardnews-maker #sysGrowthTalk mark.t{background:var(--g-hi-dark);color:#1A1A1A}
 #cardnews-maker #sysGrowthTalk .card.photocover mark{background:var(--g-hi-dark);color:#1A1A1A}
 #cardnews-maker #sysGrowthTalk .card.light .lead{top:542px}
