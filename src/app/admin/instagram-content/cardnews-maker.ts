@@ -155,21 +155,16 @@ function setPageCount(value: string|number,systemKey: CardNewsSystem=CUR){
 }
 
 /* ===== 미리보기 배율 : 한 줄에 4장이 꽉 차게 자동 계산 ===== */
-let ZOOM_MUL=1;
 function fitZoom(){
-  // 카드 박스(slot) 실제 폭에 stage를 맞춘다. 여기서 ZOOM_MUL을 또 곱하면
-  // 박스는 그대로인데 안의 내용만 커져서 넘친다 (이전 버그).
+  // 카드 박스(slot) 실제 폭에 stage를 맞춘다.
   const slot=root.querySelector('.sys:not([hidden]) .slot');
   if(!slot||!slot.clientWidth) return;
   root.style.setProperty('--z',(slot.clientWidth/1080).toFixed(4));
 }
+const CARD_BASE_W=375;                                      // 100% 확대 기준 카드 최소 폭(px)
 function setZoom(v: string){
-  ZOOM_MUL=Number(v)/100;                                   // 박스 자체를 키운다(넘치면 가로 스크롤)
-  const base=Math.min(1560, root.clientWidth);
-  root.querySelectorAll<HTMLElement>('.cards').forEach(c=>{
-    if(ZOOM_MUL<=1){ c.style.width=''; c.style.maxWidth='1560px'; }
-    else{ const w=Math.round(base*ZOOM_MUL); c.style.maxWidth='none'; c.style.width=w+'px'; }
-  });
+  // 카드 자체를 키우고, 한 줄에 다 안 들어가면 grid가 자동으로 다음 줄로 넘긴다(가로 스크롤 대신 세로로 길어짐).
+  root.style.setProperty('--card-min-w', Math.round(CARD_BASE_W*(Number(v)/100))+'px');
   fitZoom();
   root.querySelectorAll<PhotoSlot>('.ph.filled').forEach(layoutShot);
 }
