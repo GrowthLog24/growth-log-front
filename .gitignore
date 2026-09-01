@@ -47,3 +47,7 @@ next-env.d.ts
 *.xlsx
 *.xls
 *.csv
+
+# 명찰 자산 (scripts/build-name-badge-assets.mjs가 predev/prebuild에서 생성)
+/public/admin/name-badge/template.pdf
+/public/admin/name-badge/fonts/Pretendard-Regular.ttf
