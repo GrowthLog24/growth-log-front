@@ -17,6 +17,8 @@ import { memberAdminRepository } from "@/infrastructure/repositories/admin/membe
 import type { Member } from "@/domain/entities";
 import {
   BADGES_PER_SHEET,
+  BLANK_BADGE_SHEET_LIMIT,
+  downloadBlankNameBadgePdf,
   downloadNameBadgePdf,
   toBadgeRoleText,
   type NameBadgeMember,
@@ -25,6 +27,9 @@ import { buildMemberAchievementUrl } from "@/shared/utils/memberLink";
 
 /** 기수 필터의 "전체" 값 */
 const ALL_GENERATIONS = "all";
+
+/** 무기명 명찰 장수 입력의 기본값 */
+const DEFAULT_BLANK_SHEETS = "1";
 
 /**
  * 회원 명찰 생성 패널
@@ -38,6 +43,8 @@ export function NameBadgePanel() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [blankGenerating, setBlankGenerating] = useState(false);
+  const [blankSheets, setBlankSheets] = useState(DEFAULT_BLANK_SHEETS);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [generationFilter, setGenerationFilter] = useState(ALL_GENERATIONS);
@@ -119,6 +126,35 @@ export function NameBadgePanel() {
       }
       return next;
     });
+  };
+
+  /** 입력한 장수 (정수가 아니거나 범위를 벗어나면 NaN 취급) */
+  const blankSheetCount = Number(blankSheets);
+  const isBlankSheetCountValid =
+    Number.isInteger(blankSheetCount) &&
+    blankSheetCount >= 1 &&
+    blankSheetCount <= BLANK_BADGE_SHEET_LIMIT;
+
+  /**
+   * 이름·직무 없이 QR만 있는 무기명 명찰을 만들어 내려받습니다.
+   *
+   * 게스트에게 수기로 이름을 적어 나눠 줄 때 씁니다.
+   */
+  const generateBlank = async () => {
+    setBlankGenerating(true);
+    try {
+      await downloadBlankNameBadgePdf(blankSheetCount);
+      toast.success(
+        `무기명 명찰 ${blankSheetCount}장(${blankSheetCount * BADGES_PER_SHEET}개)을 만들었습니다.`
+      );
+    } catch (error) {
+      console.error("Failed to generate blank name badges:", error);
+      toast.error(
+        error instanceof Error ? error.message : "명찰을 만들지 못했습니다."
+      );
+    } finally {
+      setBlankGenerating(false);
+    }
   };
 
   /**
@@ -206,7 +242,32 @@ export function NameBadgePanel() {
           {filteredMembers.length}명 중 {selectedMembers.length}명 선택 · A4 한
           장에 {BADGES_PER_SHEET}명씩 들어갑니다.
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 무기명 명찰: 게스트에게 수기로 이름을 적어 나눠 줄 때 씁니다. */}
+          <Button
+            variant="ghost"
+            disabled={blankGenerating || !isBlankSheetCountValid}
+            onClick={generateBlank}
+            title="이름·직무 없이 QR만 있는 명찰입니다. 게스트에게 수기로 이름을 적어 나눠 줄 때 사용하세요."
+          >
+            {blankGenerating && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            무기명 명찰
+          </Button>
+          <label className="mr-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Input
+              type="number"
+              min={1}
+              max={BLANK_BADGE_SHEET_LIMIT}
+              value={blankSheets}
+              onChange={(event) => setBlankSheets(event.target.value)}
+              aria-label="무기명 명찰 장수"
+              className="h-9 w-16"
+            />
+            장
+          </label>
+
           <Button
             variant="outline"
             disabled={generating || filteredMembers.length === 0}
