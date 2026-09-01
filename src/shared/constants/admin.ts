@@ -17,6 +17,7 @@ import {
   Instagram,
   QrCode,
   Send,
+  IdCard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -117,6 +118,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: QrCode,
   },
   {
+    title: "홍보물 제작",
+    href: "/admin/promotion-materials",
+    icon: IdCard,
+  },
+  {
     title: "CTA 버튼 설정",
     href: "/admin/cta",
     icon: MousePointerClick,
@@ -148,6 +154,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/meetings": "정기모임 출결",
   "/admin/events": "행사 타임테이블",
   "/admin/promotion-qr": "홍보물 QR 발급",
+  "/admin/promotion-materials": "홍보물 제작",
   "/admin/cta": "CTA 버튼 설정",
   "/admin/settings": "사이트 정보 설정",
 };
