@@ -23,7 +23,7 @@ export interface NameBadgeMember {
 export interface NameBadgeAssets {
   /** 예시 텍스트를 걷어낸 템플릿 PDF */
   templateBytes: ArrayBuffer;
-  /** 이름용 폰트 (Pretendard Regular) */
+  /** 이름용 폰트 (Pretendard Bold) */
   nameFontBytes: ArrayBuffer;
   /** 직무용 폰트 (Montserrat Medium) */
   roleFontBytes: ArrayBuffer;
@@ -36,7 +36,7 @@ export interface NameBadgeAssets {
  */
 export const NAME_BADGE_ASSET_PATHS = {
   template: "/admin/name-badge/template.pdf",
-  nameFont: "/admin/name-badge/fonts/Pretendard-Regular.ttf",
+  nameFont: "/admin/name-badge/fonts/Pretendard-Bold.ttf",
   roleFont: "/admin/name-badge/fonts/Montserrat-Medium.ttf",
 } as const;
 
@@ -71,12 +71,15 @@ const ROLE_TEXT = {
 /**
  * QR 배치 값
  *
- * 앞면 사각 박스(80.69pt) 중앙에 62pt 크기로 넣습니다. 박스의 남는 여백이
- * QR 정숙 영역(quiet zone) 역할을 하므로 QR 자체에는 여백을 두지 않습니다.
+ * 앞면 사각 박스(80.69pt) 중앙에 넣습니다. 박스의 남는 여백이 QR 정숙 영역
+ * (quiet zone) 역할을 하므로 QR 자체에는 여백을 두지 않습니다.
+ *
+ * 크기는 박스에 처음 맞췄던 62pt에서 10% 줄인 값입니다. 가운데 정렬이라
+ * 줄어든 만큼 사방 여백이 함께 늘어납니다.
  */
 const QR_PLACEMENT = {
   centerY: 184.596,
-  size: 62,
+  size: 55.8,
 } as const;
 
 /**
