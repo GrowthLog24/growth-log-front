@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import type { Font as OutlineFont, Path as GlyphPath } from "@pdf-lib/fontkit";
-import type { PDFPage } from "pdf-lib";
+import type { PDFDocument, PDFPage } from "pdf-lib";
+import { SITE_METADATA } from "@/shared/constants";
 import { buildMemberAchievementUrl } from "@/shared/utils/memberLink";
 
 /**
@@ -23,7 +24,7 @@ export interface NameBadgeMember {
 export interface NameBadgeAssets {
   /** 예시 텍스트를 걷어낸 템플릿 PDF */
   templateBytes: ArrayBuffer;
-  /** 이름용 폰트 (Pretendard Regular) */
+  /** 이름용 폰트 (Pretendard Bold) */
   nameFontBytes: ArrayBuffer;
   /** 직무용 폰트 (Montserrat Medium) */
   roleFontBytes: ArrayBuffer;
@@ -36,12 +37,27 @@ export interface NameBadgeAssets {
  */
 export const NAME_BADGE_ASSET_PATHS = {
   template: "/admin/name-badge/template.pdf",
-  nameFont: "/admin/name-badge/fonts/Pretendard-Regular.ttf",
+  nameFont: "/admin/name-badge/fonts/Pretendard-Bold.ttf",
   roleFont: "/admin/name-badge/fonts/Montserrat-Medium.ttf",
 } as const;
 
 /** A4 한 장에 들어가는 명찰 수 (좌/우 2명) */
 export const BADGES_PER_SHEET = 2;
+
+/**
+ * 무기명 명찰을 한 번에 만들 수 있는 최대 장수
+ *
+ * 실수로 큰 수를 넣어 브라우저가 멈추는 일을 막는 상한입니다.
+ */
+export const BLANK_BADGE_SHEET_LIMIT = 50;
+
+/**
+ * 무기명 명찰 QR이 가리키는 주소
+ *
+ * 이름을 모르는 게스트용이라 개인 업적 페이지 대신 공개 사이트 첫 화면으로
+ * 보냅니다.
+ */
+const BLANK_BADGE_QR_URL = SITE_METADATA.url;
 
 /**
  * 명찰 슬롯별 좌표 (PDF 좌표계, 원점은 좌하단 / 단위 pt)
@@ -71,12 +87,15 @@ const ROLE_TEXT = {
 /**
  * QR 배치 값
  *
- * 앞면 사각 박스(80.69pt) 중앙에 62pt 크기로 넣습니다. 박스의 남는 여백이
- * QR 정숙 영역(quiet zone) 역할을 하므로 QR 자체에는 여백을 두지 않습니다.
+ * 앞면 사각 박스(80.69pt) 중앙에 넣습니다. 박스의 남는 여백이 QR 정숙 영역
+ * (quiet zone) 역할을 하므로 QR 자체에는 여백을 두지 않습니다.
+ *
+ * 크기는 박스에 처음 맞췄던 62pt에서 10% 줄인 값입니다. 가운데 정렬이라
+ * 줄어든 만큼 사방 여백이 함께 늘어납니다.
  */
 const QR_PLACEMENT = {
   centerY: 184.596,
-  size: 62,
+  size: 55.8,
 } as const;
 
 /**
@@ -248,6 +267,30 @@ function createQrPathData(url: string, size: number): string {
   return parts.join("");
 }
 
+/**
+ * 명찰 한 칸의 QR 자리에 미리 만들어 둔 패스를 그립니다.
+ *
+ * 패스를 인자로 받는 이유는 무기명 명찰처럼 모든 칸이 같은 주소를 가리킬 때
+ * 패스를 한 번만 만들어 재사용하기 위해서입니다.
+ *
+ * @param {PDFPage} page - 대상 페이지
+ * @param {number} slotIndex - 슬롯 번호 (0: 왼쪽, 1: 오른쪽)
+ * @param {string} qrPathData - `createQrPathData`가 만든 SVG path 데이터
+ * @param {typeof import("pdf-lib")} pdfLib - 동적으로 불러온 pdf-lib 모듈
+ */
+function drawBadgeQr(
+  page: PDFPage,
+  slotIndex: number,
+  qrPathData: string,
+  pdfLib: typeof import("pdf-lib")
+): void {
+  page.drawSvgPath(qrPathData, {
+    x: BADGE_SLOTS[slotIndex].qrCenterX - QR_PLACEMENT.size / 2,
+    y: QR_PLACEMENT.centerY + QR_PLACEMENT.size / 2,
+    color: pdfLib.rgb(0, 0, 0),
+  });
+}
+
 /** 명찰 한 칸을 채울 때 필요한 값 */
 interface BadgeSlotContent {
   /** 대상 회원 */
@@ -303,18 +346,95 @@ function drawBadgeSlot(
   );
 
   const qrUrl = buildMemberAchievementUrl(member.generation, member.memberName);
-  page.drawSvgPath(createQrPathData(qrUrl, QR_PLACEMENT.size), {
-    x: slot.qrCenterX - QR_PLACEMENT.size / 2,
-    y: QR_PLACEMENT.centerY + QR_PLACEMENT.size / 2,
-    color: pdfLib.rgb(0, 0, 0),
-  });
+  drawBadgeQr(
+    page,
+    slotIndex,
+    createQrPathData(qrUrl, QR_PLACEMENT.size),
+    pdfLib
+  );
+}
+
+/**
+ * 템플릿을 필요한 장수만큼 복사한 문서를 만듭니다.
+ *
+ * @param {number} sheetCount - 만들 장수
+ * @param {ArrayBuffer} templateBytes - 템플릿 PDF 바이트
+ * @param {typeof import("pdf-lib")} pdfLib - 동적으로 불러온 pdf-lib 모듈
+ * @returns {Promise<{ doc: PDFDocument; pages: PDFPage[] }>} 문서와 페이지 목록
+ */
+async function createSheetDocument(
+  sheetCount: number,
+  templateBytes: ArrayBuffer,
+  pdfLib: typeof import("pdf-lib")
+): Promise<{ doc: PDFDocument; pages: PDFPage[] }> {
+  const templateDoc = await pdfLib.PDFDocument.load(templateBytes);
+  const doc = await pdfLib.PDFDocument.create();
+
+  // 한 번의 copyPages 호출 안에서는 템플릿 리소스가 재사용되므로,
+  // 페이지마다 따로 복사하지 않고 필요한 장수를 한꺼번에 복사합니다.
+  const pages = await doc.copyPages(templateDoc, new Array(sheetCount).fill(0));
+  for (const page of pages) {
+    doc.addPage(page);
+  }
+
+  return { doc, pages };
+}
+
+/**
+ * 지정한 칸 범위를 무기명 명찰(QR만 있는 명찰)로 채웁니다.
+ *
+ * 칸 번호는 페이지를 가로지르는 통짜 번호입니다. `BADGES_PER_SHEET`으로 나눈
+ * 몫이 페이지, 나머지가 그 페이지 안에서의 자리입니다.
+ *
+ * @param {readonly PDFPage[]} pages - 대상 페이지 목록
+ * @param {number} startSlot - 채우기 시작할 칸 번호 (포함)
+ * @param {number} endSlot - 채우기를 멈출 칸 번호 (미포함)
+ * @param {typeof import("pdf-lib")} pdfLib - 동적으로 불러온 pdf-lib 모듈
+ */
+function drawBlankBadgeSlots(
+  pages: readonly PDFPage[],
+  startSlot: number,
+  endSlot: number,
+  pdfLib: typeof import("pdf-lib")
+): void {
+  if (startSlot >= endSlot) return;
+
+  // 모든 칸이 같은 주소를 가리키므로 QR 패스는 한 번만 만들어 재사용합니다.
+  const qrPathData = createQrPathData(BLANK_BADGE_QR_URL, QR_PLACEMENT.size);
+  for (let index = startSlot; index < endSlot; index += 1) {
+    drawBadgeQr(
+      pages[Math.floor(index / BADGES_PER_SHEET)],
+      index % BADGES_PER_SHEET,
+      qrPathData,
+      pdfLib
+    );
+  }
+}
+
+/**
+ * 회원 수에 맞춰 명찰을 만들 때 마지막 장에 남는 칸 수를 셉니다.
+ *
+ * 남는 칸은 `createNameBadgePdf`가 무기명 명찰로 채우므로, 화면에서 몇 칸이
+ * 무기명으로 나가는지 안내할 때 씁니다.
+ *
+ * @param {number} memberCount - 명찰을 만들 회원 수
+ * @returns {number} 남는 칸 수 (딱 맞으면 0)
+ *
+ * @example
+ * countBlankBadgeSlots(15);
+ * // => 1
+ */
+export function countBlankBadgeSlots(memberCount: number): number {
+  const remainder = memberCount % BADGES_PER_SHEET;
+  return remainder === 0 ? 0 : BADGES_PER_SHEET - remainder;
 }
 
 /**
  * 회원 목록으로 명찰 PDF를 만듭니다.
  *
  * A4 한 장에 명찰 2개가 들어가므로 회원을 두 명씩 묶어 페이지를 만듭니다.
- * 홀수 인원이면 마지막 장의 오른쪽은 빈 명찰로 남습니다.
+ * 홀수 인원이면 마지막 장의 오른쪽 칸이 남는데, 비워 두면 QR 없는 명찰이
+ * 인쇄되므로 무기명 명찰로 채웁니다.
  *
  * @param {readonly NameBadgeMember[]} members - 명찰을 만들 회원 목록
  * @param {NameBadgeAssets} assets - 템플릿 PDF와 폰트 바이트
@@ -339,19 +459,11 @@ export async function createNameBadgePdf(
   const nameFont = fontkit.create(new Uint8Array(assets.nameFontBytes));
   const roleFont = fontkit.create(new Uint8Array(assets.roleFontBytes));
 
-  const templateDoc = await pdfLib.PDFDocument.load(assets.templateBytes);
-  const outputDoc = await pdfLib.PDFDocument.create();
-
-  const sheetCount = Math.ceil(members.length / BADGES_PER_SHEET);
-  // 한 번의 copyPages 호출 안에서는 템플릿 리소스가 재사용되므로,
-  // 페이지마다 따로 복사하지 않고 필요한 장수를 한꺼번에 복사합니다.
-  const pages = await outputDoc.copyPages(
-    templateDoc,
-    new Array(sheetCount).fill(0)
+  const { doc: outputDoc, pages } = await createSheetDocument(
+    Math.ceil(members.length / BADGES_PER_SHEET),
+    assets.templateBytes,
+    pdfLib
   );
-  for (const page of pages) {
-    outputDoc.addPage(page);
-  }
 
   for (let index = 0; index < members.length; index += 1) {
     drawBadgeSlot(
@@ -362,7 +474,83 @@ export async function createNameBadgePdf(
     );
   }
 
+  // 홀수 인원이라 마지막 장에 칸이 남으면 무기명 명찰로 채웁니다.
+  // 버리는 칸 없이 게스트용으로 바로 쓸 수 있습니다.
+  drawBlankBadgeSlots(
+    pages,
+    members.length,
+    pages.length * BADGES_PER_SHEET,
+    pdfLib
+  );
+
   return outputDoc.save();
+}
+
+/**
+ * 이름·직무 없이 QR만 있는 무기명 명찰 PDF를 만듭니다.
+ *
+ * 게스트 참가자에게 이름을 수기로 적어 나눠 줄 때 씁니다. 누구의 명찰인지
+ * 미리 알 수 없으므로 QR은 개인 업적 페이지가 아니라 공개 사이트로 보냅니다.
+ *
+ * 그릴 텍스트가 없어 폰트가 필요 없으므로 템플릿만 받습니다.
+ *
+ * @param {number} sheetCount - 만들 장수 (1 이상 `BLANK_BADGE_SHEET_LIMIT` 이하)
+ * @param {ArrayBuffer} templateBytes - 템플릿 PDF 바이트
+ * @returns {Promise<Uint8Array>} 완성된 PDF 바이트
+ * @throws {Error} 장수가 허용 범위를 벗어난 경우
+ */
+export async function createBlankNameBadgePdf(
+  sheetCount: number,
+  templateBytes: ArrayBuffer
+): Promise<Uint8Array> {
+  if (!Number.isInteger(sheetCount) || sheetCount < 1) {
+    throw new Error("만들 장수는 1 이상의 정수여야 합니다.");
+  }
+  if (sheetCount > BLANK_BADGE_SHEET_LIMIT) {
+    throw new Error(
+      `무기명 명찰은 한 번에 ${BLANK_BADGE_SHEET_LIMIT}장까지 만들 수 있습니다.`
+    );
+  }
+
+  // 번들 크기가 큰 라이브러리라 이 기능을 실제로 쓸 때만 불러옵니다.
+  const pdfLib = await import("pdf-lib");
+  const { doc, pages } = await createSheetDocument(
+    sheetCount,
+    templateBytes,
+    pdfLib
+  );
+
+  drawBlankBadgeSlots(pages, 0, pages.length * BADGES_PER_SHEET, pdfLib);
+
+  return doc.save();
+}
+
+/**
+ * 명찰 자산 파일 하나를 내려받습니다.
+ *
+ * @param {string} path - `public/` 기준 경로
+ * @returns {Promise<ArrayBuffer>} 파일 바이트
+ * @throws {Error} 내려받지 못한 경우
+ */
+async function fetchAssetBytes(path: string): Promise<ArrayBuffer> {
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new Error(`명찰 자산을 불러오지 못했습니다: ${path}`);
+  }
+  return response.arrayBuffer();
+}
+
+/**
+ * 명찰 템플릿 PDF를 내려받습니다.
+ *
+ * 무기명 명찰은 그릴 텍스트가 없어 폰트가 필요 없으므로, 폰트까지 받는
+ * `fetchNameBadgeAssets` 대신 이 함수를 씁니다.
+ *
+ * @returns {Promise<ArrayBuffer>} 템플릿 PDF 바이트
+ * @throws {Error} 내려받지 못한 경우
+ */
+export async function fetchNameBadgeTemplate(): Promise<ArrayBuffer> {
+  return fetchAssetBytes(NAME_BADGE_ASSET_PATHS.template);
 }
 
 /**
@@ -372,21 +560,27 @@ export async function createNameBadgePdf(
  * @throws {Error} 자산을 내려받지 못한 경우
  */
 export async function fetchNameBadgeAssets(): Promise<NameBadgeAssets> {
-  const fetchBytes = async (path: string): Promise<ArrayBuffer> => {
-    const response = await fetch(path);
-    if (!response.ok) {
-      throw new Error(`명찰 자산을 불러오지 못했습니다: ${path}`);
-    }
-    return response.arrayBuffer();
-  };
-
   const [templateBytes, nameFontBytes, roleFontBytes] = await Promise.all([
-    fetchBytes(NAME_BADGE_ASSET_PATHS.template),
-    fetchBytes(NAME_BADGE_ASSET_PATHS.nameFont),
-    fetchBytes(NAME_BADGE_ASSET_PATHS.roleFont),
+    fetchAssetBytes(NAME_BADGE_ASSET_PATHS.template),
+    fetchAssetBytes(NAME_BADGE_ASSET_PATHS.nameFont),
+    fetchAssetBytes(NAME_BADGE_ASSET_PATHS.roleFont),
   ]);
 
   return { templateBytes, nameFontBytes, roleFontBytes };
+}
+
+/**
+ * 파일 이름에 붙일 날짜 도장을 만듭니다.
+ *
+ * @param {Date} now - 기준 시각
+ * @returns {string} `20260901` 형태의 문자열
+ */
+function formatDateStamp(now: Date): string {
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("");
 }
 
 /**
@@ -400,12 +594,45 @@ export function buildNameBadgeFileName(
   memberCount: number,
   now: Date = new Date()
 ): string {
-  const stamp = [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("");
-  return `그로스로그-명찰-${memberCount}명-${stamp}.pdf`;
+  return `그로스로그-명찰-${memberCount}명-${formatDateStamp(now)}.pdf`;
+}
+
+/**
+ * 무기명 명찰 PDF 파일 이름을 만듭니다.
+ *
+ * 회원 명찰과 달리 인원수가 없으므로 장수로 구분합니다.
+ *
+ * @param {number} sheetCount - 만든 장수
+ * @param {Date} [now] - 기준 시각 (기본값: 현재)
+ * @returns {string} `그로스로그-명찰-무기명-2장-20260901.pdf` 형태의 파일 이름
+ */
+export function buildBlankNameBadgeFileName(
+  sheetCount: number,
+  now: Date = new Date()
+): string {
+  return `그로스로그-명찰-무기명-${sheetCount}장-${formatDateStamp(now)}.pdf`;
+}
+
+/**
+ * PDF 바이트를 파일로 내려받습니다.
+ *
+ * @param {Uint8Array} bytes - PDF 바이트
+ * @param {string} fileName - 저장할 파일 이름
+ */
+function downloadPdfBytes(bytes: Uint8Array, fileName: string): void {
+  const objectUrl = URL.createObjectURL(
+    new Blob([bytes as BlobPart], { type: "application/pdf" })
+  );
+
+  try {
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = fileName;
+    link.click();
+  } finally {
+    // 다운로드가 시작된 뒤에 해제해야 하므로 다음 이벤트 루프로 미룹니다.
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  }
 }
 
 /**
@@ -420,17 +647,20 @@ export async function downloadNameBadgePdf(
 ): Promise<void> {
   const assets = await fetchNameBadgeAssets();
   const bytes = await createNameBadgePdf(members, assets);
-  const objectUrl = URL.createObjectURL(
-    new Blob([bytes as BlobPart], { type: "application/pdf" })
-  );
+  downloadPdfBytes(bytes, buildNameBadgeFileName(members.length));
+}
 
-  try {
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = buildNameBadgeFileName(members.length);
-    link.click();
-  } finally {
-    // 다운로드가 시작된 뒤에 해제해야 하므로 다음 이벤트 루프로 미룹니다.
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
-  }
+/**
+ * 무기명 명찰 PDF를 만들어 바로 내려받습니다.
+ *
+ * @param {number} sheetCount - 만들 장수
+ * @returns {Promise<void>}
+ * @throws {Error} 자산을 못 불러오거나 장수가 허용 범위를 벗어난 경우
+ */
+export async function downloadBlankNameBadgePdf(
+  sheetCount: number
+): Promise<void> {
+  const templateBytes = await fetchNameBadgeTemplate();
+  const bytes = await createBlankNameBadgePdf(sheetCount, templateBytes);
+  downloadPdfBytes(bytes, buildBlankNameBadgeFileName(sheetCount));
 }

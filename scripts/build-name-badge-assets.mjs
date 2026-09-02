@@ -11,9 +11,10 @@
  *    있고, 나머지 문구("GROWTH LOG", "일정 안내" 등)는 모두 아웃라인 벡터라
  *    이 블록만 지우면 그대로 빈 템플릿이 됩니다.
  *
- * 2. `fonts/Pretendard-Regular.ttf`
- *    이름을 그릴 때 쓰는 폰트. 이미 `pretendard` 패키지에 들어 있는 파일이라
- *    저장소에 사본을 두지 않고 `node_modules`에서 복사해 옵니다.
+ * 2. `fonts/Pretendard-Bold.ttf`
+ *    이름을 그릴 때 쓰는 폰트. 디자인 원본이 Pretendard 가변 폰트의 Bold(wght 700)
+ *    인스턴스를 쓰므로 같은 굵기의 정적 파일을 가져옵니다. `pretendard` 패키지에
+ *    들어 있는 파일이라 저장소에 사본을 두지 않고 `node_modules`에서 복사해 옵니다.
  *
  * 직무용 `fonts/Montserrat-Medium.ttf`와 캐러셀 미리보기 `preview.png`는 이 저장소
  * 밖에서 가져온 원본이라 커밋해 둡니다. 디자인이 바뀌면 `preview.png`는 새로 만든
@@ -44,7 +45,7 @@ const SOURCE_PDF = "resources/name-badge/[GL] 그로스로그 회원 명찰 (5�
 const OUTPUT_DIR = "public/admin/name-badge";
 
 /** `pretendard` 패키지 안의 이름용 폰트 경로 */
-const PRETENDARD_FONT = "dist/public/static/alternative/Pretendard-Regular.ttf";
+const PRETENDARD_FONT = "dist/public/static/alternative/Pretendard-Bold.ttf";
 
 /** 예시 텍스트 블록 패턴 (콘텐츠 스트림의 유일한 텍스트 블록) */
 const TEXT_BLOCK_PATTERN = /BT[\s\S]*?ET/g;
@@ -134,15 +135,10 @@ async function buildTemplate(root) {
 async function copyNameFont(root) {
   const require = createRequire(path.join(root, "package.json"));
   const packageRoot = path.dirname(require.resolve("pretendard/package.json"));
-  const target = path.join(
-    root,
-    OUTPUT_DIR,
-    "fonts",
-    "Pretendard-Regular.ttf"
-  );
+  const target = path.join(root, OUTPUT_DIR, "fonts", "Pretendard-Bold.ttf");
 
   await copyFile(path.join(packageRoot, PRETENDARD_FONT), target);
-  console.log("  fonts/Pretendard-Regular.ttf (pretendard 패키지에서 복사)");
+  console.log("  fonts/Pretendard-Bold.ttf (pretendard 패키지에서 복사)");
 }
 
 async function main() {

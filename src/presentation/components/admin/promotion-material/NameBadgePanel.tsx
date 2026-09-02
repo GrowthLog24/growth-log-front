@@ -5,7 +5,16 @@ import { toast } from "sonner";
 import { Download, FileText, Loader2, Search, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -17,6 +26,9 @@ import { memberAdminRepository } from "@/infrastructure/repositories/admin/membe
 import type { Member } from "@/domain/entities";
 import {
   BADGES_PER_SHEET,
+  BLANK_BADGE_SHEET_LIMIT,
+  countBlankBadgeSlots,
+  downloadBlankNameBadgePdf,
   downloadNameBadgePdf,
   toBadgeRoleText,
   type NameBadgeMember,
@@ -26,11 +38,15 @@ import { buildMemberAchievementUrl } from "@/shared/utils/memberLink";
 /** 기수 필터의 "전체" 값 */
 const ALL_GENERATIONS = "all";
 
+/** 무기명 명찰 장수 입력의 기본값 */
+const DEFAULT_BLANK_SHEETS = "1";
+
 /**
  * 회원 명찰 생성 패널
  *
  * 회원을 골라 명찰 PDF를 만듭니다. A4 한 장에 2명씩 배치되며, 각 명찰의 QR은
- * 해당 회원의 개인 업적 페이지로 연결됩니다.
+ * 해당 회원의 개인 업적 페이지로 연결됩니다. 인원이 홀수라 마지막 장에 칸이
+ * 남으면 무기명 명찰로 채웁니다.
  *
  * @returns {React.ReactElement} 명찰 생성 UI
  */
@@ -38,6 +54,9 @@ export function NameBadgePanel() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [blankGenerating, setBlankGenerating] = useState(false);
+  const [blankDialogOpen, setBlankDialogOpen] = useState(false);
+  const [blankSheets, setBlankSheets] = useState(DEFAULT_BLANK_SHEETS);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [generationFilter, setGenerationFilter] = useState(ALL_GENERATIONS);
@@ -121,6 +140,47 @@ export function NameBadgePanel() {
     });
   };
 
+  /** 입력한 장수 (정수가 아니거나 범위를 벗어나면 NaN 취급) */
+  const blankSheetCount = Number(blankSheets);
+  const isBlankSheetCountValid =
+    Number.isInteger(blankSheetCount) &&
+    blankSheetCount >= 1 &&
+    blankSheetCount <= BLANK_BADGE_SHEET_LIMIT;
+
+  /**
+   * 무기명 명찰 장수를 물어보는 다이얼로그를 엽니다.
+   *
+   * 장수는 열 때마다 기본값으로 되돌려, 직전에 넣은 값이 남아 실수로 다른
+   * 장수를 뽑는 일을 막습니다.
+   */
+  const openBlankDialog = () => {
+    setBlankSheets(DEFAULT_BLANK_SHEETS);
+    setBlankDialogOpen(true);
+  };
+
+  /**
+   * 이름·직무 없이 QR만 있는 무기명 명찰을 만들어 내려받습니다.
+   *
+   * 게스트에게 수기로 이름을 적어 나눠 줄 때 씁니다.
+   */
+  const generateBlank = async () => {
+    setBlankGenerating(true);
+    try {
+      await downloadBlankNameBadgePdf(blankSheetCount);
+      setBlankDialogOpen(false);
+      toast.success(
+        `무기명 명찰 ${blankSheetCount}장(${blankSheetCount * BADGES_PER_SHEET}개)을 만들었습니다.`
+      );
+    } catch (error) {
+      console.error("Failed to generate blank name badges:", error);
+      toast.error(
+        error instanceof Error ? error.message : "명찰을 만들지 못했습니다."
+      );
+    } finally {
+      setBlankGenerating(false);
+    }
+  };
+
   /**
    * 회원 목록으로 명찰 PDF를 만들어 내려받습니다.
    *
@@ -142,7 +202,13 @@ export function NameBadgePanel() {
       await downloadNameBadgePdf(badgeMembers);
 
       const sheetCount = Math.ceil(targets.length / BADGES_PER_SHEET);
-      toast.success(`명찰 ${targets.length}명분(${sheetCount}장)을 만들었습니다.`);
+      const blankSlots = countBlankBadgeSlots(targets.length);
+      toast.success(
+        `명찰 ${targets.length}명분(${sheetCount}장)을 만들었습니다.` +
+          (blankSlots > 0
+            ? ` 남는 ${blankSlots}칸은 무기명 명찰로 채웠습니다.`
+            : "")
+      );
     } catch (error) {
       console.error("Failed to generate name badges:", error);
       toast.error(
@@ -206,7 +272,21 @@ export function NameBadgePanel() {
           {filteredMembers.length}명 중 {selectedMembers.length}명 선택 · A4 한
           장에 {BADGES_PER_SHEET}명씩 들어갑니다.
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* 무기명 명찰: 게스트에게 수기로 이름을 적어 나눠 줄 때 씁니다. */}
+          <Button
+            variant="ghost"
+            className="mr-1"
+            disabled={blankGenerating}
+            onClick={openBlankDialog}
+            title="이름·직무 없이 QR만 있는 명찰입니다. 게스트에게 수기로 이름을 적어 나눠 줄 때 사용하세요."
+          >
+            {blankGenerating && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            무기명 명찰
+          </Button>
+
           <Button
             variant="outline"
             disabled={generating || filteredMembers.length === 0}
@@ -319,6 +399,62 @@ export function NameBadgePanel() {
           </table>
         </div>
       )}
+
+      {/* 무기명 명찰 장수 입력 */}
+      <Dialog open={blankDialogOpen} onOpenChange={setBlankDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>무기명 명찰 생성</DialogTitle>
+            <DialogDescription>
+              이름·직무 없이 QR만 있는 명찰입니다. 게스트에게 수기로 이름을 적어
+              나눠 줄 때 사용하세요.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="blank-badge-sheets">장수</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="blank-badge-sheets"
+                type="number"
+                min={1}
+                max={BLANK_BADGE_SHEET_LIMIT}
+                value={blankSheets}
+                onChange={(event) => setBlankSheets(event.target.value)}
+                className="w-24"
+                autoFocus
+              />
+              <span className="text-sm text-muted-foreground">장</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {isBlankSheetCountValid
+                ? `명찰 ${blankSheetCount * BADGES_PER_SHEET}개가 만들어집니다.`
+                : `1 이상 ${BLANK_BADGE_SHEET_LIMIT} 이하의 정수를 입력해주세요.`}
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBlankDialogOpen(false)}
+              disabled={blankGenerating}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={generateBlank}
+              disabled={blankGenerating || !isBlankSheetCountValid}
+            >
+              {blankGenerating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              생성
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
