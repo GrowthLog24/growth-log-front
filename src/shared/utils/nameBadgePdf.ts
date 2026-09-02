@@ -381,10 +381,60 @@ async function createSheetDocument(
 }
 
 /**
+ * 지정한 칸 범위를 무기명 명찰(QR만 있는 명찰)로 채웁니다.
+ *
+ * 칸 번호는 페이지를 가로지르는 통짜 번호입니다. `BADGES_PER_SHEET`으로 나눈
+ * 몫이 페이지, 나머지가 그 페이지 안에서의 자리입니다.
+ *
+ * @param {readonly PDFPage[]} pages - 대상 페이지 목록
+ * @param {number} startSlot - 채우기 시작할 칸 번호 (포함)
+ * @param {number} endSlot - 채우기를 멈출 칸 번호 (미포함)
+ * @param {typeof import("pdf-lib")} pdfLib - 동적으로 불러온 pdf-lib 모듈
+ */
+function drawBlankBadgeSlots(
+  pages: readonly PDFPage[],
+  startSlot: number,
+  endSlot: number,
+  pdfLib: typeof import("pdf-lib")
+): void {
+  if (startSlot >= endSlot) return;
+
+  // 모든 칸이 같은 주소를 가리키므로 QR 패스는 한 번만 만들어 재사용합니다.
+  const qrPathData = createQrPathData(BLANK_BADGE_QR_URL, QR_PLACEMENT.size);
+  for (let index = startSlot; index < endSlot; index += 1) {
+    drawBadgeQr(
+      pages[Math.floor(index / BADGES_PER_SHEET)],
+      index % BADGES_PER_SHEET,
+      qrPathData,
+      pdfLib
+    );
+  }
+}
+
+/**
+ * 회원 수에 맞춰 명찰을 만들 때 마지막 장에 남는 칸 수를 셉니다.
+ *
+ * 남는 칸은 `createNameBadgePdf`가 무기명 명찰로 채우므로, 화면에서 몇 칸이
+ * 무기명으로 나가는지 안내할 때 씁니다.
+ *
+ * @param {number} memberCount - 명찰을 만들 회원 수
+ * @returns {number} 남는 칸 수 (딱 맞으면 0)
+ *
+ * @example
+ * countBlankBadgeSlots(15);
+ * // => 1
+ */
+export function countBlankBadgeSlots(memberCount: number): number {
+  const remainder = memberCount % BADGES_PER_SHEET;
+  return remainder === 0 ? 0 : BADGES_PER_SHEET - remainder;
+}
+
+/**
  * 회원 목록으로 명찰 PDF를 만듭니다.
  *
  * A4 한 장에 명찰 2개가 들어가므로 회원을 두 명씩 묶어 페이지를 만듭니다.
- * 홀수 인원이면 마지막 장의 오른쪽은 빈 명찰로 남습니다.
+ * 홀수 인원이면 마지막 장의 오른쪽 칸이 남는데, 비워 두면 QR 없는 명찰이
+ * 인쇄되므로 무기명 명찰로 채웁니다.
  *
  * @param {readonly NameBadgeMember[]} members - 명찰을 만들 회원 목록
  * @param {NameBadgeAssets} assets - 템플릿 PDF와 폰트 바이트
@@ -424,6 +474,15 @@ export async function createNameBadgePdf(
     );
   }
 
+  // 홀수 인원이라 마지막 장에 칸이 남으면 무기명 명찰로 채웁니다.
+  // 버리는 칸 없이 게스트용으로 바로 쓸 수 있습니다.
+  drawBlankBadgeSlots(
+    pages,
+    members.length,
+    pages.length * BADGES_PER_SHEET,
+    pdfLib
+  );
+
   return outputDoc.save();
 }
 
@@ -461,13 +520,7 @@ export async function createBlankNameBadgePdf(
     pdfLib
   );
 
-  // 모든 칸이 같은 주소를 가리키므로 QR 패스는 한 번만 만들어 재사용합니다.
-  const qrPathData = createQrPathData(BLANK_BADGE_QR_URL, QR_PLACEMENT.size);
-  for (const page of pages) {
-    for (let slotIndex = 0; slotIndex < BADGES_PER_SHEET; slotIndex += 1) {
-      drawBadgeQr(page, slotIndex, qrPathData, pdfLib);
-    }
-  }
+  drawBlankBadgeSlots(pages, 0, pages.length * BADGES_PER_SHEET, pdfLib);
 
   return doc.save();
 }
