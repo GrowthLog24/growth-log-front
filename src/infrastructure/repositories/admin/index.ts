@@ -13,3 +13,4 @@ export {
   buildAttendanceId,
 } from "./attendanceAdminRepository";
 export { promotionLinkAdminRepository } from "./promotionLinkAdminRepository";
+export { checkinConfigAdminRepository } from "./checkinConfigAdminRepository";
