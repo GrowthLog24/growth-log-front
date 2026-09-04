@@ -806,3 +806,21 @@ export interface PromotionLinkScan {
   /** 스캔 시각 */
   scannedAt: Timestamp;
 }
+
+/**
+ * 라운지 QR 체크인 설정
+ * Collection: checkinConfig/current (단일 문서)
+ *
+ * 운영자가 admin에서 특정 정기모임 회차의 체크인을 열고 닫습니다.
+ * 회원이 명찰 QR로 업적 페이지에 진입하면 이 설정을 읽어
+ * 체크인 배너 표시 여부를 결정합니다.
+ */
+export interface CheckinConfig {
+  /** 현재 체크인을 받는 정기모임 회차 문서 ID. 닫혀 있으면 null */
+  meetingId: string | null;
+  /** 체크인 개방 여부 */
+  open: boolean;
+  /** 마지막으로 체크인을 연 시각 */
+  openedAt?: Timestamp;
+  updatedAt: Timestamp;
+}

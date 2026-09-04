@@ -1,4 +1,4 @@
-import { collection, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db, COLLECTIONS } from "@/infrastructure/firebase";
 import type { Meeting } from "@/domain/entities";
 
@@ -7,6 +7,25 @@ import type { Meeting } from "@/domain/entities";
  */
 export class MeetingRepository {
   private collectionRef = collection(db, COLLECTIONS.MEETINGS);
+
+  /**
+   * 회차 문서 ID로 단일 회차를 조회합니다.
+   *
+   * QR 체크인에서 현재 체크인 대상 회차 정보를 읽을 때 사용합니다.
+   *
+   * @param {string} meetingId - 회차 문서 ID
+   * @returns {Promise<Meeting | null>} 회차. 없으면 null
+   */
+  async getById(meetingId: string): Promise<Meeting | null> {
+    try {
+      const snapshot = await getDoc(doc(this.collectionRef, meetingId));
+      if (!snapshot.exists()) return null;
+      return { id: snapshot.id, ...snapshot.data() } as Meeting;
+    } catch (error) {
+      console.error(`Failed to fetch meeting ${meetingId}:`, error);
+      return null;
+    }
+  }
 
   /**
    * 회원이 참여 대상인 정기모임 회차 목록 조회 (집계 대상만, 회차 오름차순)
