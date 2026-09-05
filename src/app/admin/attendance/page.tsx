@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Users, Clock, AlarmClock } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -48,6 +47,14 @@ function buildThresholdMs(
   return threshold.getTime();
 }
 
+/** 시(0~23) 선택지 */
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+/** 분(0,5,…,55) 선택지 — 5분 단위 */
+const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
+
+/** 숫자를 2자리 문자열로 (예: 5 → "05") */
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
 interface Row {
   memberId: string;
   memberName: string;
@@ -71,7 +78,8 @@ export default function AttendanceStatsPage() {
   const [meetingId, setMeetingId] = useState("");
   const [records, setRecords] = useState<Attendance[]>([]);
   const [recordsLoading, setRecordsLoading] = useState(false);
-  const [lateTime, setLateTime] = useState("");
+  const [lateHour, setLateHour] = useState("");
+  const [lateMinute, setLateMinute] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -155,6 +163,12 @@ export default function AttendanceStatsPage() {
       });
   }, [records, memberById]);
 
+  // 시·분이 모두 선택됐을 때만 "HH:MM" 기준 시각을 만듭니다.
+  const lateTime =
+    lateHour !== "" && lateMinute !== ""
+      ? `${pad2(Number(lateHour))}:${pad2(Number(lateMinute))}`
+      : "";
+
   const thresholdMs = buildThresholdMs(
     selectedMeeting?.meetingDate?.toDate?.() ?? null,
     lateTime
@@ -216,13 +230,33 @@ export default function AttendanceStatsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="lateTime">지각 기준 시각 (KST)</Label>
-          <Input
-            id="lateTime"
-            type="time"
-            value={lateTime}
-            onChange={(e) => setLateTime(e.target.value)}
-          />
+          <Label>지각 기준 시각 (KST)</Label>
+          <div className="flex gap-2">
+            <Select value={lateHour} onValueChange={setLateHour}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="시" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {HOURS.map((h) => (
+                  <SelectItem key={h} value={String(h)}>
+                    {pad2(h)}시
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={lateMinute} onValueChange={setLateMinute}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="분" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {MINUTES.map((m) => (
+                  <SelectItem key={m} value={String(m)}>
+                    {pad2(m)}분
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </section>
 
