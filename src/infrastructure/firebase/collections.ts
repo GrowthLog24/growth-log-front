@@ -68,9 +68,6 @@ export const COLLECTIONS = {
 
   /** 홍보물 QR 스캔 기록 */
   PROMOTION_LINK_SCANS: "promotionLinkScans",
-
-  /** 라운지 QR 체크인 설정 (현재 체크인 중인 회차 등) */
-  CHECKIN_CONFIG: "checkinConfig",
 } as const;
 
 /**
@@ -98,7 +95,4 @@ export const DOCUMENT_IDS = {
 
   /** 활동 본문 메인 문서 */
   BODY_MAIN: "main",
-
-  /** 체크인 설정 현재 문서 */
-  CHECKIN_CONFIG_CURRENT: "current",
 } as const;
