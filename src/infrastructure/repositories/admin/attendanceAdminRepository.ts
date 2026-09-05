@@ -130,6 +130,43 @@ export class AttendanceAdminRepository {
   }
 
   /**
+   * 이미 체크인한 기록들의 출결 상태만 일괄 변경합니다.
+   *
+   * 지각 기준 시각으로 기존 출석자를 present ↔ late로 재분류할 때 사용합니다.
+   * `saveMany`와 달리 `createdAt`(체크인 시각)을 다시 쓰지 않아 원래 체크인
+   * 시각을 보존합니다. 문서가 있는 기록만 대상으로 하며(merge 저장),
+   * 새 기록을 만들거나 삭제하지 않습니다.
+   *
+   * @param {string} meetingId - 회차 문서 ID
+   * @param {ReadonlyArray<{ memberId: string; status: AttendanceStatus }>} updates - 회원별 목표 상태
+   */
+  async updateStatuses(
+    meetingId: string,
+    updates: ReadonlyArray<{ memberId: string; status: AttendanceStatus }>
+  ): Promise<void> {
+    if (updates.length === 0) return;
+
+    const batch = writeBatch(db);
+
+    for (const update of updates) {
+      const docRef = doc(
+        this.collectionRef,
+        buildAttendanceId(meetingId, update.memberId)
+      );
+      batch.set(
+        docRef,
+        {
+          status: update.status,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
+
+    await batch.commit();
+  }
+
+  /**
    * 회차 출결을 일괄 저장합니다.
    *
    * 결석("absent")은 문서를 남기지 않고 삭제합니다.

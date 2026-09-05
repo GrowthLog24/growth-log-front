@@ -42,3 +42,45 @@ export function summarizeCheckinStats(
   ).length;
   return { total, lateCount, onTimeCount: total - lateCount };
 }
+
+/** 지각 일괄 저장 대상 한 명의 현재 상태 */
+export interface AttendanceRowInput {
+  /** 회원 문서 ID */
+  memberId: string;
+  /** 체크인 시각(epoch ms). 없으면 null */
+  checkedInAtMs: number | null;
+  /** 현재 출결 상태(출석/지각만 대상) */
+  status: "present" | "late";
+}
+
+/** 저장이 필요한 상태 변경 한 건 */
+export interface StatusUpdate {
+  memberId: string;
+  status: "present" | "late";
+}
+
+/**
+ * 지각 기준으로 출석자별 목표 상태를 계산해, 현재와 다른 것만 반환합니다.
+ *
+ * 기준 이후 체크인은 "late", 기준 이하(또는 시각 없음)는 "present"가 목표입니다.
+ * 이미 목표와 같은 사람은 제외해 불필요한 쓰기를 줄입니다. 기준을 당기면
+ * 지각이었던 사람이 다시 정시("present")로 되돌아갑니다.
+ *
+ * @param {readonly AttendanceRowInput[]} rows - 출석(present/late) 명단
+ * @param {number | null} thresholdMs - 지각 기준 시각(epoch ms). 없으면 변경 없음
+ * @returns {StatusUpdate[]} 상태가 바뀌는 회원의 목표 상태 목록
+ */
+export function computeLateUpdates(
+  rows: readonly AttendanceRowInput[],
+  thresholdMs: number | null
+): StatusUpdate[] {
+  if (thresholdMs == null) return [];
+  const updates: StatusUpdate[] = [];
+  for (const row of rows) {
+    const target = isLate(row.checkedInAtMs, thresholdMs) ? "late" : "present";
+    if (target !== row.status) {
+      updates.push({ memberId: row.memberId, status: target });
+    }
+  }
+  return updates;
+}

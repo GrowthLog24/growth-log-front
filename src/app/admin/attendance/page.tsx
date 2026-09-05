@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Users, Clock, AlarmClock } from "lucide-react";
+import { Loader2, Users, Clock, AlarmClock, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -22,7 +23,11 @@ import {
   type Attendance,
 } from "@/domain/entities";
 import { normalizeMeetingType } from "@/domain/meetings/meeting";
-import { isLate, summarizeCheckinStats } from "@/domain/attendance/stats";
+import {
+  isLate,
+  summarizeCheckinStats,
+  computeLateUpdates,
+} from "@/domain/attendance/stats";
 
 /** 체크인 시각을 한국 시간(KST) "오후 2:14:15"로 표시합니다. */
 function formatKst(date: Date | null): string {
@@ -80,6 +85,8 @@ export default function AttendanceStatsPage() {
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [lateHour, setLateHour] = useState("");
   const [lateMinute, setLateMinute] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -178,6 +185,52 @@ export default function AttendanceStatsPage() {
     rows.map((r) => r.checkedInAt?.getTime() ?? null),
     thresholdMs
   );
+
+  // 기준 이후 출석자를 지각으로(그 이전은 정시로) 바꿀 대상 — 실제 변경분만
+  const pendingUpdates = useMemo(
+    () =>
+      computeLateUpdates(
+        rows.map((r) => ({
+          memberId: r.memberId,
+          checkedInAtMs: r.checkedInAt?.getTime() ?? null,
+          status: r.status === "late" ? "late" : "present",
+        })),
+        thresholdMs
+      ),
+    [rows, thresholdMs]
+  );
+
+  const pendingLateCount = pendingUpdates.filter(
+    (u) => u.status === "late"
+  ).length;
+  const pendingRestoreCount = pendingUpdates.length - pendingLateCount;
+
+  // 회차·기준이 바뀌면 확인 단계를 초기화합니다.
+  useEffect(() => {
+    setConfirming(false);
+  }, [meetingId, thresholdMs]);
+
+  /** 기준에 맞춰 출결 상태를 DB에 일괄 저장합니다. */
+  async function handleApplyLate() {
+    if (!meetingId || pendingUpdates.length === 0) return;
+    setSaving(true);
+    try {
+      await attendanceAdminRepository.updateStatuses(meetingId, pendingUpdates);
+      const list = await attendanceAdminRepository.getByMeetingId(meetingId);
+      setRecords(list);
+      toast.success(
+        pendingRestoreCount > 0
+          ? `지각 ${pendingLateCount}명 저장 · 정시 ${pendingRestoreCount}명 복원 완료`
+          : `지각 ${pendingLateCount}명 저장 완료`
+      );
+      setConfirming(false);
+    } catch (error) {
+      console.error("Failed to apply late statuses:", error);
+      toast.error("지각 저장에 실패했습니다.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -279,6 +332,58 @@ export default function AttendanceStatsPage() {
             label="정시"
             value={`${stats.onTimeCount}명`}
           />
+        </section>
+      )}
+
+      {/* 지각 일괄 저장 */}
+      {meetingId && rows.length > 0 && (
+        <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-foreground">지각 일괄 저장</p>
+            <p className="text-xs text-muted-foreground">
+              {lateTime
+                ? `${lateTime} 이후 체크인한 출석자를 '지각'으로 저장합니다. (기준 이전은 정시로 되돌립니다)`
+                : "먼저 위에서 지각 기준 시각(시·분)을 선택하세요."}
+            </p>
+          </div>
+
+          {confirming ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {pendingRestoreCount > 0
+                  ? `지각 ${pendingLateCount}명 · 정시 복원 ${pendingRestoreCount}명, 저장할까요?`
+                  : `지각 ${pendingLateCount}명을 저장할까요?`}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirming(false)}
+                disabled={saving}
+              >
+                취소
+              </Button>
+              <Button size="sm" onClick={handleApplyLate} disabled={saving}>
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "저장"
+                )}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => setConfirming(true)}
+              disabled={!lateTime || pendingUpdates.length === 0}
+            >
+              <Save className="mr-1.5 h-4 w-4" />
+              {!lateTime
+                ? "기준 시각 필요"
+                : pendingUpdates.length === 0
+                  ? "변경할 대상 없음"
+                  : `이 기준으로 지각 저장 (${pendingUpdates.length}명)`}
+            </Button>
+          )}
         </section>
       )}
 
