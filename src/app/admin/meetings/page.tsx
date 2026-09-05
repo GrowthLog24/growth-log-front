@@ -212,17 +212,19 @@ export default function MeetingsPage() {
       return;
     }
 
-    // 회차 번호는 기수 안에서 고유해야 합니다.
-    // 엑셀 일괄입력·출결 집계가 (기수, 회차)로 회차를 식별하므로,
-    // 정기모임과 그로스톡이 같은 번호를 쓰면 어느 회차인지 모호해집니다.
+    // 회차 번호는 같은 종류(정기모임/그로스톡) 안에서만 고유하면 됩니다.
+    // 정기모임 1회차와 그로스톡 1회차는 서로 무관한 별개 회차입니다.
     const duplicated = meetings.some(
       (meeting) =>
         meeting.id !== editingMeeting?.id &&
         meeting.generation === generation &&
-        meeting.round === round
+        meeting.round === round &&
+        normalizeMeetingType(meeting.type) === form.type
     );
     if (duplicated) {
-      toast.error(`${generation}기 ${round}회차가 이미 등록되어 있습니다.`);
+      toast.error(
+        `${generation}기 ${round}회차 ${form.type}가 이미 등록되어 있습니다.`
+      );
       return;
     }
 

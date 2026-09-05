@@ -15,6 +15,7 @@ import {
   type Meeting,
   type Member,
 } from "@/domain/entities";
+import { isRegularMeeting } from "@/domain/meetings/meeting";
 
 interface MemberAttendancePanelProps {
   member: Member;
@@ -62,7 +63,12 @@ export function MemberAttendancePanel({ member }: MemberAttendancePanelProps) {
       // 이전 기수에 가입한 정회원도 현재 기수 정기모임에 참석하므로,
       // 가입 기수 이상의 회차를 모두 표시합니다.
       const targetMeetings = allMeetings
-        .filter((meeting) => meeting.generation >= member.generation)
+        .filter(
+          (meeting) =>
+            meeting.generation >= member.generation &&
+            // 그로스톡은 정기모임 출결과 별개로 집계하므로 이 패널에서 제외
+            isRegularMeeting(meeting.type)
+        )
         .sort((a, b) => a.generation - b.generation || a.round - b.round);
 
       const next: Record<string, AttendanceStatus> = {};
