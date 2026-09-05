@@ -11,6 +11,7 @@ import {
   UserRoundSearch,
   CalendarClock,
   ClipboardCheck,
+  BarChart3,
   Trophy,
   MousePointerClick,
   FileUp,
@@ -106,6 +107,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     title: "정기모임 출결",
     href: "/admin/meetings",
     icon: ClipboardCheck,
+  },
+  {
+    title: "출석 통계",
+    href: "/admin/attendance",
+    icon: BarChart3,
   },
   {
     title: "행사 타임테이블",
