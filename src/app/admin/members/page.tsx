@@ -40,6 +40,7 @@ import {
 } from "@/infrastructure/repositories/admin/memberAdminRepository";
 import { activityAdminRepository } from "@/infrastructure/repositories/admin/activityAdminRepository";
 import { meetingAdminRepository } from "@/infrastructure/repositories/admin/meetingAdminRepository";
+import { isRegularMeeting } from "@/domain/meetings/meeting";
 import {
   attendanceAdminRepository,
   type MemberAttendanceInput,
@@ -290,11 +291,15 @@ export default function MembersPage() {
     meetings: Meeting[];
     attendances: Attendance[];
   }> => {
-    const [activities, meetings, attendances] = await Promise.all([
+    const [activities, allMeetings, attendances] = await Promise.all([
       activityAdminRepository.getAllActivities(),
       meetingAdminRepository.getAll(),
       attendanceAdminRepository.getAll(),
     ]);
+    // 출결 엑셀은 정기모임만 다룹니다(그로스톡은 별도 집계).
+    const meetings = allMeetings.filter((meeting) =>
+      isRegularMeeting(meeting.type)
+    );
     const growthLogs = activities.filter(
       (activity): activity is GrowthLogActivity =>
         activity.category === "growth-log"
@@ -318,7 +323,11 @@ export default function MembersPage() {
   const handleTemplateDownload = async () => {
     setTemplateDownloading(true);
     try {
-      const meetings = await meetingAdminRepository.getAll();
+      const allMeetings = await meetingAdminRepository.getAll();
+      // 출결 시트 회차 컬럼은 정기모임만(그로스톡 제외)
+      const meetings = allMeetings.filter((meeting) =>
+        isRegularMeeting(meeting.type)
+      );
       downloadMemberTemplate(toMeetingColumns(meetings));
     } catch (error) {
       console.error("Failed to download template:", error);

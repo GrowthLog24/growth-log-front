@@ -704,12 +704,24 @@ export interface PromotionBoardSnapshot {
  *
  * 회원 업적 페이지의 출결 기록은 이 회차를 기준으로 집계됩니다.
  */
+/**
+ * 회차 종류
+ * - 정기모임: 출석률 집계의 기본 대상
+ * - 그로스톡: 정기모임과 별개로 집계(정기모임 출석률에 섞지 않음)
+ */
+export type MeetingType = "정기모임" | "그로스톡";
+
+/** 회차 종류 선택지 */
+export const MEETING_TYPES: readonly MeetingType[] = ["정기모임", "그로스톡"];
+
 export interface Meeting {
   id: string;
   /** 기수 */
   generation: number;
   /** 회차 (기수 내에서 1부터 증가) */
   round: number;
+  /** 회차 종류. 기존 문서에 없으면 정기모임으로 간주 */
+  type?: MeetingType;
   /** 회차 제목 (예: "5기 3회차 정기모임") */
   title: string;
   /** 모임 일자 */
@@ -805,4 +817,22 @@ export interface PromotionLinkScan {
   keyword: string;
   /** 스캔 시각 */
   scannedAt: Timestamp;
+}
+
+/**
+ * 라운지 QR 체크인 설정
+ * Collection: checkinConfig/current (단일 문서)
+ *
+ * 운영자가 admin에서 특정 정기모임 회차의 체크인을 열고 닫습니다.
+ * 회원이 명찰 QR로 업적 페이지에 진입하면 이 설정을 읽어
+ * 체크인 배너 표시 여부를 결정합니다.
+ */
+export interface CheckinConfig {
+  /** 현재 체크인을 받는 정기모임 회차 문서 ID. 닫혀 있으면 null */
+  meetingId: string | null;
+  /** 체크인 개방 여부 */
+  open: boolean;
+  /** 마지막으로 체크인을 연 시각 */
+  openedAt?: Timestamp;
+  updatedAt: Timestamp;
 }

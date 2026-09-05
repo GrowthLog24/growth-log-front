@@ -2,11 +2,17 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { Plus, Loader2, Trash2, Pencil, Save, Users } from "lucide-react";
+import { Plus, Loader2, Trash2, Pencil, Save, Users, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
@@ -24,12 +30,20 @@ import {
 } from "@/infrastructure/repositories/admin/attendanceAdminRepository";
 import { memberAdminRepository } from "@/infrastructure/repositories/admin/memberAdminRepository";
 import { siteConfigRepository } from "@/infrastructure/repositories/siteConfigRepository";
+import { checkinConfigRepository } from "@/infrastructure/repositories/checkinConfigRepository";
+import { checkinConfigAdminRepository } from "@/infrastructure/repositories/admin/checkinConfigAdminRepository";
 import {
   ATTENDANCE_STATUS_LABELS,
+  MEETING_TYPES,
   type AttendanceStatus,
   type Meeting,
+  type MeetingType,
   type Member,
 } from "@/domain/entities";
+import {
+  buildMeetingTitle,
+  normalizeMeetingType,
+} from "@/domain/meetings/meeting";
 
 /** 출결 상태 선택 순서 */
 const STATUS_OPTIONS: AttendanceStatus[] = ["present", "late", "excused", "absent"];
@@ -59,6 +73,10 @@ export default function MeetingsPage() {
   const [loading, setLoading] = useState(true);
   const [currentGeneration, setCurrentGeneration] = useState(0);
 
+  // 현재 QR 체크인이 열려 있는 회차 ID (없으면 null)
+  const [checkinMeetingId, setCheckinMeetingId] = useState<string | null>(null);
+  const [checkinToggling, setCheckinToggling] = useState(false);
+
   // 회차 다이얼로그 상태
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
@@ -66,15 +84,13 @@ export default function MeetingsPage() {
   const [form, setForm] = useState<{
     generation: string;
     round: string;
-    title: string;
+    type: MeetingType;
     meetingDate: Date | undefined;
-    isActive: boolean;
   }>({
     generation: "",
     round: "",
-    title: "",
+    type: "정기모임",
     meetingDate: undefined,
-    isActive: true,
   });
 
   // 삭제 상태
@@ -90,14 +106,19 @@ export default function MeetingsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [meetingList, memberList, siteConfig] = await Promise.all([
-        meetingAdminRepository.getAll(),
-        memberAdminRepository.getAll(),
-        siteConfigRepository.getSiteConfig(),
-      ]);
+      const [meetingList, memberList, siteConfig, checkinConfig] =
+        await Promise.all([
+          meetingAdminRepository.getAll(),
+          memberAdminRepository.getAll(),
+          siteConfigRepository.getSiteConfig(),
+          checkinConfigRepository.getCurrent(),
+        ]);
       setMeetings(meetingList);
       setMembers(memberList);
       setCurrentGeneration(siteConfig?.currentGeneration ?? 0);
+      setCheckinMeetingId(
+        checkinConfig?.open ? checkinConfig.meetingId : null
+      );
     } catch (error) {
       console.error("Failed to fetch meetings:", error);
       toast.error("목록을 불러오는데 실패했습니다.");
@@ -109,6 +130,32 @@ export default function MeetingsPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  /**
+   * 회차의 QR 체크인을 열거나 닫습니다.
+   * 한 번에 한 회차만 열 수 있습니다(다른 회차를 열면 이전 회차는 닫힘).
+   */
+  const toggleCheckin = async (meeting: Meeting) => {
+    const willOpen = checkinMeetingId !== meeting.id;
+    setCheckinToggling(true);
+    try {
+      await checkinConfigAdminRepository.setCurrent(
+        willOpen ? meeting.id : null,
+        willOpen
+      );
+      setCheckinMeetingId(willOpen ? meeting.id : null);
+      toast.success(
+        willOpen
+          ? `체크인을 열었어요 — ${meeting.title}`
+          : "체크인을 닫았어요."
+      );
+    } catch (error) {
+      console.error("Failed to toggle checkin:", error);
+      toast.error("체크인 설정에 실패했습니다.");
+    } finally {
+      setCheckinToggling(false);
+    }
+  };
 
   /**
    * 회차 시점에 활동 중이던 활성 회원을 출결 대상으로 표시합니다.
@@ -131,9 +178,8 @@ export default function MeetingsPage() {
     setForm({
       generation: String(currentGeneration || ""),
       round: "",
-      title: "",
+      type: "정기모임",
       meetingDate: undefined,
-      isActive: true,
     });
     setDialogOpen(true);
   };
@@ -143,9 +189,8 @@ export default function MeetingsPage() {
     setForm({
       generation: String(meeting.generation),
       round: String(meeting.round),
-      title: meeting.title,
+      type: normalizeMeetingType(meeting.type),
       meetingDate: meeting.meetingDate?.toDate?.(),
-      isActive: meeting.isActive,
     });
     setDialogOpen(true);
   };
@@ -167,19 +212,23 @@ export default function MeetingsPage() {
       return;
     }
 
-    // 같은 기수 안에서 회차 번호가 겹치면 출결 집계가 어긋납니다.
+    // 회차 번호는 같은 종류(정기모임/그로스톡) 안에서만 고유하면 됩니다.
+    // 정기모임 1회차와 그로스톡 1회차는 서로 무관한 별개 회차입니다.
     const duplicated = meetings.some(
       (meeting) =>
         meeting.id !== editingMeeting?.id &&
         meeting.generation === generation &&
-        meeting.round === round
+        meeting.round === round &&
+        normalizeMeetingType(meeting.type) === form.type
     );
     if (duplicated) {
-      toast.error(`${generation}기 ${round}회차가 이미 등록되어 있습니다.`);
+      toast.error(
+        `${generation}기 ${round}회차 ${form.type}가 이미 등록되어 있습니다.`
+      );
       return;
     }
 
-    const title = form.title.trim() || `${generation}기 ${round}회차 정기모임`;
+    const title = buildMeetingTitle(generation, round, form.type);
 
     setSaving(true);
     try {
@@ -187,18 +236,20 @@ export default function MeetingsPage() {
         await meetingAdminRepository.update(editingMeeting.id, {
           generation,
           round,
+          type: form.type,
           title,
           meetingDate: form.meetingDate,
-          isActive: form.isActive,
+          isActive: true,
         });
         toast.success("수정되었습니다.");
       } else {
         await meetingAdminRepository.create({
           generation,
           round,
+          type: form.type,
           title,
           meetingDate: form.meetingDate,
-          isActive: form.isActive,
+          isActive: true,
         });
         toast.success("추가되었습니다.");
       }
@@ -254,13 +305,25 @@ export default function MeetingsPage() {
   const handleSaveAttendance = async () => {
     if (!selectedMeeting) return;
 
-    const inputs: AttendanceInput[] = targetMembers.map((member) => ({
-      memberId: member.id,
-      status: statusMap[member.id] ?? "absent",
-    }));
-
     setAttendanceSaving(true);
     try {
+      // 저장 직전 최신 출결을 다시 읽습니다.
+      // 패널을 연 뒤 QR 셀프 체크인으로 들어온 기록을, 운영자가 건드리지
+      // 않았다는 이유로 'absent'(=삭제)로 덮어써 지우는 것을 막기 위함입니다.
+      const freshRecords = await attendanceAdminRepository.getByMeetingId(
+        selectedMeeting.id
+      );
+      const freshMap: Record<string, AttendanceStatus> = {};
+      for (const record of freshRecords) {
+        freshMap[record.memberId] = record.status;
+      }
+
+      const inputs: AttendanceInput[] = targetMembers.map((member) => ({
+        memberId: member.id,
+        // 우선순위: 운영자가 명시적으로 고른 값 > 최신 DB 값(셀프 체크인 보존) > absent
+        status: statusMap[member.id] ?? freshMap[member.id] ?? "absent",
+      }));
+
       await attendanceAdminRepository.saveMany(
         {
           id: selectedMeeting.id,
@@ -269,6 +332,14 @@ export default function MeetingsPage() {
         },
         inputs
       );
+
+      // 저장 결과(셀프 체크인 포함)를 화면 상태에도 반영합니다.
+      const nextStatus: Record<string, AttendanceStatus> = {};
+      for (const input of inputs) {
+        if (input.status !== "absent") nextStatus[input.memberId] = input.status;
+      }
+      setStatusMap(nextStatus);
+
       toast.success("출결이 저장되었습니다.");
     } catch (error) {
       console.error("Failed to save attendances:", error);
@@ -348,6 +419,11 @@ export default function MeetingsPage() {
                           집계 제외
                         </span>
                       )}
+                      {checkinMeetingId === meeting.id && (
+                        <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          체크인 받는 중
+                        </span>
+                      )}
                     </div>
                     <p className="truncate font-medium text-foreground">
                       {meeting.title}
@@ -358,6 +434,21 @@ export default function MeetingsPage() {
                   </button>
 
                   <div className="mt-3 flex justify-end gap-1">
+                    <Button
+                      variant={
+                        checkinMeetingId === meeting.id ? "default" : "ghost"
+                      }
+                      size="icon"
+                      onClick={() => toggleCheckin(meeting)}
+                      disabled={checkinToggling}
+                      title={
+                        checkinMeetingId === meeting.id
+                          ? "체크인 닫기"
+                          : "체크인 열기"
+                      }
+                    >
+                      <QrCode className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -513,15 +604,28 @@ export default function MeetingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">회차 제목</Label>
-              <Input
-                id="title"
-                value={form.title}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, title: e.target.value }))
+              <Label htmlFor="type">회차 종류 *</Label>
+              <Select
+                value={form.type}
+                onValueChange={(value) =>
+                  setForm((prev) => ({ ...prev, type: value as MeetingType }))
                 }
-                placeholder="비워두면 '5기 3회차 정기모임'으로 자동 생성됩니다"
-              />
+              >
+                <SelectTrigger id="type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MEETING_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                제목은 &quot;{form.generation || "N"}기 {form.round || "N"}회차{" "}
+                {form.type}&quot;로 자동 생성됩니다.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -534,21 +638,6 @@ export default function MeetingsPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div>
-                <Label htmlFor="isActive">출석률 집계 대상</Label>
-                <p className="text-xs text-muted-foreground">
-                  끄면 회원 업적 페이지의 출석률 계산에서 제외됩니다.
-                </p>
-              </div>
-              <Switch
-                id="isActive"
-                checked={form.isActive}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({ ...prev, isActive: checked }))
-                }
-              />
-            </div>
           </div>
 
           <DialogFooter>

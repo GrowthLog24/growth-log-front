@@ -13,7 +13,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db, COLLECTIONS } from "@/infrastructure/firebase";
-import type { Meeting } from "@/domain/entities";
+import type { Meeting, MeetingType } from "@/domain/entities";
 
 /**
  * 정기모임 회차 관리자 Repository
@@ -43,6 +43,7 @@ export class MeetingAdminRepository {
   async create(data: {
     generation: number;
     round: number;
+    type: MeetingType;
     title: string;
     meetingDate: Date;
     isActive: boolean;
@@ -50,6 +51,7 @@ export class MeetingAdminRepository {
     const docRef = await addDoc(this.collectionRef, {
       generation: data.generation,
       round: data.round,
+      type: data.type,
       title: data.title,
       meetingDate: Timestamp.fromDate(data.meetingDate),
       isActive: data.isActive,
@@ -70,6 +72,7 @@ export class MeetingAdminRepository {
     data: {
       generation?: number;
       round?: number;
+      type?: MeetingType;
       title?: string;
       meetingDate?: Date;
       isActive?: boolean;
