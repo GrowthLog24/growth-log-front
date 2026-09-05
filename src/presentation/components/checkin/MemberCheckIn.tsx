@@ -66,6 +66,7 @@ export function MemberCheckIn({
   memberName,
 }: MemberCheckInProps) {
   const [state, setState] = useState<UiState>({ kind: "idle" });
+  const [showPopup, setShowPopup] = useState(false);
 
   const submit = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -108,6 +109,7 @@ export function MemberCheckIn({
             [{ memberId, status: "present" }]
           );
           setState({ kind: "done", time: formatNow() });
+          setShowPopup(true);
         } catch (error) {
           console.error("Check-in write failed:", error);
           setState({ kind: "error", reason: "출석 기록 중 오류가 났어요" });
@@ -125,10 +127,41 @@ export function MemberCheckIn({
   };
 
   return (
-    <section
-      aria-label="출석 체크"
-      className="mx-auto mt-4 w-[calc(100%-2rem)] max-w-xl rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm"
-    >
+    <>
+      {/* 출석 성공 팝업: 스크롤 없이 즉시 확인용, DB 기록 완료 시 1회 표시 */}
+      {showPopup && state.kind === "done" && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowPopup(false)}
+        >
+          <div
+            className="w-full max-w-xs rounded-2xl bg-background p-6 text-center shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <Check className="h-8 w-8 text-primary" />
+            </div>
+            <p className="mt-4 text-lg font-bold text-foreground">
+              출석이 정상 처리되었습니다
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{state.time}</p>
+            <button
+              type="button"
+              onClick={() => setShowPopup(false)}
+              className="mt-5 w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-transform active:scale-95"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      <section
+        aria-label="출석 체크"
+        className="mx-auto mt-4 w-[calc(100%-2rem)] max-w-xl rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm"
+      >
       <p className="text-sm font-medium text-muted-foreground">{meetingTitle}</p>
 
       {state.kind === "idle" && (
@@ -186,5 +219,6 @@ export function MemberCheckIn({
         </div>
       )}
     </section>
+    </>
   );
 }
