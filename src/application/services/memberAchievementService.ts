@@ -65,10 +65,15 @@ export async function getMemberAchievement(
     activityRepository.getProjectsByMember(identity),
   ]);
 
-  const records: AttendanceRecord[] = attendances.map((attendance) => ({
-    round: attendance.round,
-    status: attendance.status,
-  }));
+  // 출석률은 정기모임만 집계합니다. 그로스톡 출결은 회차 번호가 정기모임과
+  // 겹칠 수 있으므로, 정기모임 회차 문서 ID에 속한 출결만 남깁니다.
+  const regularMeetingIds = new Set(meetings.map((meeting) => meeting.id));
+  const records: AttendanceRecord[] = attendances
+    .filter((attendance) => regularMeetingIds.has(attendance.meetingId))
+    .map((attendance) => ({
+      round: attendance.round,
+      status: attendance.status,
+    }));
 
   const attendanceSummary = summarizeAttendance(
     meetings.map((meeting) => meeting.round),

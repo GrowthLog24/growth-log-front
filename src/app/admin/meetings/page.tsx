@@ -6,7 +6,13 @@ import { Plus, Loader2, Trash2, Pencil, Save, Users, QrCode } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
@@ -28,10 +34,16 @@ import { checkinConfigRepository } from "@/infrastructure/repositories/checkinCo
 import { checkinConfigAdminRepository } from "@/infrastructure/repositories/admin/checkinConfigAdminRepository";
 import {
   ATTENDANCE_STATUS_LABELS,
+  MEETING_TYPES,
   type AttendanceStatus,
   type Meeting,
+  type MeetingType,
   type Member,
 } from "@/domain/entities";
+import {
+  buildMeetingTitle,
+  normalizeMeetingType,
+} from "@/domain/meetings/meeting";
 
 /** 출결 상태 선택 순서 */
 const STATUS_OPTIONS: AttendanceStatus[] = ["present", "late", "excused", "absent"];
@@ -72,15 +84,13 @@ export default function MeetingsPage() {
   const [form, setForm] = useState<{
     generation: string;
     round: string;
-    title: string;
+    type: MeetingType;
     meetingDate: Date | undefined;
-    isActive: boolean;
   }>({
     generation: "",
     round: "",
-    title: "",
+    type: "정기모임",
     meetingDate: undefined,
-    isActive: true,
   });
 
   // 삭제 상태
@@ -168,9 +178,8 @@ export default function MeetingsPage() {
     setForm({
       generation: String(currentGeneration || ""),
       round: "",
-      title: "",
+      type: "정기모임",
       meetingDate: undefined,
-      isActive: true,
     });
     setDialogOpen(true);
   };
@@ -180,9 +189,8 @@ export default function MeetingsPage() {
     setForm({
       generation: String(meeting.generation),
       round: String(meeting.round),
-      title: meeting.title,
+      type: normalizeMeetingType(meeting.type),
       meetingDate: meeting.meetingDate?.toDate?.(),
-      isActive: meeting.isActive,
     });
     setDialogOpen(true);
   };
@@ -204,7 +212,9 @@ export default function MeetingsPage() {
       return;
     }
 
-    // 같은 기수 안에서 회차 번호가 겹치면 출결 집계가 어긋납니다.
+    // 회차 번호는 기수 안에서 고유해야 합니다.
+    // 엑셀 일괄입력·출결 집계가 (기수, 회차)로 회차를 식별하므로,
+    // 정기모임과 그로스톡이 같은 번호를 쓰면 어느 회차인지 모호해집니다.
     const duplicated = meetings.some(
       (meeting) =>
         meeting.id !== editingMeeting?.id &&
@@ -216,7 +226,7 @@ export default function MeetingsPage() {
       return;
     }
 
-    const title = form.title.trim() || `${generation}기 ${round}회차 정기모임`;
+    const title = buildMeetingTitle(generation, round, form.type);
 
     setSaving(true);
     try {
@@ -224,18 +234,20 @@ export default function MeetingsPage() {
         await meetingAdminRepository.update(editingMeeting.id, {
           generation,
           round,
+          type: form.type,
           title,
           meetingDate: form.meetingDate,
-          isActive: form.isActive,
+          isActive: true,
         });
         toast.success("수정되었습니다.");
       } else {
         await meetingAdminRepository.create({
           generation,
           round,
+          type: form.type,
           title,
           meetingDate: form.meetingDate,
-          isActive: form.isActive,
+          isActive: true,
         });
         toast.success("추가되었습니다.");
       }
@@ -590,15 +602,28 @@ export default function MeetingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">회차 제목</Label>
-              <Input
-                id="title"
-                value={form.title}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, title: e.target.value }))
+              <Label htmlFor="type">회차 종류 *</Label>
+              <Select
+                value={form.type}
+                onValueChange={(value) =>
+                  setForm((prev) => ({ ...prev, type: value as MeetingType }))
                 }
-                placeholder="비워두면 '5기 3회차 정기모임'으로 자동 생성됩니다"
-              />
+              >
+                <SelectTrigger id="type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MEETING_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                제목은 &quot;{form.generation || "N"}기 {form.round || "N"}회차{" "}
+                {form.type}&quot;로 자동 생성됩니다.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -611,21 +636,6 @@ export default function MeetingsPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div>
-                <Label htmlFor="isActive">출석률 집계 대상</Label>
-                <p className="text-xs text-muted-foreground">
-                  끄면 회원 업적 페이지의 출석률 계산에서 제외됩니다.
-                </p>
-              </div>
-              <Switch
-                id="isActive"
-                checked={form.isActive}
-                onCheckedChange={(checked) =>
-                  setForm((prev) => ({ ...prev, isActive: checked }))
-                }
-              />
-            </div>
           </div>
 
           <DialogFooter>

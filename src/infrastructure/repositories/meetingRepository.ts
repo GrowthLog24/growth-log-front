@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db, COLLECTIONS } from "@/infrastructure/firebase";
 import type { Meeting } from "@/domain/entities";
+import { isRegularMeeting } from "@/domain/meetings/meeting";
 
 /**
  * 정기모임 회차 Repository (읽기 전용)
@@ -46,7 +47,11 @@ export class MeetingRepository {
       return snapshot.docs
         .map((doc) => ({ id: doc.id, ...doc.data() }) as Meeting)
         .filter(
-          (meeting) => meeting.isActive && meeting.generation >= generation
+          (meeting) =>
+            meeting.isActive &&
+            meeting.generation >= generation &&
+            // 그로스톡은 정기모임 출석률에 섞지 않습니다(별도 집계).
+            isRegularMeeting(meeting.type)
         )
         .sort((a, b) => a.generation - b.generation || a.round - b.round);
     } catch (error) {
