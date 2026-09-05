@@ -13,7 +13,6 @@ import {
   MemberMotion,
   ProjectList,
 } from "@/presentation/components/member";
-import { MemberCheckInGate } from "@/presentation/components/checkin/MemberCheckInGate";
 
 interface MemberPageProps {
   params: Promise<{
@@ -89,12 +88,6 @@ export default async function MemberPage({ params }: MemberPageProps) {
 
   return (
     <main className="overflow-hidden bg-white pb-12">
-      <MemberCheckInGate
-        memberId={achievement.member.id}
-        memberName={achievement.member.memberName}
-        memberIsActive={achievement.member.isActive}
-        memberGeneration={achievement.member.generation}
-      />
       <MemberMotion>
         <AchievementHero member={achievement.member} level={achievement.level} />
         <AchievementStats
