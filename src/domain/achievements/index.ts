@@ -14,6 +14,8 @@ export * from "./rules";
  * 출결 집계에 사용하는 최소 단위 기록
  */
 export interface AttendanceRecord {
+  /** 기수 (같은 회차 번호라도 기수가 다르면 다른 회차) */
+  generation: number;
   /** 회차 번호 */
   round: number;
   /** 출결 상태 */
@@ -86,25 +88,34 @@ export interface EvaluatedBadge {
  *
  * 기록이 존재하지 않는 회차는 결석으로 처리합니다.
  * 관리자가 참석자만 체크하는 운영 방식을 그대로 지원하기 위함입니다.
+ * 회차는 (기수, 회차 번호) 복합키로 식별하므로, 서로 다른 기수의 같은
+ * 회차 번호(예: 5기 1회차 · 6기 1회차)가 섞이지 않습니다.
  *
- * @param {readonly number[]} meetingRounds - 집계 대상 회차 번호 목록
+ * @param {readonly {generation:number, round:number}[]} meetings - 집계 대상 회차 목록
  * @param {readonly AttendanceRecord[]} records - 해당 회원의 출결 기록
  * @returns {AttendanceSummary} 출결 요약
  *
  * @example
- * summarizeAttendance([1, 2, 3], [{ round: 1, status: "present" }]);
- * // => { totalMeetings: 3, attendedCount: 1, attendanceRate: 33, ... }
+ * summarizeAttendance(
+ *   [{ generation: 5, round: 1 }],
+ *   [{ generation: 5, round: 1, status: "present" }]
+ * );
+ * // => { totalMeetings: 1, attendedCount: 1, attendanceRate: 100, ... }
  */
 export function summarizeAttendance(
-  meetingRounds: readonly number[],
+  meetings: readonly { generation: number; round: number }[],
   records: readonly AttendanceRecord[]
 ): AttendanceSummary {
-  const statusByRound = new Map<number, AttendanceStatus>();
+  const keyOf = (generation: number, round: number) => `${generation}-${round}`;
+
+  const statusByKey = new Map<string, AttendanceStatus>();
   for (const record of records) {
-    statusByRound.set(record.round, record.status);
+    statusByKey.set(keyOf(record.generation, record.round), record.status);
   }
 
-  const sortedRounds = [...meetingRounds].sort((a, b) => a - b);
+  const sortedMeetings = [...meetings].sort(
+    (a, b) => a.generation - b.generation || a.round - b.round
+  );
 
   const timeline: AttendanceRecord[] = [];
   let presentCount = 0;
@@ -114,9 +125,14 @@ export function summarizeAttendance(
   let currentStreak = 0;
   let longestStreak = 0;
 
-  for (const round of sortedRounds) {
-    const status = statusByRound.get(round) ?? "absent";
-    timeline.push({ round, status });
+  for (const meeting of sortedMeetings) {
+    const status =
+      statusByKey.get(keyOf(meeting.generation, meeting.round)) ?? "absent";
+    timeline.push({
+      generation: meeting.generation,
+      round: meeting.round,
+      status,
+    });
 
     switch (status) {
       case "present":
@@ -145,12 +161,12 @@ export function summarizeAttendance(
   }
 
   const attendedCount = presentCount + lateCount;
-  const denominator = sortedRounds.length - excusedCount;
+  const denominator = sortedMeetings.length - excusedCount;
   const attendanceRate =
     denominator > 0 ? Math.round((attendedCount / denominator) * 100) : 0;
 
   return {
-    totalMeetings: sortedRounds.length,
+    totalMeetings: sortedMeetings.length,
     presentCount,
     lateCount,
     excusedCount,

@@ -67,6 +67,8 @@ export interface AttendanceSummaryDto {
  * 회차별 출결 항목
  */
 export interface AttendanceTimelineItemDto {
+  /** 기수 (같은 회차 번호라도 기수가 다르면 다른 회차) */
+  generation: number;
   round: number;
   status: AttendanceStatus;
   meetingTitle: string;
