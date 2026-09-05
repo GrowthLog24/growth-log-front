@@ -71,12 +71,16 @@ export async function getMemberAchievement(
   const records: AttendanceRecord[] = attendances
     .filter((attendance) => regularMeetingIds.has(attendance.meetingId))
     .map((attendance) => ({
+      generation: attendance.generation,
       round: attendance.round,
       status: attendance.status,
     }));
 
   const attendanceSummary = summarizeAttendance(
-    meetings.map((meeting) => meeting.round),
+    meetings.map((meeting) => ({
+      generation: meeting.generation,
+      round: meeting.round,
+    })),
     records
   );
 
@@ -95,6 +99,12 @@ export async function getMemberAchievement(
     projectCount: projects.length,
   });
 
+  const meetingByKey = new Map<string, Meeting>();
+  for (const meeting of meetings) {
+    meetingByKey.set(`${meeting.generation}-${meeting.round}`, meeting);
+  }
+
+  // 성장일지 엔티티에는 기수가 없어 회차 번호로만 회차를 매칭합니다.
   const meetingByRound = new Map<number, Meeting>();
   for (const meeting of meetings) {
     meetingByRound.set(meeting.round, meeting);
@@ -102,11 +112,12 @@ export async function getMemberAchievement(
 
   const timeline: AttendanceTimelineItemDto[] = attendanceSummary.timeline.map(
     (item) => {
-      const meeting = meetingByRound.get(item.round);
+      const meeting = meetingByKey.get(`${item.generation}-${item.round}`);
       return {
+        generation: item.generation,
         round: item.round,
         status: item.status,
-        meetingTitle: meeting?.title ?? `${item.round}회차`,
+        meetingTitle: meeting?.title ?? `${item.generation}기 ${item.round}회차`,
         meetingDateMs: toMillis(meeting?.meetingDate),
       };
     }

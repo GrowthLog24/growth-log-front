@@ -43,7 +43,10 @@ export function AttendanceTimeline({ attendance }: AttendanceTimelineProps) {
       {/* 회차 그리드 */}
       <ul className="border-t border-black/10" data-member-reveal>
         {attendance.timeline.map((item) => (
-          <li key={item.round} className="group border-b border-black/10">
+          <li
+            key={`${item.generation}-${item.round}`}
+            className="group border-b border-black/10"
+          >
             <div
               className="grid grid-cols-[46px_1fr_auto] items-center gap-3 py-3.5 sm:grid-cols-[64px_1fr_100px] sm:py-4"
               title={`${item.meetingTitle} · ${ATTENDANCE_STATUS_LABELS[item.status]}`}
