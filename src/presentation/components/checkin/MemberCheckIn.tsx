@@ -22,8 +22,6 @@ interface MemberCheckInProps {
   memberId: string;
   /** 회원 이름 (표시용) */
   memberName: string;
-  /** 이미 출석/지각으로 기록되어 있는지 여부 */
-  alreadyAttended: boolean;
 }
 
 /**
@@ -33,7 +31,6 @@ type UiState =
   | { kind: "idle" }
   | { kind: "working"; message: string }
   | { kind: "done"; time: string }
-  | { kind: "already" }
   | { kind: "error"; reason: string };
 
 /** 위치 조회 옵션: 고정밀·10초 제한·캐시 미사용 */
@@ -67,11 +64,8 @@ export function MemberCheckIn({
   meetingRound,
   memberId,
   memberName,
-  alreadyAttended,
 }: MemberCheckInProps) {
-  const [state, setState] = useState<UiState>(
-    alreadyAttended ? { kind: "already" } : { kind: "idle" }
-  );
+  const [state, setState] = useState<UiState>({ kind: "idle" });
 
   const submit = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -169,13 +163,6 @@ export function MemberCheckIn({
         <div className="mt-2 flex items-center gap-2 text-primary">
           <Check className="h-6 w-6" />
           <span className="text-lg font-bold">출석 완료 · {state.time}</span>
-        </div>
-      )}
-
-      {state.kind === "already" && (
-        <div className="mt-2 flex items-center gap-2 text-primary">
-          <Check className="h-6 w-6" />
-          <span className="text-lg font-bold">이미 출석했어요</span>
         </div>
       )}
 

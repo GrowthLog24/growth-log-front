@@ -29,7 +29,6 @@ interface MemberCheckInGateProps {
  */
 interface Resolved {
   meeting: Meeting;
-  alreadyAttended: boolean;
 }
 
 /**
@@ -70,12 +69,12 @@ export function MemberCheckInGate({
         { open: config.open, meetingId: config.meetingId },
         existingStatus
       );
-      if (availability === "closed") return;
+      // 배너는 지금 출석할 수 있을 때(open)만 띄웁니다.
+      // 이미 출석(present/late)한 경우 하단 출결 타임라인에 표시되므로
+      // 상단 "이미 출석" 배너는 노출하지 않습니다.
+      if (availability !== "open") return;
 
-      setResolved({
-        meeting,
-        alreadyAttended: availability === "already-attended",
-      });
+      setResolved({ meeting });
     })();
 
     return () => {
@@ -93,7 +92,6 @@ export function MemberCheckInGate({
       meetingRound={resolved.meeting.round}
       memberId={memberId}
       memberName={memberName}
-      alreadyAttended={resolved.alreadyAttended}
     />
   );
 }
