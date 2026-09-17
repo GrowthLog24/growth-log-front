@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/cbt/",
+      "destination": "https://cbt-wheat-xi.vercel.app"
+    },
+    {
+      "source": "/cbt/:path*",
+      "destination": "https://cbt-wheat-xi.vercel.app/:path*"
+    }
+  ]
+}
