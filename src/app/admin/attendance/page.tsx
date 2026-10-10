@@ -28,9 +28,9 @@ import {
 } from "@/domain/meetings/meeting";
 import { checkinConfigRepository } from "@/infrastructure/repositories/checkinConfigRepository";
 import {
-  isLate,
-  summarizeCheckinStats,
   computeLateUpdates,
+  isDisplayedLate,
+  summarizeRowStats,
 } from "@/domain/attendance/stats";
 
 /** 체크인 시각을 한국 시간(KST) "오후 2:14:15"로 표시합니다. */
@@ -198,10 +198,13 @@ export default function AttendanceStatsPage() {
     lateTime
   );
 
-  const stats = summarizeCheckinStats(
-    rows.map((r) => r.checkedInAt?.getTime() ?? null),
-    thresholdMs
-  );
+  // 화면 표시용 입력 — 기준이 없으면 DB 저장 상태, 있으면 기준으로 미리보기
+  const displayRows = rows.map((r) => ({
+    checkedInAtMs: r.checkedInAt?.getTime() ?? null,
+    status: r.status === "late" ? ("late" as const) : ("present" as const),
+  }));
+
+  const stats = summarizeRowStats(displayRows, thresholdMs);
 
   // 기준 이후 출석자를 지각으로(그 이전은 정시로) 바꿀 대상 — 실제 변경분만
   const pendingUpdates = useMemo(
@@ -347,7 +350,7 @@ export default function AttendanceStatsPage() {
           />
           <SummaryCard
             icon={<AlarmClock className="h-5 w-5" />}
-            label={lateTime ? `지각 (${lateTime} 이후)` : "지각"}
+            label={lateTime ? `지각 (${lateTime} 이후)` : "지각 (저장된 상태)"}
             value={`${stats.lateCount}명`}
             accent
           />
@@ -439,10 +442,7 @@ export default function AttendanceStatsPage() {
               </thead>
               <tbody>
                 {rows.map((row, i) => {
-                  const late = isLate(
-                    row.checkedInAt?.getTime() ?? null,
-                    thresholdMs
-                  );
+                  const late = isDisplayedLate(displayRows[i], thresholdMs);
                   return (
                     <tr
                       key={row.memberId}

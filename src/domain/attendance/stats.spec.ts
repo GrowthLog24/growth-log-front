@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { isLate, summarizeCheckinStats, computeLateUpdates } from "./stats";
+import {
+  isLate,
+  summarizeCheckinStats,
+  computeLateUpdates,
+  isDisplayedLate,
+  summarizeRowStats,
+} from "./stats";
 
 /**
  * 출석 통계(지각 판정) 동결 테스트.
@@ -72,5 +78,48 @@ describe("computeLateUpdates", () => {
       950
     );
     expect(updates).toEqual([{ memberId: "a", status: "present" }]);
+  });
+});
+
+/**
+ * 화면 표시용 지각 판정 동결 테스트.
+ *
+ * 기준 시각을 고르지 않았으면(새로고침 직후 등) DB에 저장된 상태를 그대로
+ * 보여주고, 기준을 고르면 그 기준으로 다시 계산한 미리보기를 보여준다.
+ */
+describe("isDisplayedLate", () => {
+  it("기준이 없으면 저장된 late 상태를 지각으로 보여준다", () => {
+    expect(isDisplayedLate({ checkedInAtMs: 1000, status: "late" }, null)).toBe(true);
+  });
+  it("기준이 없으면 저장된 present 상태를 정시로 보여준다", () => {
+    expect(isDisplayedLate({ checkedInAtMs: 1000, status: "present" }, null)).toBe(false);
+  });
+  it("기준이 있으면 저장 상태와 무관하게 기준으로 판정한다", () => {
+    expect(isDisplayedLate({ checkedInAtMs: 1000, status: "present" }, 950)).toBe(true);
+    expect(isDisplayedLate({ checkedInAtMs: 900, status: "late" }, 950)).toBe(false);
+  });
+});
+
+describe("summarizeRowStats", () => {
+  it("기준이 없으면 저장된 상태로 지각·정시를 센다", () => {
+    const s = summarizeRowStats(
+      [
+        { checkedInAtMs: 800, status: "present" },
+        { checkedInAtMs: 1000, status: "late" },
+        { checkedInAtMs: null, status: "late" },
+      ],
+      null
+    );
+    expect(s).toEqual({ total: 3, lateCount: 2, onTimeCount: 1 });
+  });
+  it("기준이 있으면 기준으로 다시 센다", () => {
+    const s = summarizeRowStats(
+      [
+        { checkedInAtMs: 800, status: "late" },
+        { checkedInAtMs: 1000, status: "present" },
+      ],
+      950
+    );
+    expect(s).toEqual({ total: 2, lateCount: 1, onTimeCount: 1 });
   });
 });
