@@ -1,5 +1,6 @@
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, COLLECTIONS, DOCUMENT_IDS } from "@/infrastructure/firebase";
+import type { CheckinLocation } from "@/domain/entities";
 
 /**
  * 라운지 QR 체크인 설정 관리자 Repository
@@ -28,6 +29,24 @@ export class CheckinConfigAdminRepository {
         ...(open ? { openedAt: serverTimestamp() } : {}),
         updatedAt: serverTimestamp(),
       },
+      { merge: true }
+    );
+  }
+
+  /**
+   * 체크인 허용 장소를 지정하거나(외부 모임) 기본값(강남구)으로 되돌립니다.
+   *
+   * @param {CheckinLocation | null} location - 지정 장소. null이면 강남구 기본 판정
+   */
+  async setLocation(location: CheckinLocation | null): Promise<void> {
+    const ref = doc(
+      db,
+      COLLECTIONS.CHECKIN_CONFIG,
+      DOCUMENT_IDS.CHECKIN_CONFIG_CURRENT
+    );
+    await setDoc(
+      ref,
+      { location, updatedAt: serverTimestamp() },
       { merge: true }
     );
   }

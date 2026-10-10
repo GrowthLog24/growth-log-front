@@ -834,5 +834,23 @@ export interface CheckinConfig {
   open: boolean;
   /** 마지막으로 체크인을 연 시각 */
   openedAt?: Timestamp;
+  /**
+   * 외부 장소 모임용 체크인 위치. 없거나 null이면 기본값(강남구 라운지)으로 판정
+   */
+  location?: CheckinLocation | null;
   updatedAt: Timestamp;
+}
+
+/**
+ * 체크인 허용 장소 (운영자가 주소로 지정)
+ */
+export interface CheckinLocation {
+  /** 표시용 주소 (예: 서울 마포구 마포대로 122) */
+  address: string;
+  /** 위도 */
+  lat: number;
+  /** 경도 */
+  lng: number;
+  /** 허용 반경(m) */
+  radiusMeters: number;
 }

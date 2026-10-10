@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/presentation/components/admin";
+import { CheckinLocationCard } from "@/presentation/components/admin/checkin/CheckinLocationCard";
 import { meetingAdminRepository } from "@/infrastructure/repositories/admin/meetingAdminRepository";
 import {
   attendanceAdminRepository,
@@ -373,6 +374,9 @@ export default function MeetingsPage() {
 
   return (
     <div className="space-y-8">
+      {/* QR 체크인 허용 장소 (외부 모임용) */}
+      <CheckinLocationCard />
+
       {/* 회차 목록 */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
