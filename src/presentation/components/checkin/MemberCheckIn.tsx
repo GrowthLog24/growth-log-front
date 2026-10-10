@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MapPin, Check, Loader2, AlertCircle } from "lucide-react";
-import { isInGangnam } from "@/domain/checkin/geo";
+import { isInCheckinArea } from "@/domain/checkin/geo";
 import { attendanceAdminRepository } from "@/infrastructure/repositories/admin";
 import { checkinConfigRepository } from "@/infrastructure/repositories";
 
@@ -54,7 +54,7 @@ function formatNow(): string {
  * 라운지 QR 출석 체크 배너.
  *
  * 명찰 QR로 업적 페이지에 진입한 회원이 [출석하기]를 누르면
- * 기기 위치를 확인해 강남구(라운지) 안일 때만 해당 회차 출결을
+ * 기기 위치를 확인해 허용 장소(기본: 강남구 라운지, 운영자 지정 시 그 장소 반경) 안일 때만 해당 회차 출결을
  * "present"로 기록합니다. 실패 시 담당자에게 문의하도록 안내합니다.
  */
 export function MemberCheckIn({
@@ -83,16 +83,7 @@ export function MemberCheckIn({
       async (position) => {
         const { latitude, longitude } = position.coords;
 
-        if (!isInGangnam(latitude, longitude)) {
-          setState({
-            kind: "error",
-            reason: "현재 위치가 라운지(강남구)가 아니에요",
-          });
-          return;
-        }
-
         try {
-          setState({ kind: "working", message: "출석 기록 중…" });
           // 제출 시점에 체크인이 여전히 이 회차로 열려 있는지 재확인합니다.
           // (운영자가 그새 체크인을 닫았거나 다른 회차로 바꿨을 수 있음)
           const current = await checkinConfigRepository.getCurrent();
@@ -100,6 +91,18 @@ export function MemberCheckIn({
             setState({ kind: "error", reason: "체크인이 마감되었어요" });
             return;
           }
+
+          // 운영자가 지정한 장소가 있으면 그 반경, 없으면 강남구로 판정합니다.
+          if (!isInCheckinArea(latitude, longitude, current.location)) {
+            const place = current.location?.address ?? "라운지(강남구)";
+            setState({
+              kind: "error",
+              reason: `현재 위치가 모임 장소(${place}) 근처가 아니에요`,
+            });
+            return;
+          }
+
+          setState({ kind: "working", message: "출석 기록 중…" });
           await attendanceAdminRepository.saveMany(
             {
               id: meetingId,
