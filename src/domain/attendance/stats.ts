@@ -84,3 +84,37 @@ export function computeLateUpdates(
   }
   return updates;
 }
+
+/** 화면 표시 대상 한 명 (출석/지각만) */
+export interface DisplayRowInput {
+  /** 체크인 시각(epoch ms). 없으면 null */
+  checkedInAtMs: number | null;
+  /** DB에 저장된 출결 상태 */
+  status: "present" | "late";
+}
+
+/**
+ * 명단에 "지각"으로 보여줄지 판정합니다.
+ *
+ * 기준 시각이 없으면(선택 전·새로고침 직후) DB에 저장된 상태를 그대로 따르고,
+ * 기준 시각이 있으면 그 기준으로 다시 계산한 미리보기를 보여줍니다.
+ */
+export function isDisplayedLate(
+  row: DisplayRowInput,
+  thresholdMs: number | null
+): boolean {
+  if (thresholdMs == null) return row.status === "late";
+  return isLate(row.checkedInAtMs, thresholdMs);
+}
+
+/**
+ * 화면 표시 기준(isDisplayedLate)으로 총원·지각·정시 인원을 요약합니다.
+ */
+export function summarizeRowStats(
+  rows: readonly DisplayRowInput[],
+  thresholdMs: number | null
+): CheckinStat {
+  const total = rows.length;
+  const lateCount = rows.filter((row) => isDisplayedLate(row, thresholdMs)).length;
+  return { total, lateCount, onTimeCount: total - lateCount };
+}
