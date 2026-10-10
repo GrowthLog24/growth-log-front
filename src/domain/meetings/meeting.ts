@@ -40,3 +40,45 @@ export function buildMeetingTitle(
 export function isRegularMeeting(type: string | null | undefined): boolean {
   return normalizeMeetingType(type) === "정기모임";
 }
+
+/** 기본 선택 후보 회차 (정렬·식별에 필요한 최소 필드) */
+export interface MeetingChoice {
+  id: string;
+  generation: number;
+  round: number;
+}
+
+/**
+ * 화면에 기본으로 선택할 회차를 고릅니다.
+ *
+ * 체크인이 열려 있는 회차가 목록에 있으면 그 회차를, 없으면 가장 최신
+ * 회차(기수 우선, 같으면 회차 번호가 큰 것)를 고릅니다. 입력 배열의
+ * 정렬 순서에 의존하지 않습니다.
+ *
+ * @param {readonly MeetingChoice[]} meetings - 선택 가능한 회차 목록
+ * @param {string | null} openCheckinMeetingId - 체크인이 열린 회차 ID. 없으면 null
+ * @returns {string} 기본 선택할 회차 ID. 목록이 비면 빈 문자열
+ */
+export function pickDefaultMeetingId(
+  meetings: readonly MeetingChoice[],
+  openCheckinMeetingId: string | null
+): string {
+  if (meetings.length === 0) return "";
+
+  if (openCheckinMeetingId) {
+    const open = meetings.find(
+      (meeting) => meeting.id === openCheckinMeetingId
+    );
+    if (open) return open.id;
+  }
+
+  let latest = meetings[0];
+  for (const meeting of meetings) {
+    const isNewer =
+      meeting.generation > latest.generation ||
+      (meeting.generation === latest.generation &&
+        meeting.round > latest.round);
+    if (isNewer) latest = meeting;
+  }
+  return latest.id;
+}
