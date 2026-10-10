@@ -22,7 +22,11 @@ import {
   type Member,
   type Attendance,
 } from "@/domain/entities";
-import { normalizeMeetingType } from "@/domain/meetings/meeting";
+import {
+  normalizeMeetingType,
+  pickDefaultMeetingId,
+} from "@/domain/meetings/meeting";
+import { checkinConfigRepository } from "@/infrastructure/repositories/checkinConfigRepository";
 import {
   isLate,
   summarizeCheckinStats,
@@ -87,16 +91,28 @@ export default function AttendanceStatsPage() {
   const [lateMinute, setLateMinute] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [openCheckinMeetingId, setOpenCheckinMeetingId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const [meetingList, memberList] = await Promise.all([
+        const [meetingList, memberList, config] = await Promise.all([
           meetingAdminRepository.getAll(),
           memberAdminRepository.getAll(),
+          checkinConfigRepository.getCurrent(),
         ]);
         setMeetings(meetingList);
         setMembers(memberList);
+
+        // 체크인이 열려 있으면 그 회차의 종류로 맞춰, 들어오자마자 해당 회차가 보이게 합니다.
+        const openId = config?.open ? config.meetingId : null;
+        setOpenCheckinMeetingId(openId);
+        const openMeeting = openId
+          ? meetingList.find((meeting) => meeting.id === openId)
+          : undefined;
+        if (openMeeting) setType(normalizeMeetingType(openMeeting.type));
       } catch (error) {
         console.error("Failed to fetch attendance stats context:", error);
         toast.error("데이터를 불러오는데 실패했습니다.");
@@ -125,11 +141,12 @@ export default function AttendanceStatsPage() {
     [meetings, meetingId]
   );
 
-  // 종류를 바꾸면 회차 선택 초기화
+  // 목록이 준비되거나 종류가 바뀌면 기본 회차(체크인 열린 회차 > 최신 회차)를 자동 선택
   useEffect(() => {
-    setMeetingId("");
+    if (loading) return;
     setRecords([]);
-  }, [type]);
+    setMeetingId(pickDefaultMeetingId(meetingsOfType, openCheckinMeetingId));
+  }, [loading, meetingsOfType, openCheckinMeetingId]);
 
   // 회차를 고르면 출결 기록 로드
   useEffect(() => {
@@ -261,7 +278,14 @@ export default function AttendanceStatsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label>회차</Label>
+          <div className="flex items-center gap-2">
+            <Label>회차</Label>
+            {openCheckinMeetingId && meetingId === openCheckinMeetingId && (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-900">
+                체크인 진행 중
+              </span>
+            )}
+          </div>
           <Select
             value={meetingId}
             onValueChange={setMeetingId}
