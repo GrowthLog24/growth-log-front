@@ -13,7 +13,7 @@ interface TeamBoardProps {
 }
 
 /** 한 줄에 놓을 최대 카드 수 */
-const MAX_COLUMNS = 5;
+const MAX_COLUMNS = 6;
 
 function SubmissionMeter({ submitted, total }: { submitted: number; total: number }) {
   return (
