@@ -27,18 +27,17 @@ const END_AT = kst("2026-11-07 17:10");
 const MEETING_DATE = new Date(kst("2026-11-07 00:00"));
 
 /**
- * 확정 팀 편성 (11/07 13:45, 신청 시트 최신 응답 반영)
- * - 정지은·김응원 결석, 이황수·박세호 추가 참석
- * - 이현정(15~16시)은 1팀 3인조, 유민혜(~17시)는 5팀
- * - 손궁(임원) 참가자로 추가 → 6팀
+ * 확정 팀 편성 (11/07 14:42, 신청 시트 최신 응답 + 현장 변경 반영)
+ * - 정지은·김응원·유민혜 결석, 이황수·박세호 추가 참석, 손궁(임원) 참가
+ * - 이현정(15~16시 부분 참석)·김동현 6팀
  */
 const TEAMS = [
-  ["황지현", "박창현", "이현정"],
+  ["황지현", "박창현"],
   ["박진영", "이선아"],
-  ["김동현", "박세호"],
+  ["이황수", "박세호"],
   ["권선화", "이민호"],
-  ["김류흔", "유민혜"],
-  ["이황수", "손궁"],
+  ["김류흔", "손궁"],
+  ["이현정", "김동현"],
 ];
 
 const db = createDb();
@@ -131,9 +130,10 @@ async function main() {
   const existingCodes = secrets.exists() ? secrets.data().codes ?? {} : {};
   const codes = generateCodes(teams.map((t) => t.id), existingCodes);
   const added = Object.keys(codes).filter((id) => !existingCodes[id]);
-  if (added.length > 0) {
+  const removed = Object.keys(existingCodes).filter((id) => !codes[id]);
+  if (added.length > 0 || removed.length > 0) {
     await setDoc(secretsRef, { codes });
-    console.log(`팀 코드 발급: ${added.join(", ")} (기존 코드 유지 · admin/hackathon 에서 확인)`);
+    console.log(`팀 코드 갱신 · 발급: ${added.join(", ") || "-"} · 삭제: ${removed.join(", ") || "-"} (기존 코드 유지)`);
   }
   console.log(`시드 완료: ${HACKATHON_ID} · 팀 ${teams.length} · meetingId ${meetingId}`);
 }

@@ -28,6 +28,7 @@ async function main() {
     throw new Error(`report.json 의 teamId(${report.teamId})가 ${teamId} 와 다릅니다.`);
   }
   const score = buildScore(report);
+  const unchecked = ["github", "deploy", "demo", "prd"].filter((k) => report.links && report.links[k] && report.links[k].checked === false);
   const gradedBy = byIndex >= 0 ? process.argv[byIndex + 1] : `orca-${teamId}-${placed.round}`;
 
   const db = createDb();
@@ -44,10 +45,11 @@ async function main() {
     gradedAt: Date.now(),
     round: placed.round,
     run: report.run ?? null,
+    links: report.links ?? null,
     notes: typeof report.notes === "string" ? report.notes : "",
   });
   const isStale = submission.data().submittedAt > placed.version;
-  console.log(`반영 완료: ${teamId} ${score.total}/${score.max} · ${placed.round} · by ${gradedBy}${isStale ? " · ⚠ 채점 중 재제출됨 → 재배치 필요" : ""}`);
+  console.log(`반영 완료: ${teamId} ${score.total}/${score.max} · ${placed.round} · by ${gradedBy}${isStale ? " · ⚠ 채점 중 재제출됨 → 재배치 필요" : ""}${report.links ? "" : " · ⚠ 링크 확인 결과 없음"}${unchecked.length ? ` · ⚠ 미확인 링크: ${unchecked.join(",")}` : ""}`);
 }
 
 main()

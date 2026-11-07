@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   checkVoteEligibility,
+  compareScores,
   formatRemaining,
   getHackathonPhase,
   isGithubRepoUrl,
@@ -157,5 +158,18 @@ describe("tallyVotes", () => {
   });
   it("표가 없으면 모두 0", () => {
     expect(tallyVotes(TEAMS, []).every((row) => row.count === 0)).toBe(true);
+  });
+});
+
+describe("compareScores", () => {
+  const score = (total: number, core: number) => ({ total, criteria: [{ key: "core", score: core }] });
+  it("총점이 높은 쪽이 앞선다", () => {
+    expect(compareScores(score(80, 10), score(70, 25))).toBeLessThan(0);
+  });
+  it("총점이 같으면 핵심 기능 점수가 높은 쪽이 앞선다", () => {
+    expect(compareScores(score(80, 20), score(80, 22))).toBeGreaterThan(0);
+  });
+  it("총점과 핵심 기능 점수가 모두 같으면 0 (운영진 판단)", () => {
+    expect(compareScores(score(80, 20), score(80, 20))).toBe(0);
   });
 });
