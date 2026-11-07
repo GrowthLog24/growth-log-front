@@ -1,7 +1,13 @@
 import type { HackathonTrack } from "./types";
 
-/** 이번 행사 ID (6기 11월 정기모임 100분 해커톤) */
-export const CURRENT_HACKATHON_ID = "gl6-2026-11";
+/**
+ * 이번 행사 ID (6기 11월 정기모임 100분 해커톤)
+ *
+ * 로컬 데모·리허설에서는 NEXT_PUBLIC_HACKATHON_ID 로 다른 행사 문서를 가리킬 수 있다.
+ * 배포 환경에는 설정하지 않는다.
+ */
+export const CURRENT_HACKATHON_ID =
+  process.env.NEXT_PUBLIC_HACKATHON_ID || "gl6-2026-11";
 
 /** 트랙 라벨 (11월 행사준비 회의 2차 기준) */
 export const HACKATHON_TRACKS: Record<
