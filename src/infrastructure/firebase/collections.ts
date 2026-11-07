@@ -71,6 +71,21 @@ export const COLLECTIONS = {
 
   /** 라운지 QR 체크인 설정 (현재 체크인 중인 회차 등) */
   CHECKIN_CONFIG: "checkinConfig",
+
+  /** 해커톤 행사 설정 */
+  HACKATHONS: "hackathons",
+
+  /** 해커톤 팀 제출 코드 (공개 화면에서 읽지 않음) */
+  HACKATHON_SECRETS: "hackathonSecrets",
+
+  /** 해커톤 팀 제출물 */
+  HACKATHON_SUBMISSIONS: "hackathonSubmissions",
+
+  /** 해커톤 AI 채점 결과 */
+  HACKATHON_SCORES: "hackathonScores",
+
+  /** 해커톤 휴먼 인정상 투표 */
+  HACKATHON_VOTES: "hackathonVotes",
 } as const;
 
 /**
