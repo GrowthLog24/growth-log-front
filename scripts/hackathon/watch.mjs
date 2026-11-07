@@ -31,7 +31,7 @@ const LOG_DIR = `${ROOT}/logs`;
  * 공개 Firebase 웹 설정만 담은 .env.public 과 채점 스크립트 사본만 둔다.
  */
 const RUNNER_DIR = `${ROOT}/runner`;
-const RUNNER_FILES = ["lib.mjs", "get.mjs", "score.mjs", "rubric.mjs", "grading-prompt.md"];
+const RUNNER_FILES = ["lib.mjs", "get.mjs", "score.mjs", "rubric.mjs", "submission-format.mjs", "grading-prompt.md"];
 /** macOS 의 /tmp 는 /private/tmp 의 링크라 권한 규칙을 두 형태로 적는다 (// = 절대 경로) */
 const scoped = (tool, path) => [`${tool}(/${path})`, `${tool}(//private${path})`];
 /**
