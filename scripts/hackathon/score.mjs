@@ -20,6 +20,10 @@ function parseArgs(argv) {
 
 async function main() {
   const { teamId, file, gradedBy } = parseArgs(process.argv.slice(2));
+  const lockedTeam = process.env.HACKATHON_GRADER_TEAM;
+  if (lockedTeam && lockedTeam !== teamId) {
+    throw new Error(`이 채점 세션은 ${lockedTeam} 전용입니다. (${teamId} 기록 거부)`);
+  }
   const score = buildScore(JSON.parse(await readFile(file, "utf8")));
   const db = createDb();
   const submission = await getDoc(doc(db, COLLECTIONS.SUBMISSIONS, teamDocId(teamId)));
@@ -29,8 +33,11 @@ async function main() {
     teamId,
     ...score,
     gradedBy,
-    submissionVersion: submission.data().submittedAt,
+    // watch.mjs 가 넘긴 버전(채점 시작 시점의 제출)을 우선 기록해 채점 중 재제출을 놓치지 않는다
+    submissionVersion: Number(process.env.HACKATHON_GRADE_VERSION) || submission.data().submittedAt,
     gradedAt: Date.now(),
+    // 세션 시작 시각 (watch.mjs 가 예비/최종 채점을 구분하는 기준)
+    gradeStartedAt: Number(process.env.HACKATHON_GRADE_STARTED_AT) || Date.now(),
   });
   console.log(`기록 완료: ${teamId} ${score.total}/${score.max} (by ${gradedBy})`);
 }

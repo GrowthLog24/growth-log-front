@@ -6,6 +6,7 @@
  */
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { resolve as resolvePath } from "node:path";
 
 /** 이번 행사 ID — src/domain/hackathon/constants.ts 의 CURRENT_HACKATHON_ID 와 같아야 한다 */
 export const HACKATHON_ID = process.env.HACKATHON_ID || "gl6-2026-11";
@@ -60,4 +61,18 @@ export function kst(value) {
  */
 export function teamDocId(teamId) {
   return `${HACKATHON_ID}_${teamId}`;
+}
+
+/** 실제 행사 ID — 이 행사만 hackathon/<teamId>/ 에, 리허설은 hackathon/_<행사ID>/<teamId>/ 에 둔다 */
+const REAL_HACKATHON_ID = "gl6-2026-11";
+
+/**
+ * 팀 채점 폴더의 절대 경로
+ *
+ * @param {string} teamId
+ * @returns {string}
+ */
+export function teamDirOf(teamId) {
+  const base = HACKATHON_ID === REAL_HACKATHON_ID ? "hackathon" : `hackathon/_${HACKATHON_ID}`;
+  return resolvePath(base, teamId);
 }

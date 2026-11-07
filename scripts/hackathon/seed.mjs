@@ -2,7 +2,7 @@
  * 해커톤 행사 설정 시드 (재실행 안전)
  *
  * - hackathons/{id}: 제목·시각·팀 구성 (기존 토글 값은 유지)
- * - hackathonSecrets/{id}: 팀 코드가 없을 때만 생성
+ * - hackathonSecrets/{id}: 기존 팀 코드는 유지하고, 코드가 없는 팀만 새로 발급
  * - meetings: 오늘 정기모임 회차가 없으면 생성하고 meetingId 로 연결
  *
  * 실행: node --env-file=.env.local scripts/hackathon/seed.mjs
@@ -26,13 +26,19 @@ const START_AT = kst("2026-11-07 15:30");
 const END_AT = kst("2026-11-07 17:10");
 const MEETING_DATE = new Date(kst("2026-11-07 00:00"));
 
-/** 11월 행사준비 회의(2차) 팀 편성안 */
+/**
+ * 확정 팀 편성 (11/07 13:45, 신청 시트 최신 응답 반영)
+ * - 정지은·김응원 결석, 이황수·박세호 추가 참석
+ * - 이현정(15~16시)은 1팀 3인조, 유민혜(~17시)는 5팀
+ * - 손궁(임원) 참가자로 추가 → 6팀
+ */
 const TEAMS = [
-  ["정지은", "황지현"],
+  ["황지현", "박창현", "이현정"],
   ["박진영", "이선아"],
-  ["김류흔", "김동현"],
+  ["김동현", "박세호"],
   ["권선화", "이민호"],
-  ["박창현", "김응원"],
+  ["김류흔", "유민혜"],
+  ["이황수", "손궁"],
 ];
 
 const db = createDb();
@@ -75,10 +81,14 @@ async function ensureMeeting() {
   return ref.id;
 }
 
-function generateCodes(teamIds) {
-  const used = new Set();
+function generateCodes(teamIds, existing = {}) {
+  const used = new Set(Object.values(existing));
   const codes = {};
   for (const id of teamIds) {
+    if (existing[id]) {
+      codes[id] = existing[id];
+      continue;
+    }
     let code;
     do code = String(randomInt(0, 10000)).padStart(4, "0");
     while (used.has(code));
@@ -118,9 +128,12 @@ async function main() {
 
   const secretsRef = doc(db, COLLECTIONS.SECRETS, HACKATHON_ID);
   const secrets = await getDoc(secretsRef);
-  if (!secrets.exists()) {
-    await setDoc(secretsRef, { codes: generateCodes(teams.map((t) => t.id)) });
-    console.log("팀 코드 생성 완료 (admin/hackathon 에서 확인)");
+  const existingCodes = secrets.exists() ? secrets.data().codes ?? {} : {};
+  const codes = generateCodes(teams.map((t) => t.id), existingCodes);
+  const added = Object.keys(codes).filter((id) => !existingCodes[id]);
+  if (added.length > 0) {
+    await setDoc(secretsRef, { codes });
+    console.log(`팀 코드 발급: ${added.join(", ")} (기존 코드 유지 · admin/hackathon 에서 확인)`);
   }
   console.log(`시드 완료: ${HACKATHON_ID} · 팀 ${teams.length} · meetingId ${meetingId}`);
 }
