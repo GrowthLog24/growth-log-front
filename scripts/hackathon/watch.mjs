@@ -4,17 +4,24 @@
  *
  * 실행:
  *   node --env-file=.env.local scripts/hackathon/watch.mjs           # 알림만
- *   node --env-file=.env.local scripts/hackathon/watch.mjs --spawn   # 자동 채점
+ *   node --env-file=.env.local scripts/hackathon/watch.mjs --spawn   # 마감(endAt) 후 자동 채점
+ *   node --env-file=.env.local scripts/hackathon/watch.mjs --spawn --now  # 마감 전에도 즉시 채점
+ *
+ * 기본은 마감 시각까지 기다렸다가 채점한다. 제작 중에 채점하면 제출 이후의 커밋이
+ * 반영되지 않은 저장소를 채점하게 되고, 커밋만으로는 재채점이 일어나지 않기 때문이다.
  *
  * 채점 필요 = 점수가 없거나, 점수의 submissionVersion 이 최신 submittedAt 보다 오래됨(재제출).
  * 같은 팀 세션이 돌고 있는 동안 재제출이 오면, 끝난 뒤 한 번 더 채점한다.
  */
 import { spawn } from "node:child_process";
 import { createWriteStream, mkdirSync } from "node:fs";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { COLLECTIONS, HACKATHON_ID, createDb } from "./lib.mjs";
 
 const SHOULD_SPAWN = process.argv.includes("--spawn");
+const GRADE_NOW = process.argv.includes("--now");
+/** 마감 직후 마지막 push 가 GitHub 에 반영될 여유 */
+const DEADLINE_GRACE_MS = 60_000;
 const LOG_DIR = "/tmp/hackathon-grading/logs";
 const ALLOWED_TOOLS = [
   "Read",
@@ -31,6 +38,8 @@ const ALLOWED_TOOLS = [
 const submissions = new Map(); // teamId → submission
 const scores = new Map(); // teamId → score
 const running = new Map(); // teamId → submittedAt being graded
+let endAt = null; // 행사 마감 시각 (config 구독으로 갱신)
+let deadlineTimer = null;
 const time = () => new Date().toLocaleTimeString("en-GB", { timeZone: "Asia/Seoul" });
 
 function needsGrading(teamId) {
@@ -49,7 +58,12 @@ function spawnGrader(teamId) {
   const child = spawn(
     "claude",
     ["-p", prompt, "--add-dir", "/tmp/hackathon-grading", "--allowedTools", ...ALLOWED_TOOLS],
-    { cwd: process.cwd(), stdio: ["ignore", "pipe", "pipe"] }
+    {
+      cwd: process.cwd(),
+      stdio: ["ignore", "pipe", "pipe"],
+      // score.mjs 가 이 팀 외의 점수 기록을 거부하도록 고정한다 (프롬프트 인젝션 방어)
+      env: { ...process.env, HACKATHON_GRADER_TEAM: teamId },
+    }
   );
   running.set(teamId, version);
   child.stdout.pipe(log);
@@ -69,12 +83,31 @@ function review(teamId) {
     console.log(`[${time()}] ● 채점 필요: ${teamId} ${submission.projectName} (제출 ${submission.submitCount}회)`);
     return;
   }
+  if (!GRADE_NOW && (endAt === null || Date.now() < endAt + DEADLINE_GRACE_MS)) return; // 마감 후 일괄 채점
   if (running.has(teamId)) return; // 끝나면 close 핸들러가 다시 확인한다
   spawnGrader(teamId);
 }
 
+function scheduleDeadline() {
+  if (deadlineTimer) clearTimeout(deadlineTimer);
+  if (GRADE_NOW || endAt === null) return;
+  const wait = endAt + DEADLINE_GRACE_MS - Date.now();
+  const when = new Date(endAt).toLocaleTimeString("en-GB", { timeZone: "Asia/Seoul" });
+  if (wait > 0) console.log(`[${time()}] 마감 ${when} + 1분 뒤 일괄 채점 예약 (즉시 채점은 --now)`);
+  deadlineTimer = setTimeout(() => {
+    console.log(`[${time()}] 마감 도달 — 채점 시작`);
+    for (const teamId of submissions.keys()) review(teamId);
+  }, Math.max(0, wait));
+}
+
 function main() {
   const db = createDb();
+  onSnapshot(doc(db, COLLECTIONS.HACKATHONS, HACKATHON_ID), (snapshot) => {
+    const next = snapshot.data()?.endAt ?? null;
+    if (next === endAt) return;
+    endAt = next;
+    scheduleDeadline();
+  }, (error) => console.error("설정 구독 오류:", error.message));
   const byHackathon = (name) =>
     query(collection(db, name), where("hackathonId", "==", HACKATHON_ID));
   let scoresReady = false;

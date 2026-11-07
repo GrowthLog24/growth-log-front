@@ -20,6 +20,10 @@ function parseArgs(argv) {
 
 async function main() {
   const { teamId, file, gradedBy } = parseArgs(process.argv.slice(2));
+  const lockedTeam = process.env.HACKATHON_GRADER_TEAM;
+  if (lockedTeam && lockedTeam !== teamId) {
+    throw new Error(`이 채점 세션은 ${lockedTeam} 전용입니다. (${teamId} 기록 거부)`);
+  }
   const score = buildScore(JSON.parse(await readFile(file, "utf8")));
   const db = createDb();
   const submission = await getDoc(doc(db, COLLECTIONS.SUBMISSIONS, teamDocId(teamId)));
