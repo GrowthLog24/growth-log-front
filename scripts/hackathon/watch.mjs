@@ -4,11 +4,12 @@
  *
  * 실행:
  *   node --env-file=.env.local scripts/hackathon/watch.mjs           # 알림만
- *   node --env-file=.env.local scripts/hackathon/watch.mjs --spawn   # 마감(endAt) 후 자동 채점
- *   node --env-file=.env.local scripts/hackathon/watch.mjs --spawn --now  # 마감 전에도 즉시 채점
+ *   node --env-file=.env.local scripts/hackathon/watch.mjs --spawn              # 예비 + 최종 채점
+ *   node --env-file=.env.local scripts/hackathon/watch.mjs --spawn --final-only # 마감 후 최종 채점만
  *
- * 기본은 마감 시각까지 기다렸다가 채점한다. 제작 중에 채점하면 제출 이후의 커밋이
- * 반영되지 않은 저장소를 채점하게 되고, 커밋만으로는 재채점이 일어나지 않기 때문이다.
+ * 기본(혼합): 제출이 들어오면 바로 예비 채점하고, 마감 1분 뒤 마감 전에 채점된 팀을
+ * 최종 코드로 다시 채점해 덮어쓴다. 예비 점수는 마감 때 세션이 실패해도 쓸 수 있는 보험이고,
+ * 최종 채점은 제출 이후 커밋(재제출 없이 push 만 한 경우)을 반영하기 위해서다.
  *
  * 채점 필요 = 점수가 없거나, 점수의 submissionVersion 이 최신 submittedAt 보다 오래됨(재제출).
  * 같은 팀 세션이 돌고 있는 동안 재제출이 오면, 끝난 뒤 한 번 더 채점한다.
@@ -20,7 +21,7 @@ import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { COLLECTIONS, HACKATHON_ID, createDb } from "./lib.mjs";
 
 const SHOULD_SPAWN = process.argv.includes("--spawn");
-const GRADE_NOW = process.argv.includes("--now");
+const FINAL_ONLY = process.argv.includes("--final-only");
 /** 마감 직후 마지막 push 가 GitHub 에 반영될 여유 */
 const DEADLINE_GRACE_MS = 60_000;
 const ROOT = "/tmp/hackathon-grading";
@@ -62,11 +63,24 @@ let endAt = null; // 행사 마감 시각 (config 구독으로 갱신)
 let deadlineTimer = null;
 const time = () => new Date().toLocaleTimeString("en-GB", { timeZone: "Asia/Seoul" });
 
+function isAfterDeadline() {
+  return endAt !== null && Date.now() >= endAt + DEADLINE_GRACE_MS;
+}
+
+/** 채점 단계: 마감 전은 예비(early), 마감 후는 최종(final) */
+function gradingPhase() {
+  return isAfterDeadline() ? "final" : "early";
+}
+
 function needsGrading(teamId) {
   const submission = submissions.get(teamId);
   if (!submission) return false;
   const score = scores.get(teamId);
-  return !score || score.submissionVersion < submission.submittedAt;
+  if (!score || score.submissionVersion < submission.submittedAt) return true;
+  // 마감 후: 마감 전에 매긴 예비 점수는 최종 코드로 다시 채점한다
+  // 채점 '시작' 시각 기준: 마감 직전에 시작해 마감 뒤에 끝난 세션도 예비 점수로 본다
+  const startedAt = score.gradeStartedAt ?? score.gradedAt;
+  return isAfterDeadline() && startedAt < endAt + DEADLINE_GRACE_MS;
 }
 
 /** 비밀키 없는 채점 작업 폴더를 만든다 (스크립트는 읽기 전용 사본). */
@@ -92,9 +106,10 @@ function prepareRunner() {
 
 function spawnGrader(teamId) {
   const version = submissions.get(teamId).submittedAt;
-  const key = `${teamId}:${version}`;
+  const phase = gradingPhase();
+  const key = `${teamId}:${version}:${phase}`;
   attempts.set(key, (attempts.get(key) ?? 0) + 1);
-  const session = `grader-${teamId}-${version}-${attempts.get(key)}`;
+  const session = `grader-${teamId}-${phase}-${attempts.get(key)}`;
   mkdirSync(LOG_DIR, { recursive: true });
   const log = createWriteStream(`${LOG_DIR}/${session}.log`);
   const prompt = `grading-prompt.md 를 읽고 그 절차대로 teamId=${teamId} 한 팀만 채점하라. <세션이름> 은 ${session} 이다.`;
@@ -111,7 +126,12 @@ function spawnGrader(teamId) {
       cwd: RUNNER_DIR,
       stdio: ["ignore", "pipe", "pipe"],
       // score.mjs 가 이 팀·이 제출 버전 외의 기록을 거부하도록 고정한다 (프롬프트 인젝션·재제출 경합 방어)
-      env: { ...process.env, HACKATHON_GRADER_TEAM: teamId, HACKATHON_GRADE_VERSION: String(version) },
+      env: {
+        ...process.env,
+        HACKATHON_GRADER_TEAM: teamId,
+        HACKATHON_GRADE_VERSION: String(version),
+        HACKATHON_GRADE_STARTED_AT: String(Date.now()),
+      },
     }
   );
   running.set(teamId, version);
@@ -135,9 +155,9 @@ function review(teamId) {
     console.log(`[${time()}] ● 채점 필요: ${teamId} ${submission.projectName} (제출 ${submission.submitCount}회)`);
     return;
   }
-  if (!GRADE_NOW && (endAt === null || Date.now() < endAt + DEADLINE_GRACE_MS)) return; // 마감 후 일괄 채점
+  if (FINAL_ONLY && !isAfterDeadline()) return; // --final-only: 마감 후에만 채점
   if (running.has(teamId)) return; // 끝나면 close 핸들러가 다시 확인한다
-  const key = `${teamId}:${submission.submittedAt}`;
+  const key = `${teamId}:${submission.submittedAt}:${gradingPhase()}`;
   if ((attempts.get(key) ?? 0) >= MAX_ATTEMPTS) {
     if (attempts.get(key) === MAX_ATTEMPTS) {
       console.error(`[${time()}] ✖ ${teamId} ${MAX_ATTEMPTS}회 시도에도 점수 없음 — 로그 확인 후 수동 채점 필요`);
@@ -150,12 +170,12 @@ function review(teamId) {
 
 function scheduleDeadline() {
   if (deadlineTimer) clearTimeout(deadlineTimer);
-  if (GRADE_NOW || endAt === null) return;
+  if (endAt === null) return;
   const wait = endAt + DEADLINE_GRACE_MS - Date.now();
   const when = new Date(endAt).toLocaleTimeString("en-GB", { timeZone: "Asia/Seoul" });
-  if (wait > 0) console.log(`[${time()}] 마감 ${when} + 1분 뒤 일괄 채점 예약 (즉시 채점은 --now)`);
+  if (wait > 0) console.log(`[${time()}] 마감 ${when} + 1분 뒤 최종 채점 예약 ${FINAL_ONLY ? "(마감 전 채점 안 함)" : "(그 전엔 제출 즉시 예비 채점)"}`);
   deadlineTimer = setTimeout(() => {
-    console.log(`[${time()}] 마감 도달 — 채점 시작`);
+    console.log(`[${time()}] 마감 도달 — 최종 채점 시작`);
     for (const teamId of submissions.keys()) review(teamId);
   }, Math.max(0, wait));
 }

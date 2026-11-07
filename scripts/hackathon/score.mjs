@@ -36,6 +36,8 @@ async function main() {
     // watch.mjs 가 넘긴 버전(채점 시작 시점의 제출)을 우선 기록해 채점 중 재제출을 놓치지 않는다
     submissionVersion: Number(process.env.HACKATHON_GRADE_VERSION) || submission.data().submittedAt,
     gradedAt: Date.now(),
+    // 세션 시작 시각 (watch.mjs 가 예비/최종 채점을 구분하는 기준)
+    gradeStartedAt: Number(process.env.HACKATHON_GRADE_STARTED_AT) || Date.now(),
   });
   console.log(`기록 완료: ${teamId} ${score.total}/${score.max} (by ${gradedBy})`);
 }
