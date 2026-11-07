@@ -33,7 +33,8 @@ async function main() {
     teamId,
     ...score,
     gradedBy,
-    submissionVersion: submission.data().submittedAt,
+    // watch.mjs 가 넘긴 버전(채점 시작 시점의 제출)을 우선 기록해 채점 중 재제출을 놓치지 않는다
+    submissionVersion: Number(process.env.HACKATHON_GRADE_VERSION) || submission.data().submittedAt,
     gradedAt: Date.now(),
   });
   console.log(`기록 완료: ${teamId} ${score.total}/${score.max} (by ${gradedBy})`);
