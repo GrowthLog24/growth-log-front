@@ -242,3 +242,25 @@ export function buildTeamDocId(hackathonId: string, teamId: string): string {
 export function buildVoteDocId(hackathonId: string, memberId: string): string {
   return `${hackathonId}_${memberId}`;
 }
+
+/** 동점 시 우선 비교하는 채점 항목 (핵심 기능 작동) */
+export const TIEBREAK_CRITERION_KEY = "core";
+
+/** 순위 비교에 필요한 점수 정보 */
+type RankableScore = { total: number; criteria: readonly { key: string; score: number }[] };
+
+function tiebreakScore(score: RankableScore): number {
+  return score.criteria.find((c) => c.key === TIEBREAK_CRITERION_KEY)?.score ?? 0;
+}
+
+/**
+ * AI 인정상 순위 비교 (내림차순 정렬용). 총점 → 핵심 기능 점수 순으로 비교합니다.
+ * 둘 다 같으면 0을 반환하며, 이때는 공동 순위로 두고 운영진이 판단합니다.
+ *
+ * @param {RankableScore} a - 점수 A
+ * @param {RankableScore} b - 점수 B
+ * @returns {number} b가 앞서면 양수, a가 앞서면 음수, 동점이면 0
+ */
+export function compareScores(a: RankableScore, b: RankableScore): number {
+  return b.total - a.total || tiebreakScore(b) - tiebreakScore(a);
+}

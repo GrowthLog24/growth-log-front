@@ -1,16 +1,12 @@
 "use client";
 
-import { CheckCircle2, ExternalLink, Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2, ExternalLink } from "lucide-react";
 import { HACKATHON_TRACKS } from "@/domain/hackathon/constants";
 import type { HackathonSubmission } from "@/domain/hackathon/types";
 import { formatKstTimeWithSeconds } from "./formatTime";
 
 interface SubmitSuccessProps {
   submission: HackathonSubmission;
-  /** 유예 시간까지 지나 수정이 막혔는지 */
-  isClosed: boolean;
-  onEdit: () => void;
 }
 
 function LinkRow({ label, href }: { label: string; href: string }) {
@@ -32,9 +28,9 @@ function LinkRow({ label, href }: { label: string; href: string }) {
 }
 
 /**
- * 제출 완료 화면. 마감 전까지 다시 제출하면 덮어쓴다는 안내와 수정 버튼을 보여줍니다.
+ * 제출 완료 화면. 제출은 팀당 1회이므로 수정 버튼 없이 제출 내용과 문의 안내만 보여줍니다.
  */
-export function SubmitSuccess({ submission, isClosed, onEdit }: SubmitSuccessProps) {
+export function SubmitSuccess({ submission }: SubmitSuccessProps) {
   const track = HACKATHON_TRACKS[submission.track];
 
   return (
@@ -42,10 +38,10 @@ export function SubmitSuccess({ submission, isClosed, onEdit }: SubmitSuccessPro
       <div role="status" className="rounded-2xl bg-gradient-brand p-5 text-white shadow-lg sm:p-6">
         <CheckCircle2 className="size-8" aria-hidden />
         <h2 id="submit-success-title" className="mt-3 text-xl font-extrabold">
-          제출 완료 · 마감 전까지 다시 제출하면 덮어써요
+          제출 완료
         </h2>
         <p className="mt-2 text-sm text-white/90">
-          {formatKstTimeWithSeconds(submission.submittedAt)} 제출 · 총 {submission.submitCount}회
+          {formatKstTimeWithSeconds(submission.submittedAt)} 제출 · 제출은 팀당 1회라 수정할 수 없어요
           {submission.isLate && (
             <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">지각 제출</span>
           )}
@@ -66,10 +62,9 @@ export function SubmitSuccess({ submission, isClosed, onEdit }: SubmitSuccessPro
         </ul>
       </div>
 
-      <Button type="button" variant="outline" size="lg" className="h-12 w-full text-base" onClick={onEdit} disabled={isClosed}>
-        <Pencil aria-hidden />
-        {isClosed ? "제출이 마감되어 수정할 수 없어요" : "수정하기"}
-      </Button>
+      <p className="rounded-xl bg-gray-6 px-4 py-3 text-sm text-gray-1">
+        잘못 낸 내용이 있으면 운영진에게 말씀해 주세요.
+      </p>
     </section>
   );
 }

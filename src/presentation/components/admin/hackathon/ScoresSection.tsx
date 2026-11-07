@@ -16,6 +16,7 @@ import type {
   HackathonTeam,
 } from "@/domain/hackathon/types";
 import { formatKstDateTime } from "@/shared/lib/hackathonExport";
+import { compareScores } from "@/domain/hackathon/rules";
 
 interface ScoresSectionProps {
   teams: readonly HackathonTeam[];
@@ -32,17 +33,17 @@ interface RankedScore {
 }
 
 /**
- * 총점 내림차순으로 순위를 매깁니다. 동점은 같은 순위입니다.
+ * 총점 → 핵심 기능 점수 순으로 순위를 매깁니다. 둘 다 같으면 공동 순위(운영진 판단)입니다.
  */
 function rankScores(
   teams: readonly HackathonTeam[],
   submissions: readonly HackathonSubmission[],
   scores: readonly HackathonScore[]
 ): RankedScore[] {
-  const sorted = [...scores].sort((a, b) => b.total - a.total);
+  const sorted = [...scores].sort(compareScores);
   return sorted.map((score) => {
     const submission = submissions.find((s) => s.teamId === score.teamId);
-    const rank = sorted.findIndex((other) => other.total === score.total) + 1;
+    const rank = sorted.findIndex((other) => compareScores(other, score) === 0) + 1;
     return {
       rank,
       score,

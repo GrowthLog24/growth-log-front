@@ -1,4 +1,5 @@
 import { HACKATHON_NOTICE_MINUTES } from "@/domain/hackathon/constants";
+import { compareScores } from "@/domain/hackathon/rules";
 import type {
   HackathonCriterionScore,
   HackathonScore,
@@ -141,9 +142,9 @@ export function rankTeams(
     score: scoreByTeam.get(team.id) ?? null,
   }));
   rows.sort((a, b) => {
-    const totalA = a.score?.total ?? -1;
-    const totalB = b.score?.total ?? -1;
-    return totalB - totalA || a.index - b.index;
+    if (a.score && b.score) return compareScores(a.score, b.score) || a.index - b.index;
+    if (a.score || b.score) return a.score ? -1 : 1;
+    return a.index - b.index;
   });
 
   const result: ResultRow[] = [];
@@ -151,7 +152,8 @@ export function rankTeams(
     const previous = result[position - 1];
     let rank: number | null = null;
     if (row.score) {
-      const isTie = previous?.score && previous.score.total === row.score.total;
+      // 총점·핵심 기능 점수가 모두 같을 때만 공동 순위 (그 이후는 운영진 판단)
+      const isTie = previous?.score && compareScores(previous.score, row.score) === 0;
       rank = isTie && previous.rank !== null ? previous.rank : position + 1;
     }
     result.push({ team: row.team, submission: row.submission, score: row.score, rank });

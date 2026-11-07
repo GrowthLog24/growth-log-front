@@ -102,6 +102,24 @@ export class HackathonRepository {
     return id;
   }
 
+  /**
+   * 팀 제출물을 처음 한 번만 저장합니다 (팀당 1회 제출).
+   * 이미 제출물이 있으면 false 를 반환하고 쓰지 않습니다. 트랜잭션으로 동시 요청에서도 1회를 보장합니다.
+   */
+  async createSubmission(submission: WithoutId<HackathonSubmission>): Promise<boolean> {
+    const ref = doc(
+      db,
+      COLLECTIONS.HACKATHON_SUBMISSIONS,
+      buildTeamDocId(submission.hackathonId, submission.teamId)
+    );
+    return runTransaction(db, async (transaction) => {
+      const existing = await transaction.get(ref);
+      if (existing.exists()) return false;
+      transaction.set(ref, submission);
+      return true;
+    });
+  }
+
   /** 행사의 전체 제출물 조회 */
   async listSubmissions(hackathonId: string): Promise<HackathonSubmission[]> {
     const snapshot = await getDocs(

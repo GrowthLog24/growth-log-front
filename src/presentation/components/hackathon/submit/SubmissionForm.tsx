@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent, ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,8 +89,15 @@ export function SubmissionForm({ auth, initial, isClosed, onSubmitted, onAuthExp
   const form = useSubmissionForm({ auth, initial, onSubmitted, onAuthExpired });
   const { values, errors, setField } = form;
 
+  // 팀당 1회 제출이라 한 번 더 확인받는다
+  const [isConfirming, setIsConfirming] = useState(false);
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isConfirming) {
+      setIsConfirming(true);
+      return;
+    }
+    setIsConfirming(false);
     void form.submit();
   };
 
@@ -126,10 +133,21 @@ export function SubmissionForm({ auth, initial, isClosed, onSubmitted, onAuthExp
             {SUBMISSION_CLOSED_MESSAGE}
           </p>
         )}
+        {isConfirming && (
+          <div role="alert" className="space-y-1 rounded-lg border border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+            <p className="font-semibold">제출은 팀당 1회이고, 제출 후에는 수정할 수 없어요.</p>
+            <p>GitHub(public)·배포·시연·PRD 링크와 기획 내용을 다시 확인한 뒤 아래 버튼을 한 번 더 눌러 주세요.</p>
+          </div>
+        )}
         <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={form.isPending || isClosed}>
           {form.isPending && <Loader2 className="animate-spin" aria-hidden />}
-          {form.isPending ? "제출 중…" : initial ? "수정 내용 다시 제출하기" : "제출하기"}
+          {form.isPending ? "제출 중…" : isConfirming ? "확인했어요, 최종 제출하기" : "제출하기"}
         </Button>
+        {isConfirming && (
+          <Button type="button" variant="ghost" className="w-full" onClick={() => setIsConfirming(false)}>
+            다시 검토할게요
+          </Button>
+        )}
       </div>
     </form>
   );

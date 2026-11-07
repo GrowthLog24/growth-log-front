@@ -64,7 +64,7 @@ function StageView({ config, stage, isClosed, actions }: StageViewProps) {
     <div className="space-y-4">
       <TeamBar config={config} teamId={auth.teamId} onChangeTeam={() => actions.changeTeam()} />
       {stage.kind === "done" ? (
-        <SubmitSuccess submission={stage.submission} isClosed={isClosed} onEdit={() => actions.handleEdit(auth, stage.submission)} />
+        <SubmitSuccess submission={stage.submission} />
       ) : (
         <SubmissionForm
           auth={auth}
@@ -95,7 +95,7 @@ export function HackathonSubmitClient() {
         <header className="space-y-1">
           <p className="text-xs font-semibold tracking-wide text-green-1">그로스로그 6기 · 100분 해커톤</p>
           <h1 className="text-2xl font-extrabold text-gray-black sm:text-3xl">100분 해커톤 · 제출</h1>
-          <p className="text-sm text-gray-1">팀을 확인한 뒤 결과물을 제출해 주세요. 마감 전까지 몇 번이든 다시 제출할 수 있어요.</p>
+          <p className="text-sm text-gray-1">팀을 확인한 뒤 결과물을 제출해 주세요. 제출은 팀당 1회만 가능하니, 모두 완성한 뒤 한 번에 제출해 주세요.</p>
         </header>
 
         {configState.status === "loading" && <Notice title="행사 정보를 불러오고 있어요" isLoading />}
