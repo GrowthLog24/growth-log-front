@@ -5,7 +5,8 @@
 
 - 너는 별도 워크트리에서 돌지만, 팀 폴더·스크립트·`.env.local` 은 모두 **HACK 워크트리**에 있다:
   `HACK=/Users/cheetah_hong/orca/workspaces/growth-log-front/hack`
-- 모든 node 명령은 `cd $HACK && ...` 로 HACK 에서 실행한다. 팀 워커도 HACK 워크트리에 띄운다.
+- 모든 node 명령은 `cd $HACK && ...` 로 HACK 에서 실행한다.
+- 팀 워커는 **너(hackathon-grader) 아래 하위 워크트리** `grade-<teamId>` 에 띄운다. 태홍님이 Orca 사이드바에서 팀별로 실시간으로 지켜본다.
 - Orca 명령은 `orca` 를 쓴다. 처음 한 번 `orca skills get orchestration` 으로 사용법을 읽어라.
 - 너는 팀 워커들의 코디네이터다. 워커를 띄운 뒤 턴을 끝내면 Orca 가 보고로 너를 깨운다.
 
@@ -21,12 +22,19 @@ DIR=<팀 폴더들의 상위 경로>
 ## 할 일
 
 1. TEAMS 의 팀마다 독립된 채점 워커를 하나씩 띄운다. 팀 지시서는 이미 `<DIR>/<teamId>/spec.md` 에 있다.
-   ```
-   orca orchestration worker-start --spec-file <DIR>/<teamId>/spec.md --task-title "채점 <teamId> <ROUND>" --worktree path:/Users/cheetah_hong/orca/workspaces/growth-log-front/hack --agent claude --json
-   ```
+   - 먼저 `orca worktree list --json` 에서 표시 이름이 `grade-<teamId>` 인 워크트리가 있는지 본다.
+   - **없으면** 너의 하위 워크트리를 새로 만들어 띄운다 (열린 채로 남아 태홍님이 볼 수 있다):
+     ```
+     orca orchestration worker-start --spec-file <DIR>/<teamId>/spec.md --task-title "채점 <teamId> <ROUND>" --worktree new-child --name grade-<teamId> --display-name grade-<teamId> --setup skip --agent claude --json
+     ```
+   - **있으면** (재채점·최종 라운드) 그 워크트리를 다시 쓴다:
+     ```
+     orca orchestration worker-start --spec-file <DIR>/<teamId>/spec.md --task-title "채점 <teamId> <ROUND>" --worktree path:<그 워크트리 경로> --agent claude --json
+     ```
    - 같은 팀의 워커가 아직 돌고 있으면 그 워커가 끝난 뒤 새로 띄운다 (같은 팀 워커 동시 2개 금지 — 포트·폴더가 겹친다).
    - 워커를 다 띄웠으면 **턴을 끝낸다.** Orca 가 워커 보고로 너를 깨운다. 폴링·감시 스크립트 금지.
    - `worker-start` 가 실패하면 receipt 의 오류를 그대로 결과에 적고, 같은 명령을 한 번만 다시 시도한다.
+   - 하위 워크트리는 행사가 끝날 때까지 지우거나 release 하지 않는다.
 2. 워커의 `worker_done` 을 받으면:
    - 성공이면 점수를 반영한다:
      ```
