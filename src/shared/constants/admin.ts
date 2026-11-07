@@ -19,6 +19,7 @@ import {
   QrCode,
   Send,
   IdCard,
+  Hammer,
   type LucideIcon,
 } from "lucide-react";
 
@@ -119,6 +120,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: CalendarClock,
   },
   {
+    title: "해커톤",
+    href: "/admin/hackathon",
+    icon: Hammer,
+  },
+  {
     title: "홍보물 QR 발급",
     href: "/admin/promotion-qr",
     icon: QrCode,
@@ -159,6 +165,7 @@ export const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/members": "멤버 관리",
   "/admin/meetings": "정기모임 출결",
   "/admin/events": "행사 타임테이블",
+  "/admin/hackathon": "해커톤",
   "/admin/promotion-qr": "홍보물 QR 발급",
   "/admin/promotion-materials": "홍보물 제작",
   "/admin/cta": "CTA 버튼 설정",

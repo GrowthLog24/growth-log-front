@@ -1,0 +1,152 @@
+/*
+ * 100분 해커톤 빔 대시보드 전용 스타일 (hl- 접두사)
+ *
+ * --u 는 16:9 화면 높이의 1% 입니다. 1920x1080 → 10.8px, 1280x720 → 7.2px.
+ * 4:3 프로젝터에서도 가로가 넘치지 않도록 vw 로 상한을 둡니다.
+ * Tailwind v4 spacing 유틸리티가 --spacing 을 쓰므로 무대 안에서 함께 비례 확대됩니다.
+ */
+.hl-stage {
+  --u: min(1vh, 0.5625vw);
+  --spacing: calc(var(--u) * 0.37);
+
+  --hl-bg: #07130b;
+  --hl-bg-2: #0b1a10;
+  --hl-surface: #0f2216;
+  --hl-surface-2: #143020;
+  --hl-line: rgb(100 205 82 / 0.16);
+  --hl-line-strong: rgb(100 205 82 / 0.38);
+  --hl-text: #eef8f0;
+  --hl-muted: #8ba893;
+  --hl-dim: #4f6b57;
+  --hl-green: #00962b;
+  --hl-green-bright: #64cd52;
+  --hl-mint: #b3eeaa;
+  --hl-amber: #ffb43d;
+  --hl-red: #ff5a52;
+
+  color: var(--hl-text);
+  background-color: var(--hl-bg);
+  background-image:
+    radial-gradient(ellipse 60% 55% at 12% 0%, rgb(0 150 43 / 0.22), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 100% 100%, rgb(100 205 82 / 0.08), transparent 70%),
+    linear-gradient(var(--hl-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hl-line) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    calc(var(--u) * 6) calc(var(--u) * 6),
+    calc(var(--u) * 6) calc(var(--u) * 6);
+  background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+  font-variant-numeric: tabular-nums;
+  word-break: keep-all;
+}
+
+/* 그리드 선이 화면을 시끄럽게 하지 않도록 가장자리로 갈수록 흐리게 */
+.hl-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 85% 80% at 50% 45%, transparent 40%, var(--hl-bg) 100%);
+}
+
+/* ---------- 타입 스케일 ---------- */
+.hl-t-micro { font-size: calc(var(--u) * 1.6); line-height: 1.3; }
+.hl-t-sm { font-size: calc(var(--u) * 2); line-height: 1.35; }
+.hl-t-base { font-size: calc(var(--u) * 2.4); line-height: 1.35; }
+.hl-t-md { font-size: calc(var(--u) * 3); line-height: 1.25; }
+.hl-t-lg { font-size: calc(var(--u) * 4); line-height: 1.15; }
+.hl-t-xl { font-size: calc(var(--u) * 6); line-height: 1.05; }
+.hl-t-2xl { font-size: calc(var(--u) * 9); line-height: 1; }
+.hl-t-display {
+  font-size: calc(var(--u) * 32);
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 시:분:초처럼 긴 카운트다운은 가로 폭을 넘지 않도록 줄입니다. */
+.hl-t-display.hl-t-display-long { font-size: calc(var(--u) * 24); }
+
+.hl-label {
+  font-size: calc(var(--u) * 1.7);
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: var(--hl-muted);
+}
+
+/* ---------- 긴장도 색 ---------- */
+.hl-tone-calm { --hl-tone: var(--hl-green-bright); }
+.hl-tone-notice { --hl-tone: var(--hl-mint); }
+.hl-tone-warning { --hl-tone: var(--hl-amber); }
+.hl-tone-critical { --hl-tone: var(--hl-red); }
+
+.hl-countdown {
+  color: var(--hl-text);
+  text-shadow: 0 0 calc(var(--u) * 6) color-mix(in srgb, var(--hl-tone) 35%, transparent);
+  transition: color 600ms ease;
+}
+.hl-tone-warning .hl-countdown,
+.hl-tone-critical .hl-countdown {
+  color: var(--hl-tone);
+}
+
+.hl-progress-fill {
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--hl-green), var(--hl-tone));
+  transition: transform 1s linear;
+}
+
+/* ---------- 애니메이션 ---------- */
+@keyframes hl-live-ring {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+.hl-live-ring { animation: hl-live-ring 1.8s ease-out infinite; }
+
+@keyframes hl-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.015); opacity: 0.82; }
+}
+.hl-pulse { animation: hl-pulse 1.2s ease-in-out infinite; }
+
+@keyframes hl-rise {
+  from { transform: translateY(calc(var(--u) * 2)); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.hl-rise { animation: hl-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes hl-card-pop {
+  0% { transform: scale(1); }
+  18% { transform: scale(1.045); }
+  100% { transform: scale(1); }
+}
+.hl-card-pop { animation: hl-card-pop 1.1s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes hl-flash {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.hl-flash { animation: hl-flash 2.4s ease-out forwards; }
+
+@keyframes hl-toast {
+  0% { transform: translate(-50%, calc(var(--u) * -3)) scale(0.96); opacity: 0; }
+  8% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  86% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, calc(var(--u) * -2)) scale(0.98); opacity: 0; }
+}
+.hl-toast { animation: hl-toast 4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hl-stage *,
+  .hl-stage *::before,
+  .hl-stage *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  .hl-toast { animation: none !important; transform: translate(-50%, 0); }
+  .hl-live-ring { display: none; }
+}
