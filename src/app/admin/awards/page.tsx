@@ -130,7 +130,7 @@ export default function AdminAwardsPage() {
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground">
           총 {awards.length}개의 수상 내역
         </p>

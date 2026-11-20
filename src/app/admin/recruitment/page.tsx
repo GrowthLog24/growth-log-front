@@ -755,7 +755,7 @@ export default function RecruitmentPage() {
       {isRecruitmentOpen && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
@@ -782,7 +782,7 @@ export default function RecruitmentPage() {
               </div>
             ) : (
               <Tabs defaultValue="apply" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-4">
                   <TabsTrigger value="apply">가입 안내</TabsTrigger>
                   <TabsTrigger value="ot">OT 안내</TabsTrigger>
                   <TabsTrigger value="fee">입금 안내</TabsTrigger>
@@ -803,7 +803,7 @@ export default function RecruitmentPage() {
                         placeholder="마감일 및 시간 선택"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="contactPhone" className="flex items-center gap-2">
                           <Phone className="h-4 w-4" />
@@ -1300,7 +1300,7 @@ export default function RecruitmentPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="otRound">회차</Label>
                 <Input

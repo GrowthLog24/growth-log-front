@@ -184,7 +184,7 @@ export default function AdminActivitiesPage() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActivityCategory)}>
-        <TabsList className="grid grid-cols-6 w-full">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-6">
           {CATEGORIES.map((cat) => (
             <TabsTrigger key={cat} value={cat} className="text-xs sm:text-sm">
               {ACTIVITY_CATEGORY_LABELS[cat]}
@@ -195,7 +195,7 @@ export default function AdminActivitiesPage() {
         {CATEGORIES.map((cat) => (
           <TabsContent key={cat} value={cat} className="space-y-4">
             {/* 헤더 */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground">
                 총 {filteredActivities.length}개의 {ACTIVITY_CATEGORY_LABELS[cat]}
               </p>

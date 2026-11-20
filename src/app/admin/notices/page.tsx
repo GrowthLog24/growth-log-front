@@ -239,7 +239,7 @@ export default function AdminNoticesPage() {
   return (
     <div className="space-y-4">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground">
           총 {notices.length}개의 공지사항 · 드래그하여 순서를 변경할 수 있습니다.
         </p>

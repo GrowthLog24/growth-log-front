@@ -284,7 +284,7 @@ export default function PromotionQrPage() {
   return (
     <div className="space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           총 {items.length}개의 QR · 포스터·현수막 등 홍보물에 넣을 QR을
           발급합니다. 인쇄 후에도 이동 주소를 바꿀 수 있습니다.

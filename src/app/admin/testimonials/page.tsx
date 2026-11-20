@@ -149,7 +149,7 @@ export default function AdminTestimonialsPage() {
   return (
     <div className="space-y-4">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground">
           총 {testimonials.length}개의 멤버 후기
         </p>

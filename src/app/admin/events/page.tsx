@@ -308,9 +308,9 @@ export default function EventsAdminPage() {
   return (
     <div className="space-y-4">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">총 {events.length}개의 행사</p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" asChild>
             <a href="/event/timetable" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
@@ -334,7 +334,7 @@ export default function EventsAdminPage() {
           {events.map((event) => (
             <div key={event.id} className="border rounded-lg overflow-hidden">
               {/* 행사 요약 */}
-              <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+              <div className="flex flex-col gap-3 p-4 hover:bg-gray-50 transition-colors sm:flex-row sm:items-center sm:justify-between">
                 <div
                   className="flex items-center gap-3 flex-1 cursor-pointer"
                   onClick={() => openBlocksEditor(event)}
@@ -542,7 +542,7 @@ export default function EventsAdminPage() {
                 placeholder="날짜 선택"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="eventStartTime">시작 시간 *</Label>
                 <Input
@@ -609,7 +609,7 @@ export default function EventsAdminPage() {
                 rows={2}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>시작 시간 *</Label>
                 <Input
@@ -663,7 +663,7 @@ export default function EventsAdminPage() {
                     onChange={(e) => updateSubItem(index, "description", e.target.value)}
                     placeholder="설명 (선택)"
                   />
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <Input
                       type="time"
                       value={sub.startTime}

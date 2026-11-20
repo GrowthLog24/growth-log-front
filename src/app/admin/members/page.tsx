@@ -783,11 +783,11 @@ export default function MembersPage() {
   return (
     <div className="space-y-4">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           총 {items.length}명의 멤버 (현재 {currentGeneration}기)
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -863,9 +863,9 @@ export default function MembersPage() {
           {filteredItems.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between p-4 hover:bg-gray-6 transition-colors"
+              className="flex flex-col gap-3 p-4 hover:bg-gray-6 transition-colors sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <Badge variant="secondary">{item.generation}기</Badge>
                 <Badge
                   variant={item.memberType === "신입회원" ? "default" : "outline"}
@@ -883,7 +883,7 @@ export default function MembersPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center justify-end gap-1">
                 <Button asChild variant="outline" size="sm" title="상세 관리">
                   <Link href={`/admin/members/${item.id}`}>
                     <Settings2 className="mr-1 h-4 w-4" />
