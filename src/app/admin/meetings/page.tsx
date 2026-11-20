@@ -379,7 +379,7 @@ export default function MeetingsPage() {
 
       {/* 회차 목록 */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-bold text-foreground">정기모임 회차</h2>
             <p className="text-sm text-muted-foreground">
@@ -580,7 +580,7 @@ export default function MeetingsPage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="generation">기수 *</Label>
                 <Input

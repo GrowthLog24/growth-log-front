@@ -1,3 +1,3 @@
 export { AdminLayout } from "./AdminLayout";
-export { AdminSidebar } from "./AdminSidebar";
+export { AdminSidebar, AdminSidebarNav } from "./AdminSidebar";
 export { AdminHeader } from "./AdminHeader";

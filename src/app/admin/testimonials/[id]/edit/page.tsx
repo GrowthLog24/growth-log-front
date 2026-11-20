@@ -180,7 +180,7 @@ export default function EditTestimonialPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="category">직무 카테고리 *</Label>
                 <Input
